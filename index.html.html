@@ -1,0 +1,3266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Gerencial V3 · Perforación y Voladura</title>
+
+<script src="https://cdn.tailwindcss.com"
+        onerror="window.__tailwindFailed=true;"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+        onerror="this.onerror=function(){window.__xlsxFailed=true;};this.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style id="fallbackCriticalCss">.hidden{display:none !important;}</style>
+
+<script>
+  if (typeof tailwind !== 'undefined') {
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: {
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+        },
+        colors: {
+          panel: { bg:'#0A0E1A', surface:'#111827', surface2:'#161F33', border:'#232B42' },
+          teal: { DEFAULT:'#2DD4BF' }, amber: { DEFAULT:'#F5A524' }, rose: { DEFAULT:'#FB6B6B' }, indigox: { DEFAULT:'#818CF8' },
+        }
+      }}
+    };
+  } else { window.__tailwindFailed = true; }
+</script>
+
+<style>
+  html, body { font-family: 'Inter', sans-serif; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono-num { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #94a3b866; border-radius: 8px; }
+  .dark ::-webkit-scrollbar-thumb { background: #364059; }
+  .drop-active { outline: 2px dashed #2DD4BF !important; outline-offset: 4px; }
+  @keyframes pulseGlow { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  .signal-dot { animation: pulseGlow 2.2s ease-in-out infinite; }
+  .fade-in { animation: fadeIn .3s ease both; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:translateY(0);} }
+  [data-panel] { display: none; } [data-panel].open { display: block; }
+  /* Paneles desplegables de filtros (Proyecto/Fase/Banco/Material): ocultos
+     por defecto, visibles solo con .open — esta regla faltaba por completo,
+     por lo que TODOS los paneles quedaban siempre visibles a la vez. */
+  [data-panel-id] { display: none; } [data-panel-id].open { display: block; }
+  .tab-btn[data-active="true"] { color: #2DD4BF; border-color:#2DD4BF; background: rgba(45,212,191,.08); }
+  .semaforo-dot { width:9px; height:9px; border-radius:9999px; display:inline-block; }
+  .checklist::-webkit-scrollbar { width: 6px; }
+</style>
+</head>
+
+<body class="bg-slate-50 dark:bg-panel-bg text-slate-900 dark:text-slate-100 font-body min-h-screen transition-colors duration-300">
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-40 border-b border-slate-200 dark:border-panel-border bg-white/90 dark:bg-panel-bg/90 backdrop-blur">
+  <div class="max-w-[1700px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center gap-3">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none" class="shrink-0">
+        <rect x="1" y="1" width="32" height="32" rx="9" class="fill-slate-100 dark:fill-panel-surface2 stroke-slate-300 dark:stroke-panel-border"/>
+        <path d="M8 22 L8 16 M14 22 L14 10 M20 22 L20 14 M26 22 L26 8" stroke="#2DD4BF" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="26" cy="8" r="2.3" fill="#F5A524" class="signal-dot"/>
+      </svg>
+      <div>
+        <h1 class="font-display font-700 text-lg sm:text-xl leading-tight tracking-tight">Panel Gerencial V3</h1>
+        <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 -mt-0.5">Perforación · Voladura · Fragmentación · Vibraciones</p>
+      </div>
+      <button id="btnAlertas" title="Ver Principales Desvíos en Resumen Gerencial" class="hidden items-center gap-1.5 text-xs font-semibold rounded-full border border-rose/40 bg-rose/10 text-rose px-3 py-1.5 ml-1">
+        <span class="semaforo-dot bg-rose"></span>
+        <span id="alertasCount">0</span> alertas críticas
+      </button>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <button id="btnRefresh" class="hidden items-center gap-1.5 text-sm font-medium rounded-lg border border-slate-300 dark:border-panel-border bg-white dark:bg-panel-surface2 hover:bg-slate-50 dark:hover:bg-panel-surface px-3 py-2 transition">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
+        Actualizar datos
+      </button>
+      <button id="btnUpload" class="flex items-center gap-1.5 text-sm font-semibold rounded-lg bg-slate-900 dark:bg-teal text-white dark:text-panel-bg hover:opacity-90 px-3.5 py-2 transition shadow-sm">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
+        Cargar archivo
+      </button>
+      <input id="fileInput" type="file" accept=".xlsx,.xls" class="hidden">
+      <button id="btnTheme" title="Cambiar tema" class="rounded-lg border border-slate-300 dark:border-panel-border bg-white dark:bg-panel-surface2 hover:bg-slate-50 dark:hover:bg-panel-surface p-2.5 transition">
+        <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="hidden dark:block"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="block dark:hidden"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div id="tabBarWrap" class="hidden relative border-t border-slate-200 dark:border-panel-border bg-slate-50/70 dark:bg-panel-surface/50">
+    <div id="tabBar" class="overflow-x-auto">
+      <div class="max-w-[1700px] mx-auto px-4 sm:px-6 flex gap-1 text-sm font-medium">
+        <button data-tab="control" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">00 · Resumen Gerencial</button>
+        <button data-tab="voladura" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">01 · Voladura</button>
+        <button data-tab="voladura_pc" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">02 · Voladura Pre-Corte</button>
+        <button data-tab="perforacion" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">03 · Perforación</button>
+        <button data-tab="perforacion_pc" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">04 · Perforación Pre-Corte</button>
+        <button data-tab="frag" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">05 · Fragmentación</button>
+        <button data-tab="vibraciones" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">06 · Vibraciones &amp; Air Blast</button>
+        <button data-tab="estadistica" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">07 · Estadística &amp; Demoras</button>
+        <button data-tab="costos" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">08 · Costos</button>
+      </div>
+    </div>
+    <!-- Degradados que indican que hay más pestañas al desplazar (9 pestañas en total) -->
+    <div id="tabFadeLeft" class="hidden absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-50 dark:from-panel-surface to-transparent pointer-events-none"></div>
+    <div id="tabFadeRight" class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-50 dark:from-panel-surface to-transparent pointer-events-none flex items-center justify-end pr-0.5">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-slate-400"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1700px] mx-auto px-4 sm:px-6 py-6">
+
+  <!-- EMPTY STATE -->
+  <div id="emptyState" class="fade-in">
+    <div id="dropZone" class="border-2 border-dashed border-slate-300 dark:border-panel-border rounded-2xl bg-white dark:bg-panel-surface/60 py-16 px-6 text-center transition-colors">
+      <div class="w-14 h-14 mx-auto rounded-xl bg-slate-100 dark:bg-panel-surface2 flex items-center justify-center mb-4">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-slate-400"><path d="M4 14.9A5 5 0 0 1 6 5.3 6 6 0 0 1 17.7 7 4.5 4.5 0 0 1 17 16H6a4 4 0 0 1-2-1.1Z"/><path d="M12 12v6M9.5 15.5 12 13l2.5 2.5"/></svg>
+      </div>
+      <h2 class="font-display font-700 text-xl">Esperando datos</h2>
+      <p class="text-slate-500 dark:text-slate-400 text-sm mt-1.5 max-w-lg mx-auto">Carga <b>BD_Compilados_P_V_LIMPIO.xlsx</b> (o el archivo con la misma estructura) para generar el panel gerencial: Control Gerencial, Voladura, Fragmentación, Perforación y Vibraciones.</p>
+      <button id="btnUpload2" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold rounded-lg bg-slate-900 dark:bg-teal text-white dark:text-panel-bg hover:opacity-90 px-4 py-2.5 transition shadow-sm">Seleccionar archivo</button>
+      <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-4 font-mono-num">.XLSX &nbsp;·&nbsp; .XLS</p>
+    </div>
+  </div>
+
+  <div id="msgBanner" class="hidden fade-in mb-4 rounded-xl border border-amber/40 bg-amber/10 text-amber-700 dark:text-amber px-4 py-3 text-sm font-medium"></div>
+  <div id="sheetWarnings" class="hidden fade-in mb-4 rounded-xl border border-rose/40 bg-rose/10 text-rose px-4 py-3 text-sm font-medium space-y-1"></div>
+
+  <!-- DASHBOARD ROOT -->
+  <div id="dashboard" class="hidden space-y-6">
+
+    <!-- ===================== TAB: 00 CONTROL GERENCIAL ===================== -->
+    <section data-panel="control" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="control" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_control" class="flex flex-wrap items-center gap-2"></div>
+        <p class="text-[11px] text-slate-400 mt-2">Proyecto / Fase / Banco / Material se aplican solo a los paneles cuya fuente de datos tiene esa dimensión (Tonelaje por proyecto, Fragmentación). El comparativo Plan vs Ejecutado es una serie corporativa diaria y no se segmenta por proyecto.</p>
+      </div>
+
+      <div id="kpi_control" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+
+      <!-- COSTOS UNITARIOS P&V — primera fila, protagonista -->
+      <div>
+        <h4 class="font-display font-700 text-base mb-3">💰 Costos Unitarios — Perforación &amp; Voladura</h4>
+        <div id="kpi_control_costos" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Tonelaje Roto — Plan Acumulado vs Ejecutado Acumulado</h4>
+          <p class="text-xs text-slate-400 mb-3">Acumulado corrido del período — permite ver si la brecha se cierra, se mantiene o se amplía.</p>
+          <div style="height:300px"><canvas id="chart_control_acum"></canvas></div>
+        </div>
+        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Detalle mensual</h4>
+          <p class="text-xs text-slate-400 mb-3">Plan vs Ejecutado por mes, con desviación.</p>
+          <div style="height:230px"><canvas id="chart_control_main"></canvas></div>
+          <div id="dev_row_control" class="flex mt-1 text-center"></div>
+        </div>
+      </div>
+
+      <!-- P80 y VIBRACIONES -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">🪨 P80 — Calidad de Fragmentación</h4>
+          <p class="text-xs text-slate-400 mb-3">¿Estamos logrando la fragmentación objetivo?</p>
+          <div id="kpi_control_p80" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
+          <div style="height:180px"><canvas id="chart_control_p80"></canvas></div>
+        </div>
+        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">📳 Vibraciones &amp; Air Blast</h4>
+          <p class="text-xs text-slate-400 mb-3">No solo el promedio — también el máximo y dónde ocurre.</p>
+          <div id="kpi_control_vib" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
+          <div id="vib_worst_control" class="text-xs text-slate-500 dark:text-slate-400"></div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-rose/30 bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1 flex items-center gap-2"><span class="semaforo-dot bg-rose"></span> Principales Desvíos</h4>
+        <p class="text-xs text-slate-400 mb-3">Los indicadores con mayor desviación |%| respecto a su plan, en todo el panel — clasificados por criticidad e impacto.</p>
+        <div class="overflow-auto">
+          <table class="w-full text-xs min-w-[620px]">
+            <thead class="text-slate-400 uppercase text-[10px]">
+              <tr>
+                <th class="text-left py-1.5 pr-2">Indicador</th>
+                <th class="text-right py-1.5 pr-2">Plan</th>
+                <th class="text-right py-1.5 pr-2">Ejecutado</th>
+                <th class="text-right py-1.5 pr-2">Desv.</th>
+                <th class="text-left py-1.5 pr-2">Criticidad</th>
+                <th class="text-left py-1.5">Impacto</th>
+              </tr>
+            </thead>
+            <tbody id="table_desvios" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-amber/30 bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">¿Dónde debemos actuar?</h4>
+        <p class="text-xs text-slate-400 mb-3">Focos de mejora identificados automáticamente a partir de los datos cargados.</p>
+        <div id="oportunidades_control" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+
+      <div>
+        <h4 class="font-display font-700 text-base mb-1">📈 Relaciones Costo–Performance</h4>
+        <p class="text-xs text-slate-400 mb-3">¿Estamos gastando más y obteniendo mejores resultados, o simplemente gastando más? — series mensuales, eje dual.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+            <h5 class="font-display font-600 text-sm mb-2">Costo Perforación US$/TM ↔ Utilización</h5>
+            <div style="height:200px"><canvas id="chart_rel_costoperf_util"></canvas></div>
+          </div>
+          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+            <h5 class="font-display font-600 text-sm mb-2">Costo Voladura US$/TM ↔ Kg Explosivo/TM</h5>
+            <div style="height:200px"><canvas id="chart_rel_costovol_kg"></canvas></div>
+          </div>
+          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+            <h5 class="font-display font-600 text-sm mb-2">P80 ↔ Factor de Potencia</h5>
+            <div style="height:200px"><canvas id="chart_rel_p80_fp"></canvas></div>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-2">PPV ↔ tamaño de disparo se muestra en <b>06 · Vibraciones</b> usando "Número de Taladros" como proxy real de carga — no existe en el Excel un campo directo de tonelaje/carga vinculado a cada medición de vibración.</p>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 02 VOLADURA ===================== -->
+    <section data-panel="voladura" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="voladura" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_voladura" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+
+      <div>
+        <h4 class="font-display font-700 text-base mb-3">Ratios operativos</h4>
+        <div id="kpi_voladura_ratios" class="grid grid-cols-2 xl:grid-cols-4 gap-3"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Consumibles — Real vs Plan (ordenado por desviación)</h4>
+          <p class="text-xs text-slate-400 mb-3">Todos los agentes con Plan y/o Consumo disponibles en el Excel — mayor desviación primero.</p>
+          <div class="overflow-auto">
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px]">
+                <tr><th class="text-left py-1.5 pr-2">Agente</th><th class="text-right py-1.5 pr-2">Plan</th><th class="text-right py-1.5 pr-2">Consumo</th><th class="text-right py-1.5 pr-2">Desv.</th><th class="text-left py-1.5">Estado</th></tr>
+              </thead>
+              <tbody id="table_consumibles_voladura" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Pareto de desviaciones</h4>
+          <p class="text-xs text-slate-400 mb-3">|Desviación %| por agente — dónde enfocar primero.</p>
+          <div style="height:280px"><canvas id="chart_pareto_voladura"></canvas></div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">Explosivos totales — Plan Acumulado vs Consumo Acumulado</h4>
+        <p class="text-xs text-slate-400 mb-3">Suma de todos los agentes (kg/und equivalente) — acumulado corrido del período.</p>
+        <div style="height:260px"><canvas id="chart_voladura_acum"></canvas></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
+        <p class="text-xs text-slate-400 mb-2">Para ubicar rápidamente dónde se concentra el gasto de voladura.</p>
+        <div id="guide_voladura"></div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 02 VOLADURA PRE-CORTE ===================== -->
+    <section data-panel="voladura_pc" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="voladura_pc" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_voladura_pc" class="flex flex-wrap items-center gap-2"></div>
+        <p class="text-[11px] text-slate-400 mt-2">Fuentes: "Blasting PC" y "Plan vs Ejec. PC" — el precorte no genera tonelaje roto (es voladura perimetral de control de talud), por eso no se muestra ese indicador aquí.</p>
+      </div>
+
+      <div>
+        <h4 class="font-display font-700 text-base mb-3">Metros y ratios</h4>
+        <div id="kpi_voladura_pc_ratios" class="grid grid-cols-2 xl:grid-cols-4 gap-3"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Consumibles — Real vs Plan (ordenado por desviación)</h4>
+          <div class="overflow-auto">
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px]">
+                <tr><th class="text-left py-1.5 pr-2">Agente</th><th class="text-right py-1.5 pr-2">Plan</th><th class="text-right py-1.5 pr-2">Consumo</th><th class="text-right py-1.5 pr-2">Desv.</th><th class="text-left py-1.5">Estado</th></tr>
+              </thead>
+              <tbody id="table_consumibles_voladura_pc" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Pareto de desviaciones</h4>
+          <div style="height:260px"><canvas id="chart_pareto_voladura_pc"></canvas></div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
+        <div id="guide_voladura_pc"></div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 03 FRAGMENTACIÓN ===================== -->
+    <section data-panel="frag" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="frag" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_frag" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+
+      <div id="kpi_frag" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">P80 vs Target por Fase</h4>
+          <p class="text-xs text-slate-400 mb-3">¿Dónde estamos fuera del target? — promedio de P80 real vs target por fase</p>
+          <div style="height:320px"><canvas id="chart_frag_p80"></canvas></div>
+        </div>
+        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Ranking de desviación</h4>
+          <p class="text-xs text-slate-400 mb-3">Zona = Fase / Banco, ordenado de mayor a menor desviación</p>
+          <div class="overflow-auto max-h-[320px]">
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px] sticky top-0 bg-white dark:bg-panel-surface">
+                <tr>
+                  <th class="text-left py-1.5 pr-2">Prioridad</th>
+                  <th class="text-left py-1.5 pr-2">Zona</th>
+                  <th class="text-right py-1.5 pr-2">P80</th>
+                  <th class="text-right py-1.5 pr-2">Target</th>
+                  <th class="text-right py-1.5">Desv.</th>
+                </tr>
+              </thead>
+              <tbody id="table_frag_ranking" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 04 PERFORACIÓN & PERFORMANCE ===================== -->
+    <section data-panel="perforacion" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="perforacion" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_perforacion" class="flex flex-wrap items-center gap-2"></div>
+        <p class="text-[11px] text-slate-400 mt-2">Metros/Utilización/Disp./Velocidad Real vs Plan son series corporativas (hoja "Plan vs Ejec."). El ranking y matriz por perforadora usan la hoja "Drilling" y se filtran solo por fecha.</p>
+      </div>
+
+      <div id="kpi_perforacion_top" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3"></div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-3">Tendencia mensual — Metros perforados</h4>
+        <div style="height:280px"><canvas id="chart_perf_trend"></canvas></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-3">Ranking por perforadora — Metros totales</h4>
+          <div style="height:280px"><canvas id="chart_perf_ranking"></canvas></div>
+        </div>
+        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-3">Matriz de desempeño</h4>
+          <div class="overflow-auto max-h-[280px]">
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px] sticky top-0 bg-white dark:bg-panel-surface">
+                <tr>
+                  <th class="text-left py-1.5 pr-2">Perforadora</th>
+                  <th class="text-right py-1.5 pr-2">Utilización</th>
+                  <th class="text-right py-1.5 pr-2">Disp. Mec.</th>
+                  <th class="text-right py-1.5 pr-2">OEE</th>
+                  <th class="text-right py-1.5">Velocidad</th>
+                </tr>
+              </thead>
+              <tbody id="table_perf_matriz" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="highlights_perforacion"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Consumo de Aceros — Real vs Plan</h4>
+          <p class="text-xs text-slate-400 mb-2">Ordenado por mayor desviación — incluye intensidad por 1000 m perforados.</p>
+          <div class="overflow-auto">
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px]">
+                <tr><th class="text-left py-1.5 pr-2">Ítem</th><th class="text-right py-1.5 pr-2">Plan</th><th class="text-right py-1.5 pr-2">Real</th><th class="text-right py-1.5 pr-2">/1000m</th><th class="text-right py-1.5">Desv.</th></tr>
+              </thead>
+              <tbody id="table_aceros_perforacion" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Pareto de sobreconsumo</h4>
+          <p class="text-xs text-slate-400 mb-2">|Desviación %| por ítem de acero.</p>
+          <div style="height:220px"><canvas id="chart_pareto_aceros_perforacion"></canvas></div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
+        <p class="text-xs text-slate-400 mb-2">Para ubicar rápidamente dónde se concentra el gasto de perforación.</p>
+        <div id="guide_perforacion"></div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 04 PERFORACIÓN PRE-CORTE ===================== -->
+    <section data-panel="perforacion_pc" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="perforacion_pc" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_perforacion_pc" class="flex flex-wrap items-center gap-2"></div>
+        <p class="text-[11px] text-slate-400 mt-2">Fuente: "DrillingPC" (equipos distintos a producción: DI650i, ROCL8-01) y "Plan vs Ejec. PC".</p>
+      </div>
+
+      <div id="kpi_perforacion_pc_top" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3"></div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-3">Tendencia mensual — Metros perforados (Pre-Corte)</h4>
+        <div style="height:280px"><canvas id="chart_perf_pc_trend"></canvas></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-3">Ranking por equipo — Metros totales</h4>
+          <div style="height:280px"><canvas id="chart_perf_pc_ranking"></canvas></div>
+        </div>
+        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-3">Matriz de desempeño</h4>
+          <div class="overflow-auto max-h-[280px]">
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px] sticky top-0 bg-white dark:bg-panel-surface">
+                <tr>
+                  <th class="text-left py-1.5 pr-2">Equipo</th>
+                  <th class="text-right py-1.5 pr-2">Utilización</th>
+                  <th class="text-right py-1.5 pr-2">Disp. Mec.</th>
+                  <th class="text-right py-1.5 pr-2">OEE</th>
+                  <th class="text-right py-1.5">Velocidad</th>
+                </tr>
+              </thead>
+              <tbody id="table_perf_pc_matriz" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="highlights_perforacion_pc"></div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Consumo de Aceros — Real vs Plan</h4>
+          <div class="overflow-auto">
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px]">
+                <tr><th class="text-left py-1.5 pr-2">Ítem</th><th class="text-right py-1.5 pr-2">Plan</th><th class="text-right py-1.5 pr-2">Real</th><th class="text-right py-1.5 pr-2">/1000m</th><th class="text-right py-1.5">Desv.</th></tr>
+              </thead>
+              <tbody id="table_aceros_perforacion_pc" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Pareto de sobreconsumo</h4>
+          <div style="height:200px"><canvas id="chart_pareto_aceros_perforacion_pc"></canvas></div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
+        <div id="guide_perforacion_pc"></div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 05 VIBRACIONES & AIR BLAST ===================== -->
+    <section data-panel="vibraciones" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="vibraciones" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_vibraciones" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+
+      <div>
+        <h4 class="font-display font-700 text-base mb-3 flex items-center gap-2"><span class="semaforo-dot bg-rose"></span> Eventos de mayor atención</h4>
+        <div id="events_vibraciones" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-3">Evolución mensual — PPV y Air Blast</h4>
+        <div style="height:300px"><canvas id="chart_vib_trend"></canvas></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">PPV ↔ Tamaño del disparo</h4>
+        <p class="text-xs text-slate-400 mb-3">Cada punto es una medición real — "Número de Taladros" como proxy de carga (el Excel no registra tonelaje/carga por medición de vibración).</p>
+        <div style="height:280px"><canvas id="chart_vib_ppv_taladros"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 07 ESTADÍSTICA & DEMORAS ===================== -->
+    <section data-panel="estadistica" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="estadistica" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_estadistica" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">Estadística descriptiva — indicadores clave</h4>
+        <p class="text-xs text-slate-400 mb-3">Promedio, mediana, desviación estándar, coeficiente de variación y percentiles — para ver más allá del promedio.</p>
+        <div class="overflow-auto">
+          <table class="w-full text-xs min-w-[720px]">
+            <thead class="text-slate-400 uppercase text-[10px]">
+              <tr>
+                <th class="text-left py-1.5 pr-2">Indicador</th>
+                <th class="text-right py-1.5 pr-2">Promedio</th>
+                <th class="text-right py-1.5 pr-2">Mediana</th>
+                <th class="text-right py-1.5 pr-2">Desv. Est.</th>
+                <th class="text-right py-1.5 pr-2">CV%</th>
+                <th class="text-right py-1.5 pr-2">P10</th>
+                <th class="text-right py-1.5 pr-2">P90</th>
+                <th class="text-right py-1.5">Atípicos</th>
+              </tr>
+            </thead>
+            <tbody id="table_stats" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-display font-700 text-base mb-3">Análisis de demoras — Perforación (Producción + Pre-Corte)</h4>
+        <div id="kpi_demoras" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+            <h5 class="font-display font-600 text-sm mb-1">Pareto por categoría de demora</h5>
+            <p class="text-[11px] text-slate-400 mb-3">El Excel registra horas por categoría (Operativa / No operativa / Falla mecánica), sin causa específica por evento. Para un Pareto de causas reales, se necesitaría capturar el motivo de cada demora.</p>
+            <div style="height:240px"><canvas id="chart_demoras_pareto"></canvas></div>
+          </div>
+          <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+            <h5 class="font-display font-600 text-sm mb-3">Equipo con mayor demora total</h5>
+            <div style="height:240px"><canvas id="chart_demoras_equipo"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 08 COSTOS ===================== -->
+    <section data-panel="costos" class="space-y-6">
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="costos" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_costos" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+
+      <div id="kpi_costos_top" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"></div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-3">Evolución mensual del costo — Perforación + Voladura</h4>
+        <div style="height:300px"><canvas id="chart_costos_trend"></canvas></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-3">Componentes del costo ejecutado</h4>
+          <div style="height:260px"><canvas id="chart_costos_componentes"></canvas></div>
+        </div>
+        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h4 class="font-display font-700 text-base mb-1">Puente Plan → Ejecutado</h4>
+          <p class="text-[11px] text-slate-400 mb-2">Voladura + Perforación, solo en el período con Plan de costo disponible en el Excel.</p>
+          <div style="height:240px"><canvas id="chart_costos_waterfall"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="max-w-[1700px] mx-auto px-4 sm:px-6 py-6 text-center text-[11px] text-slate-400 dark:text-slate-600">
+  Panel Gerencial V3 · Todo el procesamiento ocurre en tu navegador — ningún dato sale de este equipo.
+</footer>
+
+<script>
+'use strict';
+/* ======================================================================
+   UTILIDADES BASE (parseo, tipos, formato)
+   ====================================================================== */
+function isDateVal(v){ return v instanceof Date && !isNaN(v.getTime()); }
+
+function looksNumericString(raw){
+  let s = String(raw).trim();
+  if (s === '') return false;
+  if (/^#/.test(s)) return false;
+  s = s.replace(/^[$S\/.]*\s*/i,'').replace(/\s*%$/,'').replace(/\s+/g,'');
+  if (s === '') return false;
+  return /^-?\d{1,3}(,\d{3})*(\.\d+)?$/.test(s) ||
+         /^-?\d{1,3}(\.\d{3})*(,\d+)?$/.test(s) ||
+         /^-?\d+(\.\d+)?$/.test(s) ||
+         /^-?\d+(,\d+)?$/.test(s);
+}
+
+function parseNumber(v){
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  if (typeof v === 'string'){
+    const s = v.trim();
+    if (!looksNumericString(s)) return null;
+    let cleaned = s.replace(/^[$S\/.]*\s*/i,'').replace(/%$/,'').replace(/\s+/g,'');
+    if (cleaned.indexOf(',') > -1 && cleaned.indexOf('.') > -1){
+      if (cleaned.lastIndexOf(',') > cleaned.lastIndexOf('.')) cleaned = cleaned.replace(/\./g,'').replace(',', '.');
+      else cleaned = cleaned.replace(/,/g,'');
+    } else if (cleaned.indexOf(',') > -1){
+      const parts = cleaned.split(',');
+      if (parts.length === 2 && parts[1].length <= 2) cleaned = cleaned.replace(',', '.');
+      else cleaned = cleaned.replace(/,/g,'');
+    }
+    const n = parseFloat(cleaned);
+    return isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+function detectHeaderRow(rows, maxScan){
+  maxScan = Math.min(maxScan || 30, rows.length);
+  let bestIdx = 0, bestScore = -1;
+  for (let i=0;i<maxScan;i++){
+    const row = rows[i] || [];
+    let nonNull=0, textCount=0;
+    for (const c of row){
+      if (c!==null && c!==undefined && c!==''){
+        nonNull++;
+        if (typeof c === 'string' && c.trim()!=='') textCount++;
+      }
+    }
+    let score = nonNull + textCount;
+    if (nonNull <= 1) score -= 5;
+    if (score > bestScore){ bestScore = score; bestIdx = i; }
+  }
+  return bestIdx;
+}
+
+function buildHeaders(rawRow){
+  const seen = {};
+  return rawRow.map((v,i)=>{
+    let name = (v!==null && v!==undefined && String(v).trim()!=='') ? String(v).trim().replace(/\s+/g,' ') : `Columna ${i+1}`;
+    if (seen[name]!==undefined){ seen[name]++; name = `${name} (${seen[name]})`; } else { seen[name]=0; }
+    return name;
+  });
+}
+
+function rowsToRecords(rows, headerIdx, headers){
+  const records = [];
+  for (let r=headerIdx+1; r<rows.length; r++){
+    const row = rows[r];
+    if (!row) continue;
+    let hasData=false;
+    const obj = {};
+    for (let c=0;c<headers.length;c++){
+      const val = row[c]!==undefined ? row[c] : null;
+      if (val!==null && val!==undefined && val!=='') hasData = true;
+      obj[headers[c]] = val;
+    }
+    if (hasData) records.push(obj);
+  }
+  return records;
+}
+
+function dateMinMax(dates){
+  if (!dates.length) return {min:null, max:null};
+  let min = dates[0], max = dates[0];
+  for (let i=1;i<dates.length;i++){ if (dates[i]<min) min=dates[i]; if (dates[i]>max) max=dates[i]; }
+  return {min, max};
+}
+
+function toLocalDateInputVal(d){
+  if (!d) return '';
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+const nf0 = new Intl.NumberFormat('es-PE', {maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('es-PE', {maximumFractionDigits:1});
+const nf2 = new Intl.NumberFormat('es-PE', {maximumFractionDigits:2});
+
+function fmtNum(v, decimals){
+  if (v===null || v===undefined || isNaN(v)) return '—';
+  const abs = Math.abs(v);
+  const d = decimals===undefined ? (Number.isInteger(v)?0:1) : decimals;
+  if (abs >= 1000000) return nf1.format(v/1000000) + 'M';
+  if (abs >= 10000) return nf1.format(v/1000) + 'K';
+  return new Intl.NumberFormat('es-PE', {maximumFractionDigits:d, minimumFractionDigits:d}).format(v);
+}
+function fmtPct(v, decimals){
+  if (v===null || v===undefined || isNaN(v)) return '—';
+  return new Intl.NumberFormat('es-PE', {maximumFractionDigits: decimals===undefined?1:decimals}).format(v) + '%';
+}
+function fmtDate(d){
+  if (!isDateVal(d)) return String(d);
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ======================================================================
+   AGREGACIÓN MENSUAL CONTINUA (sin meses vacíos)
+   ====================================================================== */
+const MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function monthKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function monthLabel(key){ const [y,m]=key.split('-'); return `${MESES_ES[parseInt(m,10)-1]} ${y}`; }
+
+// Genera TODOS los meses entre min y max (inclusive), sin saltos, aunque algún
+// mes no tenga datos — así el eje nunca "salta" meses.
+function continuousMonths(min, max){
+  if (!min || !max) return [];
+  const months = [];
+  let y = min.getFullYear(), m = min.getMonth();
+  const endY = max.getFullYear(), endM = max.getMonth();
+  while (y < endY || (y === endY && m <= endM)){
+    months.push(`${y}-${String(m+1).padStart(2,'0')}`);
+    m++; if (m>11){ m=0; y++; }
+  }
+  return months;
+}
+
+// Suma valores de valueCol agrupados por mes, alineado a la lista `months`
+// (meses sin datos = 0 para sumas, null para promedios).
+function monthlySum(records, dateCol, valueCol, months){
+  const map = new Map();
+  for (const r of records){
+    const d = r[dateCol];
+    if (!isDateVal(d)) continue;
+    const v = parseNumber(r[valueCol]);
+    if (v===null) continue;
+    const k = monthKey(d);
+    map.set(k, (map.get(k)||0) + v);
+  }
+  return months.map(k => map.has(k) ? map.get(k) : 0);
+}
+
+// Acumulado REAL (corrido) a través de todo el rango seleccionado. Las
+// columnas "ACUMULADO" del propio Excel resetean cada mes (verificado contra
+// los datos: vuelven a ~0 el día 1 de cada mes), útiles para seguimiento
+// intra-mes pero no para ver si la brecha Plan-Ejecutado se cierra o amplía
+// en el tiempo. Por eso se calcula aquí un acumulado corrido a partir de los
+// valores diarios reales.
+function cumulativeByMonth(monthlyValues){
+  const out = [];
+  let running = 0;
+  for (const v of monthlyValues){ running += v; out.push(running); }
+  return out;
+}
+function monthlyAvg(records, dateCol, valueCol, months, excludeZero){
+  const sums = new Map(), counts = new Map();
+  for (const r of records){
+    const d = r[dateCol];
+    if (!isDateVal(d)) continue;
+    const v = parseNumber(r[valueCol]);
+    if (v===null) continue;
+    if (excludeZero && v===0) continue;
+    const k = monthKey(d);
+    sums.set(k, (sums.get(k)||0) + v);
+    counts.set(k, (counts.get(k)||0) + 1);
+  }
+  return months.map(k => counts.has(k) ? sums.get(k)/counts.get(k) : null);
+}
+
+function sumCol(records, col){
+  let s=0, n=0;
+  for (const r of records){ const v=parseNumber(r[col]); if (v!==null){ s+=v; n++; } }
+  return { sum:s, count:n, avg: n? s/n : null };
+}
+
+// Promedio que EXCLUYE ceros — para métricas de tasa/intensidad (Utilización,
+// Disp. Mecánica, Velocidad, OEE, Kg/Taladro, Factor de Potencia) donde un 0
+// registrado casi siempre significa "sin medición ese día", no "cero real".
+// Incluir esos ceros arrastra el promedio hacia abajo de forma artificial.
+// No se usa para sumas (Tonelaje, Metros, consumos) ni para columnas donde
+// un cero es un dato físico legítimo (P80, gasto diario).
+function avgNonZero(records, col){
+  let s=0, n=0;
+  for (const r of records){ const v=parseNumber(r[col]); if (v!==null && v!==0){ s+=v; n++; } }
+  return n? s/n : null;
+}
+
+// Denominador correcto para $/TM (Voladura y Perforación): el tonelaje MINADO
+// ejecutado (hoja "Plan vs Ejec."), no el tonelaje ROTO de blasteo puntual
+// (hoja "TON ROTO", que es un subconjunto y da un $/t artificialmente alto).
+const TON_MINADO_EJEC_COL = 'TONELAJE MINADO MATERIAL INSITU DIA (EJECUTADO)';
+function tonMinadoEjecSum(peRecordsFiltered){ return sumCol(peRecordsFiltered, TON_MINADO_EJEC_COL).sum; }
+function tonMinadoEjecMonthly(peRecordsFiltered, months){ return monthlySum(peRecordsFiltered, DATE_COL.planEjec, TON_MINADO_EJEC_COL, months); }
+
+function deviation(plan, ejec){
+  if (plan===null || plan===undefined || plan===0 || ejec===null || ejec===undefined) return null;
+  return ((ejec-plan)/Math.abs(plan))*100;
+}
+
+/* ======================================================================
+   ESTADÍSTICA DESCRIPTIVA GENÉRICA
+   ====================================================================== */
+function extractNumericValues(records, col){
+  const out = [];
+  for (const r of records){ const v = parseNumber(r[col]); if (v!==null) out.push(v); }
+  return out;
+}
+function median(sortedArr){
+  const n = sortedArr.length;
+  if (n===0) return null;
+  const mid = Math.floor(n/2);
+  return n%2 ? sortedArr[mid] : (sortedArr[mid-1]+sortedArr[mid])/2;
+}
+function percentile(sortedArr, p){
+  const n = sortedArr.length;
+  if (n===0) return null;
+  const idx = (p/100)*(n-1);
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  if (lo===hi) return sortedArr[lo];
+  return sortedArr[lo] + (sortedArr[hi]-sortedArr[lo])*(idx-lo);
+}
+function stdDev(arr, mean){
+  const n = arr.length;
+  if (n<2) return null;
+  const variance = arr.reduce((a,v)=>a+Math.pow(v-mean,2),0)/(n-1);
+  return Math.sqrt(variance);
+}
+// Recolecta la lista curada de indicadores Plan vs Ejecutado disponibles en
+// el panel, con su desviación%. Reusada por la tabla "Principales Desvíos"
+// (con los filtros de la pestaña) y por el badge de alertas del header (con
+// el dataset completo, para dar una lectura global estable).
+function collectDesviaciones(peRecs, fragRecs, pePcRecs){
+  const desvios = [];
+  function addDesvio(label, plan, ejec, goodDirection, impacto){
+    const dev = deviation(plan, ejec);
+    if (dev===null) return;
+    desvios.push({ label, plan, ejec, dev, goodDirection, impacto });
+  }
+  if (DATA.planEjec.length){
+    addDesvio('Tonelaje Roto', sumCol(peRecs,'TONELAJE ROTO DIA (PLAN)').sum, sumCol(peRecs,'TONELAJE ROTO POR DISPARO (EJECUTADO)').sum, 'higher', 'Producción');
+    addDesvio('Tonelaje Minado', sumCol(peRecs,'TON MINADO DIA (PLAN)').sum, sumCol(peRecs,'TONELAJE MINADO MATERIAL INSITU DIA (EJECUTADO)').sum, 'higher', 'Producción');
+    addDesvio('Metros Perforados', sumCol(peRecs,'METROS (PLAN)').sum, sumCol(peRecs,'METROS (EJECUTADO)').sum, 'higher', 'Producción futura');
+    addDesvio('Taladros', sumCol(peRecs,'TALADROS DIA (PLAN)').sum, sumCol(peRecs,'TALADROS (EJECUTADO)').sum, 'higher', 'Producción futura');
+    addDesvio('Utilización', avgNonZero(peRecs,'UTILIZACION PLAN (%)'), avgNonZero(peRecs,'UTILIZACION EJEC (%)'), 'higher', 'Performance');
+    addDesvio('Disp. Mecánica', avgNonZero(peRecs,'D.M. PLAN (%)'), avgNonZero(peRecs,'D.M. EJEC (%)'), 'higher', 'Performance');
+    addDesvio('Usage', avgNonZero(peRecs,'USAGE PLAN (%)'), avgNonZero(peRecs,'USAGE EJEC (%)'), 'higher', 'Performance');
+    addDesvio('Velocidad', avgNonZero(peRecs,'VELOC. PLAN (m/Hra)'), avgNonZero(peRecs,'VELOC. EJEC (m/Hr)'), 'higher', 'Performance');
+    addDesvio('Consumo Nitrato', sumCol(peRecs,'PLAN DE NITRATO (kg)').sum, sumCol(peRecs,'CONSUMO NITRATO (kg)').sum, 'lower', 'Costo');
+    addDesvio('Consumo Emulsión', sumCol(peRecs,'PLAN DE EMULSION (kg)').sum, sumCol(peRecs,'CONSUMO EMULSION (kg)').sum, 'lower', 'Costo');
+    addDesvio('Consumo Booster', sumCol(peRecs,'PLAN BOOSTER (kg)').sum, sumCol(peRecs,'CONSUMO BOOSTER (kg)').sum, 'lower', 'Costo');
+    addDesvio('Consumo Detonadores', sumCol(peRecs,'PLAN DETONADOR ELECT. (und)').sum, sumCol(peRecs,'CONSUMO DETONADOR ELECT. (und)').sum, 'lower', 'Costo');
+    addDesvio('Consumo Diésel', sumCol(peRecs,'PLAN DE DIESEL (kg)').sum, sumCol(peRecs,'CONSUMO DIESEL (kg)').sum, 'lower', 'Costo');
+    // Aceros: se agrega solo el de mayor sobreconsumo, para no saturar el ranking gerencial
+    // (el detalle completo vive en 04 · Perforación).
+    const acerosItems = [
+      ['Brocas','PLAN BROCAS (und)','CONSUMO BROCAS (und)'], ['Martillos','PLAN DE MARTILLOS (und)','CONSUMO MARTILLOS (und)'],
+      ['Chuck','PLAN CHUCK (Und)','CONSUMO CHUCK (Und)'], ['Barras','PLAN BARRAS (und)','CONSUMO BARRAS (und)'],
+    ];
+    let worstAcero = null;
+    for (const [label, planCol, ejecCol] of acerosItems){
+      const plan = sumCol(peRecs, planCol).sum, ejec = sumCol(peRecs, ejecCol).sum;
+      const dev = deviation(plan, ejec);
+      if (dev!==null && (!worstAcero || dev>worstAcero.dev)) worstAcero = { label, plan, ejec, dev };
+    }
+    if (worstAcero) addDesvio(`Consumo ${worstAcero.label} (acero)`, worstAcero.plan, worstAcero.ejec, 'lower', 'Costo');
+  }
+  if (DATA.frag.length){
+    addDesvio('P80 vs Target', sumCol(fragRecs,'Target P80 (Pulg.)').avg, sumCol(fragRecs,'P80 (pulg)').avg, 'lower', 'Fragmentación');
+  }
+  if (DATA.planEjecPC.length){
+    addDesvio('Metros Pre-Corte', sumCol(pePcRecs,'METROS (PLAN)').sum, sumCol(pePcRecs,'METROS (EJECUTADO)').sum, 'higher', 'Producción futura');
+    addDesvio('Enaline Pre-Corte', sumCol(pePcRecs,'PLAN DE ENALINE (kg)').sum, sumCol(pePcRecs,'CONSUMO DE ENALINE (kg)').sum, 'lower', 'Costo');
+  }
+  desvios.sort((a,b)=> Math.abs(b.dev) - Math.abs(a.dev));
+  return desvios;
+}
+
+// Badge de alertas en el header: cuenta cuántos indicadores están en estado
+// 🔴 Crítico usando TODO el dataset cargado (sin filtros), como lectura de
+// salud global estable sin importar en qué pestaña/filtro esté el usuario.
+function updateAlertsBadge(){
+  const btn = document.getElementById('btnAlertas');
+  if (!DATA.planEjec.length && !DATA.frag.length && !DATA.planEjecPC.length){ btn.classList.add('hidden'); return; }
+  const desvios = collectDesviaciones(DATA.planEjec, DATA.frag, DATA.planEjecPC);
+  const criticos = desvios.filter(d=> semaforoStatus(d.dev, d.goodDirection)==='red').length;
+  document.getElementById('alertasCount').textContent = criticos;
+  btn.classList.toggle('hidden', criticos===0);
+  btn.classList.toggle('flex', criticos>0);
+}
+document.getElementById('btnAlertas').addEventListener('click', ()=> switchTab('control'));
+
+function describeStats(records, col){
+  const vals = extractNumericValues(records, col).sort((a,b)=>a-b);
+  const n = vals.length;
+  if (n===0) return null;
+  const mean = vals.reduce((a,v)=>a+v,0)/n;
+  const sd = stdDev(vals, mean);
+  const p10 = percentile(vals,10), p90 = percentile(vals,90);
+  const q1 = percentile(vals,25), q3 = percentile(vals,75);
+  const iqr = (q1!==null && q3!==null) ? q3-q1 : null;
+  let outliers = 0;
+  if (iqr!==null){
+    const lowFence = q1 - 1.5*iqr, highFence = q3 + 1.5*iqr;
+    outliers = vals.filter(v=>v<lowFence || v>highFence).length;
+  }
+  return { n, mean, median: median(vals), sd, cv: (sd!==null && mean)? (sd/Math.abs(mean))*100 : null, p10, p90, outliers };
+}
+
+// goodDirection: 'higher' (más ejecutado que plan es bueno: producción, utilización)
+//                'lower'  (más ejecutado que plan es malo: consumo, costo, P80 vs target)
+function semaforoStatus(devPct, goodDirection){
+  if (devPct===null || devPct===undefined) return 'gray';
+  if (goodDirection==='higher'){
+    if (devPct >= -5) return 'green';
+    if (devPct >= -15) return 'orange';
+    return 'red';
+  } else {
+    if (devPct <= 5) return 'green';
+    if (devPct <= 15) return 'orange';
+    return 'red';
+  }
+}
+const SEMAFORO_COLOR = { green:'#2DD4BF', orange:'#F5A524', red:'#FB6B6B', gray:'#94A3B8' };
+const SEMAFORO_BG = { green:'bg-teal', orange:'bg-amber', red:'bg-rose', gray:'bg-slate-400' };
+
+/* ======================================================================
+   ESTADO GLOBAL
+   ====================================================================== */
+const REQUIRED_SHEETS = ['Plan vs Ejec.', 'Plan vs Ejec. PC', 'TON ROTO', 'Drilling', 'DrillingPC', 'Blasting', 'Blasting PC', 'Frag. PortaM', 'Vib & Air Blast.', 'Vib & Air Blast. (2)'];
+// Hojas complementarias/opcionales: su ausencia es una situación normal (por
+// ejemplo, "Vib & Air Blast. (2)" es una segunda campaña de monitoreo que no
+// siempre existe) y no debe mostrarse como una advertencia — el panel ya
+// funciona correctamente sin ellas.
+const OPTIONAL_SHEETS = new Set(['Vib & Air Blast. (2)'].map(s=>s.trim().toLowerCase()));
+
+const DATA = {
+  planEjec: [], planEjecPC: [], tonRoto: [], drilling: [], drillingPC: [], blasting: [], blastingPC: [], frag: [], vib: [],
+  missingSheets: [],
+};
+
+const filters = {
+  control:        { dateFrom:null, dateTo:null, proyecto:new Set(), fase:new Set(), banco:new Set(), material:new Set() },
+  voladura:       { dateFrom:null, dateTo:null, proyecto:new Set() },
+  voladura_pc:    { dateFrom:null, dateTo:null, proyecto:new Set() },
+  frag:           { dateFrom:null, dateTo:null, proyecto:new Set(), fase:new Set(), banco:new Set(), material:new Set() },
+  perforacion:    { dateFrom:null, dateTo:null, equipo:new Set() },
+  perforacion_pc: { dateFrom:null, dateTo:null, equipo:new Set() },
+  vibraciones:    { dateFrom:null, dateTo:null, proyecto:new Set() },
+  estadistica:    { dateFrom:null, dateTo:null },
+  costos:         { dateFrom:null, dateTo:null },
+};
+
+// Config declarativo de qué chips de dimensión mostrar en cada pestaña, y de
+// qué hoja/columna provienen sus opciones. Facilita agregar pestañas nuevas
+// sin duplicar lógica de filtros.
+const FILTER_DIMS = {
+  control:        [ {key:'proyecto', label:'Proyecto', src:()=>DATA.tonRoto, col:'PROYECTO'}, {key:'fase', label:'Fase', src:()=>DATA.tonRoto, col:'Fase'}, {key:'banco', label:'Banco', src:()=>DATA.frag, col:'BANCO'}, {key:'material', label:'Material', src:()=>DATA.frag, col:'MATERIAL'} ],
+  voladura:       [ {key:'proyecto', label:'Proyecto', src:()=>DATA.blasting, col:'PROYECTO'} ],
+  voladura_pc:    [ {key:'proyecto', label:'Proyecto', src:()=>DATA.blastingPC, col:'PROYECTO'} ],
+  frag:           [ {key:'proyecto', label:'Proyecto', src:()=>DATA.frag, col:'PROYECTO'}, {key:'fase', label:'Fase', src:()=>DATA.frag, col:'FASE'}, {key:'banco', label:'Banco', src:()=>DATA.frag, col:'BANCO'}, {key:'material', label:'Material', src:()=>DATA.frag, col:'MATERIAL'} ],
+  perforacion:    [ {key:'equipo', label:'Equipo', src:()=>DATA.drilling, col:'Perforadora'} ],
+  perforacion_pc: [ {key:'equipo', label:'Equipo', src:()=>DATA.drillingPC, col:'Perforadora'} ],
+  vibraciones:    [ {key:'proyecto', label:'Proyecto', src:()=>DATA.vib, col:'PROYECTO'} ],
+  estadistica:    [],
+  costos:         [],
+};
+
+const CHART_COLORS = {
+  light: { teal:'#0D9488', amber:'#B45309', rose:'#E11D48', indigo:'#4F46E5', grid:'#E2E8F0', text:'#475569',
+           palette:['#0D9488','#B45309','#4F46E5','#E11D48','#0891B2','#7C3AED'] },
+  dark:  { teal:'#2DD4BF', amber:'#F5A524', rose:'#FB6B6B', indigo:'#818CF8', grid:'#232B42', text:'#94A3B8',
+           palette:['#2DD4BF','#F5A524','#818CF8','#FB6B6B','#38BDF8','#C084FC'] },
+};
+function colors(){ return document.documentElement.classList.contains('dark') ? CHART_COLORS.dark : CHART_COLORS.light; }
+
+/* ======================================================================
+   CARGA DE ARCHIVO
+   ====================================================================== */
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const msgBanner = document.getElementById('msgBanner');
+const sheetWarnings = document.getElementById('sheetWarnings');
+
+function showMessage(text, kind){
+  msgBanner.textContent = text;
+  msgBanner.className = 'fade-in mb-4 rounded-xl border px-4 py-3 text-sm font-medium ' +
+    (kind==='error' ? 'border-rose/40 bg-rose/10 text-rose' : 'border-amber/40 bg-amber/10 text-amber-700 dark:text-amber');
+  msgBanner.classList.remove('hidden');
+}
+function hideMessage(){ msgBanner.classList.add('hidden'); }
+
+function librariesReady(){ return typeof XLSX !== 'undefined'; }
+function showLibraryFailureMessage(){
+  showMessage(
+    `No se pudo cargar SheetJS (el lector de Excel). ` +
+    `Esto normalmente ocurre por falta de conexión a internet o porque la red/firewall bloquea cdnjs.cloudflare.com y cdn.jsdelivr.net. ` +
+    `Prueba con internet activo, en otra red, o en modo incógnito sin bloqueadores. (Los gráficos de este panel no dependen de ningún servicio externo, así que solo la carga del Excel se ve afectada.)`, 'error');
+}
+window.addEventListener('load', ()=>{ setTimeout(()=>{ if (!librariesReady()) showLibraryFailureMessage(); }, 800); });
+
+/* ======================================================================
+   FUENTE DE DATOS PERSISTENTE (File System Access API)
+   Evita tener que volver a "subir" el archivo cada vez: en navegadores
+   compatibles (Chrome/Edge), el usuario elige el archivo UNA vez y
+   "Actualizar datos" vuelve a leer ese mismo archivo del disco (con los
+   cambios que tenga) sin pedirlo de nuevo. En navegadores sin soporte
+   (Firefox/Safari) se usa el selector clásico como respaldo real, no una
+   simulación — no existe otra forma técnicamente confiable de leer un
+   archivo local sin interacción del usuario por razones de seguridad del
+   navegador.
+   ====================================================================== */
+const supportsFileSystemAccess = 'showOpenFilePicker' in window;
+let fsAccessUnavailable = false; // se activa si la API existe pero falla al usarla (p.ej. contexto file://)
+let currentFileHandle = null;
+
+async function pickFileViaFSAccess(){
+  try{
+    const [handle] = await window.showOpenFilePicker({
+      types: [{ description:'Excel', accept: {'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx'], 'application/vnd.ms-excel':['.xls']} }],
+      excludeAcceptAllOption: false, multiple: false,
+    });
+    currentFileHandle = handle;
+    const file = await handle.getFile();
+    handleFile(file);
+  } catch(err){
+    if (err && err.name === 'AbortError') return; // usuario canceló el diálogo — no hacer nada
+    // La API File System Access puede fallar por restricciones del navegador
+    // (por ejemplo, al abrir el HTML directamente como archivo local con
+    // protocolo file:// en vez de servirlo por http/https). En ese caso no
+    // mostramos un error: simplemente usamos el selector clásico de toda la
+    // vida, que sí funciona siempre. "Actualizar datos" pedirá seleccionar
+    // el archivo de nuevo en ese modo, en vez de releerlo automáticamente.
+    console.warn('File System Access no disponible en este contexto, usando selector clásico:', err);
+    fsAccessUnavailable = true;
+    fileInput.click();
+  }
+}
+
+async function refreshFromHandle(){
+  if (!currentFileHandle || fsAccessUnavailable){ fileInput.click(); return; }
+  try{
+    // Verifica permiso de lectura (puede pedirse de nuevo tras recargar la página)
+    if (currentFileHandle.queryPermission){
+      let perm = await currentFileHandle.queryPermission({mode:'read'});
+      if (perm !== 'granted' && currentFileHandle.requestPermission){
+        perm = await currentFileHandle.requestPermission({mode:'read'});
+      }
+      if (perm !== 'granted'){
+        currentFileHandle = null;
+        fileInput.click(); // respaldo silencioso — evita dejar al usuario sin poder continuar
+        return;
+      }
+    }
+    const file = await currentFileHandle.getFile(); // relee el contenido actual en disco
+    handleFile(file);
+  } catch(err){
+    console.warn('No se pudo releer el archivo automáticamente, se pide de nuevo:', err);
+    currentFileHandle = null;
+    fileInput.click();
+  }
+}
+
+['btnUpload','btnUpload2'].forEach(id=>{
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', ()=>{
+    if (supportsFileSystemAccess && !fsAccessUnavailable) pickFileViaFSAccess();
+    else fileInput.click();
+  });
+});
+document.getElementById('btnRefresh').addEventListener('click', ()=>{
+  if (supportsFileSystemAccess && !fsAccessUnavailable && currentFileHandle) refreshFromHandle();
+  else fileInput.click(); // respaldo real en navegadores sin soporte, o si aún no se usó el selector nativo
+});
+
+fileInput.addEventListener('change', (e)=>{ if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]); });
+['dragenter','dragover'].forEach(evt=> dropZone.addEventListener(evt, (e)=>{ e.preventDefault(); dropZone.classList.add('drop-active'); }));
+['dragleave','drop'].forEach(evt=> dropZone.addEventListener(evt, (e)=>{ e.preventDefault(); dropZone.classList.remove('drop-active'); }));
+dropZone.addEventListener('drop', (e)=>{ const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+function findSheetName(wb, target){
+  const norm = s => String(s).trim().toLowerCase();
+  return wb.SheetNames.find(n => norm(n) === norm(target)) || null;
+}
+
+// La hoja "Plan vs Ejec." mezcla unidades en dos columnas: UTILIZACION PLAN (%)
+// y D.M. PLAN (%) vienen como porcentaje (90) hasta mediados de 2025 y luego
+// cambian a fracción (0.9) para el resto del período — un problema real del
+// archivo fuente, no de este panel. Se normaliza a escala 0-100 en todos los
+// valores <= 1.5 (imposible que sea un porcentaje real tan bajo en estas
+// columnas) para que promedios y desviaciones no queden distorsionados.
+const MIXED_UNIT_PERCENT_COLS = ['UTILIZACION PLAN (%)', 'D.M. PLAN (%)'];
+function normalizeMixedPercentColumns(records){
+  for (const r of records){
+    for (const col of MIXED_UNIT_PERCENT_COLS){
+      const v = r[col];
+      if (typeof v === 'number' && isFinite(v) && v > 0 && v <= 1.5){
+        r[col] = v * 100;
+      }
+    }
+  }
+}
+
+function parseSheet(wb, sheetName){
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+  if (!rows || rows.length===0) return [];
+  const hIdx = detectHeaderRow(rows, 30);
+  const headers = buildHeaders(rows[hIdx] || []);
+  const records = rowsToRecords(rows, hIdx, headers);
+  sanitizeImplausibleDates(records, headers);
+  return records;
+}
+
+// Anula (deja en null) valores de fecha claramente erróneos — p.ej. un
+// registro con año 2006 en medio de una operación 2025-2026 — para que un
+// solo dato mal tipeado no distorsione los rangos y ejes de tiempo de todo
+// el panel. No se inventa ni se corrige la fecha: solo se excluye del
+// cálculo de rangos/series, el resto del registro se conserva intacto.
+const PLAUSIBLE_YEAR_MIN = 2015, PLAUSIBLE_YEAR_MAX = 2035;
+function sanitizeImplausibleDates(records, headers){
+  const dateLikeHeaders = headers.filter(h=>/fecha/i.test(h));
+  let cleared = 0;
+  for (const r of records){
+    for (const h of dateLikeHeaders){
+      const v = r[h];
+      if (v instanceof Date && !isNaN(v.getTime())){
+        const y = v.getFullYear();
+        if (y < PLAUSIBLE_YEAR_MIN || y > PLAUSIBLE_YEAR_MAX){ r[h] = null; cleared++; }
+      }
+    }
+  }
+  return cleared;
+}
+
+function handleFile(file){
+  hideMessage();
+  if (!librariesReady()){ showLibraryFailureMessage(); return; }
+  const reader = new FileReader();
+  reader.onerror = ()=> showMessage('No se pudo leer el archivo. Intenta nuevamente.', 'error');
+  reader.onload = (e)=>{
+    try{
+      const wb = XLSX.read(e.target.result, {type:'array', cellDates:true});
+      if (!wb.SheetNames || wb.SheetNames.length===0){ showMessage('El archivo no contiene hojas legibles.', 'error'); return; }
+
+      const missing = [];
+      const found = {};
+      for (const req of REQUIRED_SHEETS){
+        const real = findSheetName(wb, req);
+        if (!real) { missing.push(req); continue; }
+        found[req] = real;
+      }
+
+      DATA.planEjec = found['Plan vs Ejec.'] ? parseSheet(wb, found['Plan vs Ejec.']) : [];
+      normalizeMixedPercentColumns(DATA.planEjec);
+      DATA.planEjecPC = found['Plan vs Ejec. PC'] ? parseSheet(wb, found['Plan vs Ejec. PC']) : [];
+      normalizeMixedPercentColumns(DATA.planEjecPC);
+      DATA.tonRoto  = found['TON ROTO'] ? parseSheet(wb, found['TON ROTO']) : [];
+      DATA.drilling = found['Drilling'] ? parseSheet(wb, found['Drilling']) : [];
+      DATA.drillingPC = found['DrillingPC'] ? parseSheet(wb, found['DrillingPC']) : [];
+      DATA.blasting = found['Blasting'] ? parseSheet(wb, found['Blasting']) : [];
+      DATA.blastingPC = found['Blasting PC'] ? parseSheet(wb, found['Blasting PC']) : [];
+      DATA.frag     = found['Frag. PortaM'] ? parseSheet(wb, found['Frag. PortaM']) : [];
+      const vib1 = found['Vib & Air Blast.'] ? parseSheet(wb, found['Vib & Air Blast.']) : [];
+      const vib2 = found['Vib & Air Blast. (2)'] ? parseSheet(wb, found['Vib & Air Blast. (2)']) : [];
+      DATA.vib = vib1.concat(vib2);
+      DATA.missingSheets = missing;
+
+      // Solo se advierte de hojas REQUERIDAS ausentes — las opcionales (como
+      // la segunda campaña de vibraciones) no generan ningún aviso.
+      const missingRequired = missing.filter(m => !OPTIONAL_SHEETS.has(m.trim().toLowerCase()));
+      if (missingRequired.length){
+        sheetWarnings.innerHTML = `<div>No se encontraron estas hojas en el archivo (las secciones relacionadas mostrarán "dato no disponible"): <b>${missingRequired.map(escapeHtml).join(', ')}</b></div>`;
+        sheetWarnings.classList.remove('hidden');
+      } else {
+        sheetWarnings.classList.add('hidden');
+      }
+      // (Se normalizan silenciosamente las unidades mixtas de UTILIZACION/D.M. PLAN
+      // — ver normalizeMixedPercentColumns — sin mostrar un aviso en pantalla,
+      // para mantener el panel limpio; el dato final ya queda corregido.)
+
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      document.getElementById('tabBarWrap').classList.remove('hidden');
+      requestAnimationFrame(updateTabScrollFades);
+      const btnRefresh = document.getElementById('btnRefresh');
+      btnRefresh.classList.remove('hidden');
+      btnRefresh.classList.add('flex');
+      btnRefresh.title = (supportsFileSystemAccess && !fsAccessUnavailable && currentFileHandle)
+        ? 'Vuelve a leer el archivo desde su ubicación original (con los cambios que tenga), sin pedirlo de nuevo.'
+        : 'Tu navegador no admite releer el archivo automáticamente — te pedirá seleccionarlo de nuevo. Usa Chrome o Edge para actualizar en un clic.';
+
+      initAllFilters();
+      updateAlertsBadge();
+      switchTab('control');
+    } catch(err){
+      console.error(err);
+      if (!librariesReady()) showLibraryFailureMessage();
+      else showMessage('Ocurrió un error al procesar el archivo. Verifica que sea el Excel con la estructura esperada.', 'error');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ======================================================================
+   COLUMNAS DE FECHA POR HOJA Y HELPERS DE FILTRADO
+   ====================================================================== */
+const DATE_COL = { planEjec:'FECHA', planEjecPC:'FECHA', tonRoto:'Fecha', drilling:'Fecha', drillingPC:'Fecha', blasting:'FECHA', blastingPC:'FECHA', frag:'FECHA', vib:'FECHA' };
+
+function applyDateFilter(records, dateCol, dateFrom, dateTo){
+  if (!dateFrom && !dateTo) return records;
+  return records.filter(r=>{
+    const d = r[dateCol];
+    if (!isDateVal(d)) return false;
+    if (dateFrom && d < dateFrom) return false;
+    if (dateTo && d > dateTo) return false;
+    return true;
+  });
+}
+function applyCategoryFilter(records, col, selectedSet){
+  if (!selectedSet || selectedSet.size===0) return records;
+  return records.filter(r=>{
+    const raw = r[col];
+    const v = (raw===null||raw===undefined||String(raw).trim()==='') ? '(Sin dato)' : String(raw).trim();
+    return selectedSet.has(v);
+  });
+}
+function distinctValues(records, col){
+  const s = new Set();
+  for (const r of records){
+    const raw = r[col];
+    const v = (raw===null||raw===undefined||String(raw).trim()==='') ? '(Sin dato)' : String(raw).trim();
+    s.add(v);
+  }
+  return Array.from(s).sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+}
+function globalDateRange(){
+  const allDates = [];
+  const push = (arr,col)=>{ for (const r of arr) if (isDateVal(r[col])) allDates.push(r[col]); };
+  push(DATA.planEjec, DATE_COL.planEjec); push(DATA.tonRoto, DATE_COL.tonRoto);
+  push(DATA.blasting, DATE_COL.blasting); push(DATA.frag, DATE_COL.frag);
+  push(DATA.drilling, DATE_COL.drilling); push(DATA.vib, DATE_COL.vib);
+  push(DATA.planEjecPC, DATE_COL.planEjecPC); push(DATA.drillingPC, DATE_COL.drillingPC); push(DATA.blastingPC, DATE_COL.blastingPC);
+  return dateMinMax(allDates);
+}
+
+/* ======================================================================
+   COMPONENTES DE FILTRO — segmentadores tipo chip, siempre visibles
+   (nunca en un desplegable oculto; punto explícito del usuario)
+   ====================================================================== */
+
+function buildDateRangeControl(container, tabKey, onChange){
+  const {min, max} = globalDateRange();
+  const f = filters[tabKey];
+  const box = document.createElement('div');
+  box.className = 'flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-panel-border px-2 py-1.5 bg-slate-50 dark:bg-panel-surface2 shrink-0';
+  box.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-400 shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    <input type="date" class="fdate-from text-xs bg-transparent focus:outline-none w-[110px]" min="${toLocalDateInputVal(min)}" max="${toLocalDateInputVal(max)}" value="${toLocalDateInputVal(f.dateFrom||min)}">
+    <span class="text-slate-400 text-xs">→</span>
+    <input type="date" class="fdate-to text-xs bg-transparent focus:outline-none w-[110px]" min="${toLocalDateInputVal(min)}" max="${toLocalDateInputVal(max)}" value="${toLocalDateInputVal(f.dateTo||max)}">
+  `;
+  container.appendChild(box);
+  box.querySelector('.fdate-from').addEventListener('change', (e)=>{
+    f.dateFrom = e.target.value ? new Date(e.target.value+'T00:00:00') : null; onChange();
+  });
+  box.querySelector('.fdate-to').addEventListener('change', (e)=>{
+    f.dateTo = e.target.value ? new Date(e.target.value+'T23:59:59') : null; onChange();
+  });
+}
+
+// Segmentador de chips: todas las opciones visibles de una vez (envuelve en
+// varias líneas si son muchas), selección múltiple con un clic, sin popover.
+// Filtro desplegable compacto (un botón + panel de checkboxes) — ocupa una
+// sola línea junto a los demás filtros, a diferencia de los chips que se
+// expanden y consumen mucho espacio vertical con muchas opciones.
+let openFilterPanelId = null;
+document.addEventListener('click', (e)=>{
+  if (openFilterPanelId && !e.target.closest('[data-filter-wrap]')){
+    const p = document.querySelector(`[data-panel-id="${openFilterPanelId}"]`);
+    if (p) p.classList.remove('open');
+    openFilterPanelId = null;
+  }
+});
+
+function buildDropdownMultiSelect(container, label, options, selectedSet, onChange){
+  const fw = document.createElement('div');
+  fw.setAttribute('data-filter-wrap','');
+  fw.className = 'relative shrink-0';
+  const panelId = 'p_' + label.replace(/[^a-zA-Z0-9]/g,'_') + '_' + Math.random().toString(36).slice(2,7);
+  const selectedCount = selectedSet.size;
+  fw.innerHTML = `
+    <button class="fms-btn text-xs font-medium flex items-center gap-1.5 rounded-lg border ${selectedCount? 'border-teal text-teal bg-teal/10':'border-slate-300 dark:border-panel-border bg-slate-50 dark:bg-panel-surface2'} px-2.5 py-1.5">
+      ${escapeHtml(label)}<span class="opacity-70">${selectedCount? selectedCount+' sel.':'Todos'}</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div data-panel-id="${panelId}" class="absolute z-30 mt-1.5 w-56 rounded-xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface2 shadow-xl p-2">
+      <div class="flex items-center justify-between px-1 pb-1.5 mb-1.5 border-b border-slate-100 dark:border-panel-border">
+        <button class="text-[11px] font-semibold text-teal hover:underline" data-act="all">Todos</button>
+        <button class="text-[11px] font-semibold text-slate-400 hover:underline" data-act="none">Ninguno</button>
+      </div>
+      <div class="checklist max-h-56 overflow-y-auto space-y-0.5">
+        ${options.map(opt=>`<label class="flex items-center gap-2 text-xs px-1.5 py-1 rounded hover:bg-slate-50 dark:hover:bg-panel-surface cursor-pointer">
+          <input type="checkbox" value="${escapeHtml(opt)}" ${selectedSet.has(opt)?'checked':''} class="rounded border-slate-300 text-teal focus:ring-teal/40 shrink-0">
+          <span class="truncate">${escapeHtml(opt)}</span>
+        </label>`).join('') || '<p class="text-xs text-slate-400 px-1.5 py-1">Sin opciones</p>'}
+      </div>
+    </div>`;
+  container.appendChild(fw);
+  const btn = fw.querySelector('.fms-btn');
+  const panel = fw.querySelector(`[data-panel-id="${panelId}"]`);
+  btn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const willOpen = !panel.classList.contains('open');
+    document.querySelectorAll('[data-panel-id].open').forEach(p=>p.classList.remove('open'));
+    if (willOpen){ panel.classList.add('open'); openFilterPanelId = panelId; } else openFilterPanelId=null;
+  });
+  panel.addEventListener('click', e=>e.stopPropagation());
+  panel.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if (cb.checked) selectedSet.add(cb.value); else selectedSet.delete(cb.value);
+      onChange();
+      // Nota: onChange() solo recalcula el panel (renderTab), no reconstruye
+      // este dropdown — el panel ya sigue abierto de forma natural, sin
+      // necesidad de "reabrirlo". (Antes había aquí una reapertura diferida
+      // por requestAnimationFrame que, si el usuario ya había pasado a otro
+      // filtro mientras el recálculo corría, terminaba reabriendo este panel
+      // por encima del nuevo — dejando varios paneles abiertos a la vez.)
+    });
+  });
+  panel.querySelector('[data-act="all"]').addEventListener('click', ()=>{
+    options.forEach(o=>selectedSet.add(o)); onChange();
+  });
+  panel.querySelector('[data-act="none"]').addEventListener('click', ()=>{
+    selectedSet.clear(); onChange();
+  });
+}
+
+document.querySelectorAll('.clear-filters-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const tabKey = btn.dataset.clear;
+    const f = filters[tabKey];
+    f.dateFrom = null; f.dateTo = null;
+    ['proyecto','fase','banco','material','equipo'].forEach(k=>{ if (f[k]) f[k].clear(); });
+    renderTab(tabKey);
+  });
+});
+
+/* ======================================================================
+   NAVEGACIÓN POR PESTAÑAS
+   ====================================================================== */
+let currentTab = 'control';
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
+function switchTab(tabKey){
+  currentTab = tabKey;
+  document.querySelectorAll('.tab-btn').forEach(b=> b.dataset.active = (b.dataset.tab===tabKey) ? 'true' : 'false');
+  document.querySelectorAll('[data-panel]').forEach(p=> p.classList.toggle('open', p.dataset.panel===tabKey));
+  // Si la pestaña activa queda fuera de la vista (scroll horizontal), la trae a la vista.
+  const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabKey}"]`);
+  if (activeBtn) activeBtn.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
+  renderTab(tabKey);
+}
+
+// Degradados que insinúan "hay más pestañas" cuando la barra desborda —
+// para que las 9 pestañas sean descubribles aunque no quepan todas a la vez.
+function updateTabScrollFades(){
+  const bar = document.getElementById('tabBar');
+  const fadeLeft = document.getElementById('tabFadeLeft');
+  const fadeRight = document.getElementById('tabFadeRight');
+  if (!bar) return;
+  const atStart = bar.scrollLeft <= 2;
+  const atEnd = bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 2;
+  fadeLeft.classList.toggle('hidden', atStart);
+  fadeRight.classList.toggle('hidden', atEnd);
+}
+document.getElementById('tabBar').addEventListener('scroll', updateTabScrollFades);
+window.addEventListener('resize', ()=> requestAnimationFrame(updateTabScrollFades));
+
+function initAllFilters(){
+  Object.keys(filters).forEach(renderFilters);
+}
+
+function renderFilters(tabKey){
+  const container = document.getElementById('filters_' + tabKey);
+  if (!container) return;
+  container.innerHTML = '';
+  const onChange = ()=> renderTab(tabKey);
+
+  buildDateRangeControl(container, tabKey, onChange);
+
+  const dims = FILTER_DIMS[tabKey] || [];
+  dims.forEach(d=>{
+    buildDropdownMultiSelect(container, d.label, distinctValues(d.src(), d.col), filters[tabKey][d.key], onChange);
+  });
+}
+
+function renderTab(tabKey){
+  try{
+    if (tabKey==='control') renderTabControl();
+    else if (tabKey==='voladura') renderTabVoladura();
+    else if (tabKey==='voladura_pc') renderTabVoladuraPC();
+    else if (tabKey==='frag') renderTabFrag();
+    else if (tabKey==='perforacion') renderTabPerforacion();
+    else if (tabKey==='perforacion_pc') renderTabPerforacionPC();
+    else if (tabKey==='vibraciones') renderTabVibraciones();
+    else if (tabKey==='estadistica') renderTabEstadistica();
+    else if (tabKey==='costos') renderTabCostos();
+  } catch(err){
+    console.error(`Error renderizando pestaña ${tabKey}:`, err);
+    showMessage(`No se pudo generar la sección "${tabKey}". Verifica que el archivo tenga la estructura esperada.`, 'error');
+  }
+}
+
+/* ======================================================================
+   MOTOR DE GRÁFICOS PROPIO (sin dependencias externas)
+   Reemplaza a Chart.js para que el panel funcione aunque la red/firewall
+   bloquee CDNs de JavaScript — solo usa Canvas 2D nativo del navegador.
+   ====================================================================== */
+const MiniChart = (function(){
+
+  function niceNum(range, round){
+    if (range === 0) return 1;
+    const exp = Math.floor(Math.log10(range));
+    const f = range / Math.pow(10, exp);
+    let nf;
+    if (round){ nf = f<1.5?1:f<3?2:f<7?5:10; }
+    else { nf = f<=1?1:f<=2?2:f<=5?5:10; }
+    return nf * Math.pow(10, exp);
+  }
+
+  function niceScale(min, max, maxTicks){
+    maxTicks = maxTicks || 5;
+    if (min > 0) min = 0; // los gráficos de esta app siempre parten en 0 salvo series negativas
+    if (min === max){ max = min===0 ? 1 : max + Math.abs(max)*0.1; }
+    const range = niceNum(max-min, false) || 1;
+    const step = niceNum(range/(maxTicks-1), true) || 1;
+    const niceMin = Math.floor(min/step)*step;
+    const niceMax = Math.ceil(max/step)*step;
+    const ticks = [];
+    for (let v=niceMin; v<=niceMax+1e-9; v+=step) ticks.push(Math.round(v*1e6)/1e6);
+    return { min:niceMin, max:niceMax, ticks, step };
+  }
+
+  function setupCanvas(canvas, fixedHeight){
+    const parent = canvas.parentElement;
+    const cs = window.getComputedStyle(parent);
+    const padX = (parseFloat(cs.paddingLeft)||0) + (parseFloat(cs.paddingRight)||0);
+    const padY = (parseFloat(cs.paddingTop)||0) + (parseFloat(cs.paddingBottom)||0);
+    const w = Math.max((parent.clientWidth||300) - padX, 50);
+    const h = Math.max(fixedHeight || ((parent.clientHeight||240) - padY), 50);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(w*dpr);
+    canvas.height = Math.round(h*dpr);
+    canvas.style.width = w+'px';
+    canvas.style.height = h+'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    return { ctx, w, h };
+  }
+
+  function truncateLabel(ctx, text, maxWidth){
+    if (ctx.measureText(text).width <= maxWidth) return text;
+    let t = text;
+    while (t.length>1 && ctx.measureText(t+'…').width > maxWidth) t = t.slice(0,-1);
+    return t + '…';
+  }
+
+  // Tooltip flotante compartido (una sola instancia reusada por todos los gráficos)
+  let tooltipEl = null;
+  function getTooltip(){
+    if (!tooltipEl){
+      tooltipEl = document.createElement('div');
+      tooltipEl.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;background:rgba(15,23,42,.95);color:#fff;font-size:11px;padding:6px 9px;border-radius:8px;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.25);display:none;font-family:Inter,sans-serif;white-space:nowrap;';
+      document.body.appendChild(tooltipEl);
+    }
+    return tooltipEl;
+  }
+  function showTooltip(x, y, html){
+    const t = getTooltip();
+    t.innerHTML = html;
+    t.style.display = 'block';
+    const pad = 14;
+    let left = x + pad, top = y + pad;
+    if (left + t.offsetWidth > window.innerWidth) left = x - t.offsetWidth - pad;
+    if (top + t.offsetHeight > window.innerHeight) top = y - t.offsetHeight - pad;
+    t.style.left = left+'px'; t.style.top = top+'px';
+  }
+  function hideTooltip(){ if (tooltipEl) tooltipEl.style.display = 'none'; }
+
+  function attachClearOnLeave(canvas){
+    canvas.addEventListener('mouseleave', hideTooltip);
+  }
+
+  const PAD = { top:14, right:14, bottom:34, left:52 };
+
+  /* ---------- BAR (vertical, agrupado) ---------- */
+  function bar(canvas, { labels, datasets, colors, formatY, formatTooltip, horizontal }){
+    if (horizontal) return hbar(canvas, arguments[1]);
+    const { ctx, w, h } = setupCanvas(canvas);
+    const padLeft = 46, padRight = 10, padTop = 12, padBottom = labels.length>8 ? 46 : 26;
+    const plotW = w - padLeft - padRight, plotH = h - padTop - padBottom;
+
+    let maxV = 0, minV = 0;
+    datasets.forEach(ds => ds.data.forEach(v=>{ if (v!==null && v!==undefined){ if (v>maxV) maxV=v; if (v<minV) minV=v; } }));
+    const scale = niceScale(minV, maxV, 5);
+    const yToPx = v => padTop + plotH - ((v-scale.min)/(scale.max-scale.min))*plotH;
+
+    // grid + eje Y
+    ctx.strokeStyle = colors.grid; ctx.lineWidth = 1; ctx.font = '10px Inter, sans-serif'; ctx.fillStyle = colors.text;
+    scale.ticks.forEach(t=>{
+      const y = yToPx(t);
+      ctx.beginPath(); ctx.moveTo(padLeft, y); ctx.lineTo(w-padRight, y); ctx.stroke();
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(formatY?formatY(t):String(t), padLeft-6, y);
+    });
+
+    const n = labels.length;
+    const groupW = plotW / Math.max(n,1);
+    const barW = Math.min(28, (groupW*0.7) / datasets.length);
+    const zeroY = yToPx(0);
+
+    const bars = []; // for tooltip hit-testing
+    datasets.forEach((ds, di)=>{
+      ds.data.forEach((v, i)=>{
+        if (v===null||v===undefined) return;
+        const groupX = padLeft + i*groupW + groupW/2;
+        const x = groupX - (datasets.length*barW)/2 + di*barW;
+        const y = yToPx(v);
+        const top = Math.min(y, zeroY), bh = Math.abs(zeroY-y);
+        ctx.fillStyle = ds.color || colors.palette[di % colors.palette.length];
+        const r = Math.min(4, barW/2);
+        roundRectTop(ctx, x, top, barW, bh, r);
+        bars.push({x, y:top, w:barW, h:bh, i, di, v});
+      });
+    });
+
+    // eje X
+    ctx.fillStyle = colors.text; ctx.font = '9px Inter, sans-serif';
+    const rotate = n > 8;
+    labels.forEach((lab,i)=>{
+      const groupX = padLeft + i*groupW + groupW/2;
+      ctx.save();
+      if (rotate){
+        ctx.translate(groupX, h-padBottom+6);
+        ctx.rotate(-Math.PI/4);
+        ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+        ctx.fillText(truncateLabel(ctx, String(lab), 70), 0, 0);
+      } else {
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(truncateLabel(ctx, String(lab), groupW), groupX, h-padBottom+6);
+      }
+      ctx.restore();
+    });
+
+    drawLegend(ctx, w, padTop-8, datasets, colors);
+
+    canvas.onmousemove = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+      const hit = bars.find(b=> mx>=b.x && mx<=b.x+b.w && my>=b.y && my<=b.y+b.h);
+      if (hit){
+        const ds = datasets[hit.di];
+        showTooltip(e.clientX, e.clientY, `<b>${escapeHtml(String(labels[hit.i]))}</b><br>${escapeHtml(ds.label||'')}: ${formatTooltip?formatTooltip(hit.v):hit.v}`);
+      } else hideTooltip();
+    };
+    attachClearOnLeave(canvas);
+  }
+
+  function roundRectTop(ctx, x, y, w, h, r){
+    if (h<=0){ return; }
+    r = Math.min(r, w/2, h);
+    ctx.beginPath();
+    ctx.moveTo(x, y+h);
+    ctx.lineTo(x, y+r);
+    ctx.arcTo(x, y, x+r, y, r);
+    ctx.lineTo(x+w-r, y);
+    ctx.arcTo(x+w, y, x+w, y+r, r);
+    ctx.lineTo(x+w, y+h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  /* ---------- HBAR (horizontal, un dataset) ---------- */
+  function hbar(canvas, { labels, datasets, colors, formatTooltip }){
+    const ds = datasets[0];
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.font = '10px Inter, sans-serif';
+    let maxLabelW = 0;
+    labels.forEach(l=> maxLabelW = Math.max(maxLabelW, ctx.measureText(String(l)).width));
+    const padLeft = Math.min(140, Math.max(50, maxLabelW+10)), padRight = 44, padTop = 8, padBottom = 8;
+    const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
+
+    const maxV = Math.max(1, ...ds.data.map(v=>v||0));
+    const n = labels.length;
+    const rowH = plotH/Math.max(n,1);
+    const barH = Math.min(24, rowH*0.62);
+
+    const bars = [];
+    labels.forEach((lab,i)=>{
+      const v = ds.data[i]||0;
+      const y = padTop + i*rowH + (rowH-barH)/2;
+      const bw = (v/maxV)*plotW;
+      ctx.fillStyle = ds.color || colors.teal;
+      roundRectRight(ctx, padLeft, y, bw, barH, 4);
+      ctx.fillStyle = colors.text; ctx.font='10px Inter, sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText(truncateLabel(ctx, String(lab), padLeft-8), padLeft-8, y+barH/2);
+      ctx.textAlign='left';
+      ctx.fillText(fmtNum(v), padLeft+bw+6, y+barH/2);
+      bars.push({y, h:barH, v, lab});
+    });
+
+    canvas.onmousemove = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const my = e.clientY-rect.top;
+      const hit = bars.find(b=> my>=b.y && my<=b.y+b.h);
+      if (hit) showTooltip(e.clientX, e.clientY, `<b>${escapeHtml(hit.lab)}</b><br>${formatTooltip?formatTooltip(hit.v):hit.v}`);
+      else hideTooltip();
+    };
+    attachClearOnLeave(canvas);
+  }
+  function roundRectRight(ctx,x,y,w,h,r){
+    if (w<=0) return;
+    r = Math.min(r, h/2, w);
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x+w-r,y);
+    ctx.arcTo(x+w,y,x+w,y+r,r);
+    ctx.lineTo(x+w,y+h-r);
+    ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+    ctx.lineTo(x,y+h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  /* ---------- LINE (una o dos series, eje dual opcional) ---------- */
+  function line(canvas, { labels, datasets, colors, formatY, formatY2, formatTooltip }){
+    const { ctx, w, h } = setupCanvas(canvas);
+    const hasY2 = datasets.some(d=>d.yAxisID==='y2');
+    const padLeft = 46, padRight = hasY2 ? 46 : 12, padTop = 12, padBottom = labels.length>8 ? 46 : 26;
+    const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
+
+    const y1ds = datasets.filter(d=>d.yAxisID!=='y2');
+    const y2ds = datasets.filter(d=>d.yAxisID==='y2');
+    function rangeOf(dss){ let mn=Infinity,mx=-Infinity; dss.forEach(d=>d.data.forEach(v=>{ if(v!==null&&v!==undefined){ if(v<mn)mn=v; if(v>mx)mx=v; }})); if(!isFinite(mn)){mn=0;mx=1;} return {mn,mx}; }
+    const r1 = rangeOf(y1ds.length?y1ds:datasets);
+    const scale1 = niceScale(Math.min(0,r1.mn), r1.mx, 5);
+    let scale2 = null;
+    if (hasY2){ const r2 = rangeOf(y2ds); scale2 = niceScale(Math.min(0,r2.mn), r2.mx, 5); }
+
+    const n = labels.length;
+    const xStep = n>1 ? plotW/(n-1) : plotW;
+    const xOf = i => padLeft + i*xStep;
+    const yOf1 = v => padTop + plotH - ((v-scale1.min)/(scale1.max-scale1.min))*plotH;
+    const yOf2 = v => padTop + plotH - ((v-scale2.min)/(scale2.max-scale2.min))*plotH;
+
+    // grid + eje Y izquierdo
+    ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
+    ctx.font = '10px Inter, sans-serif';
+    scale1.ticks.forEach(t=>{
+      const y = yOf1(t);
+      ctx.beginPath(); ctx.moveTo(padLeft,y); ctx.lineTo(w-padRight,y); ctx.stroke();
+      ctx.fillStyle = colors.text; ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText(formatY?formatY(t):fmtNum(t), padLeft-6, y);
+    });
+    if (scale2){
+      ctx.fillStyle = colors.text;
+      scale2.ticks.forEach(t=>{
+        const y = yOf2(t);
+        ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.fillText(formatY2?formatY2(t):fmtNum(t), w-padRight+6, y);
+      });
+    }
+
+    // eje X
+    ctx.fillStyle = colors.text; ctx.font='9px Inter, sans-serif';
+    const rotate = n>8;
+    const skip = n>16 ? Math.ceil(n/16) : 1;
+    labels.forEach((lab,i)=>{
+      if (i % skip !== 0 && i!==n-1) return;
+      const x = xOf(i);
+      ctx.save();
+      if (rotate){
+        ctx.translate(x, h-padBottom+6); ctx.rotate(-Math.PI/4);
+        ctx.textAlign='right'; ctx.textBaseline='top';
+        ctx.fillText(String(lab), 0, 0);
+      } else {
+        ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillText(String(lab), x, h-padBottom+6);
+      }
+      ctx.restore();
+    });
+
+    function drawSeries(ds, yOf, scaleMin){
+      const pts = ds.data.map((v,i)=> v===null||v===undefined ? null : {x:xOf(i), y:yOf(v), v});
+      if (ds.fill){
+        ctx.beginPath();
+        let started=false;
+        pts.forEach((p,i)=>{ if(!p) return; if(!started){ ctx.moveTo(p.x, yOf(scaleMin)); started=true; } ctx.lineTo(p.x,p.y); });
+        if (started){ const lastPt=[...pts].reverse().find(Boolean); if(lastPt) ctx.lineTo(lastPt.x, yOf(scaleMin)); ctx.closePath();
+          ctx.fillStyle = (ds.color||colors.teal)+'26'; ctx.fill(); }
+      }
+      ctx.beginPath(); ctx.lineWidth = 2; ctx.strokeStyle = ds.color || colors.teal;
+      let started=false;
+      pts.forEach(p=>{ if(!p){ started=false; return; } if(!started){ ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y); });
+      ctx.stroke();
+      ctx.fillStyle = ds.color || colors.teal;
+      pts.forEach(p=>{ if(!p) return; ctx.beginPath(); ctx.arc(p.x,p.y,2.2,0,Math.PI*2); ctx.fill(); });
+      return pts;
+    }
+    const allPts = [];
+    datasets.forEach(ds=>{
+      const isY2 = ds.yAxisID==='y2';
+      const pts = drawSeries(ds, isY2?yOf2:yOf1, isY2?scale2.min:scale1.min);
+      allPts.push({ds, pts});
+    });
+
+    drawLegend(ctx, w, padTop-8, datasets, colors);
+
+    canvas.onmousemove = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX-rect.left;
+      let idx = Math.round((mx-padLeft)/xStep);
+      idx = Math.max(0, Math.min(n-1, idx));
+      const lines = allPts.map(({ds,pts})=>{
+        const p = pts[idx];
+        if (!p) return null;
+        return `${escapeHtml(ds.label||'')}: ${formatTooltip?formatTooltip(p.v, ds):fmtNum(p.v)}`;
+      }).filter(Boolean);
+      if (lines.length) showTooltip(e.clientX, e.clientY, `<b>${escapeHtml(String(labels[idx]))}</b><br>${lines.join('<br>')}`);
+      else hideTooltip();
+    };
+    attachClearOnLeave(canvas);
+  }
+
+  function drawLegend(ctx, w, y, datasets, colors){
+    if (datasets.length<2 && !datasets[0].label) return;
+    ctx.font = '10px Inter, sans-serif';
+    const items = datasets.map((d,i)=>({ label:d.label||`Serie ${i+1}`, color: d.color || colors.palette[i%colors.palette.length] }));
+    let totalW = 0;
+    items.forEach(it=> totalW += 14 + ctx.measureText(it.label).width + 14);
+    let x = Math.max(6, (w-totalW)/2);
+    items.forEach(it=>{
+      ctx.fillStyle = it.color;
+      ctx.fillRect(x, 2, 8, 8);
+      ctx.fillStyle = colors.text; ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText(it.label, x+12, 6);
+      x += 14 + ctx.measureText(it.label).width + 14;
+    });
+  }
+
+  /* ---------- SPARKLINE (mini línea sin ejes) ---------- */
+  function sparkline(canvas, { data, color, fill=true }){
+    const { ctx, w, h } = setupCanvas(canvas, 26);
+    const vals = data.map(v=>v===null||v===undefined?null:v);
+    const nums = vals.filter(v=>v!==null);
+    if (!nums.length) return;
+    const mn = Math.min(...nums), mx = Math.max(...nums);
+    const range = (mx-mn) || 1;
+    const n = vals.length;
+    const xStep = n>1 ? w/(n-1) : w;
+    const pad = 2;
+    const yOf = v => pad + (h-2*pad) - ((v-mn)/range)*(h-2*pad);
+    const pts = vals.map((v,i)=> v===null?null:{x:i*xStep, y:yOf(v)});
+
+    if (fill){
+      ctx.beginPath(); let started=false;
+      pts.forEach(p=>{ if(!p) return; if(!started){ ctx.moveTo(p.x,h); ctx.lineTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y); });
+      const last = [...pts].reverse().find(Boolean);
+      if (last){ ctx.lineTo(last.x,h); ctx.closePath(); ctx.fillStyle = color+'22'; ctx.fill(); }
+    }
+    ctx.beginPath(); ctx.lineWidth=1.6; ctx.strokeStyle = color;
+    let started=false;
+    pts.forEach(p=>{ if(!p){started=false; return;} if(!started){ctx.moveTo(p.x,p.y); started=true;} else ctx.lineTo(p.x,p.y); });
+    ctx.stroke();
+  }
+
+  function clear(canvas){
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+  }
+
+  /* ---------- WATERFALL (puente Plan → Ejecutado) ---------- */
+  // steps: [{label, value, type:'total'|'delta'}] — 'total' dibuja desde 0;
+  // 'delta' dibuja desde el nivel acumulado anterior (verde si sube el costo
+  // ejecutado respecto al plan es malo => se colorea con semántica de costo).
+  function waterfall(canvas, { steps, colors, formatTooltip }){
+    const { ctx, w, h } = setupCanvas(canvas);
+    const padLeft = 56, padRight = 12, padTop = 14, padBottom = 40;
+    const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
+
+    let level = 0;
+    const bars = steps.map(s=>{
+      let from, to;
+      if (s.type==='total'){ from = 0; to = s.value; level = s.value; }
+      else { from = level; to = level + s.value; level = to; }
+      return { ...s, from, to };
+    });
+    const allVals = bars.flatMap(b=>[b.from,b.to]);
+    const scale = niceScale(Math.min(0,...allVals), Math.max(0,...allVals), 5);
+    const yOf = v => padTop + plotH - ((v-scale.min)/(scale.max-scale.min))*plotH;
+
+    ctx.strokeStyle = colors.grid; ctx.lineWidth=1; ctx.font='10px Inter, sans-serif';
+    scale.ticks.forEach(t=>{
+      const y = yOf(t);
+      ctx.beginPath(); ctx.moveTo(padLeft,y); ctx.lineTo(w-padRight,y); ctx.stroke();
+      ctx.fillStyle = colors.text; ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText(fmtNum(t), padLeft-6, y);
+    });
+
+    const n = bars.length;
+    const groupW = plotW/n;
+    const barW = Math.min(60, groupW*0.55);
+    const hitAreas = [];
+    bars.forEach((b,i)=>{
+      const cx = padLeft + i*groupW + groupW/2;
+      const yFrom = yOf(b.from), yTo = yOf(b.to);
+      const top = Math.min(yFrom,yTo), bh = Math.abs(yFrom-yTo);
+      let color;
+      if (b.type==='total') color = colors.text;
+      else color = b.value>=0 ? colors.rose : colors.teal; // más costo ejecutado que el nivel previo = rojo
+      ctx.fillStyle = color;
+      roundRectTop(ctx, cx-barW/2, top, barW, Math.max(bh,2), 3);
+      // conector punteado al siguiente
+      if (i<n-1){
+        ctx.strokeStyle = colors.grid; ctx.setLineDash([3,3]);
+        ctx.beginPath(); ctx.moveTo(cx+barW/2, yTo); ctx.lineTo(cx+groupW-barW/2+ (groupW-barW), yTo); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.fillStyle = colors.text; ctx.font='10px Inter, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillText(fmtNum(b.value), cx, top-4);
+      ctx.textBaseline='top';
+      ctx.fillText(truncateLabel(ctx,b.label,groupW), cx, h-padBottom+8);
+      hitAreas.push({x:cx-barW/2, y:top, w:barW, h:Math.max(bh,2), label:b.label, value:b.value});
+    });
+
+    canvas.onmousemove = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+      const hit = hitAreas.find(a=>mx>=a.x&&mx<=a.x+a.w&&my>=a.y&&my<=a.y+a.h);
+      if (hit) showTooltip(e.clientX,e.clientY, `<b>${escapeHtml(hit.label)}</b><br>${formatTooltip?formatTooltip(hit.value):fmtNum(hit.value)}`);
+      else hideTooltip();
+    };
+    attachClearOnLeave(canvas);
+  }
+
+  /* ---------- SCATTER (dispersión: relación entre dos variables) ---------- */
+  function scatter(canvas, { points, colors, xLabel, yLabel, color, formatTooltip }){
+    const { ctx, w, h } = setupCanvas(canvas);
+    const padLeft = 46, padRight = 14, padTop = 12, padBottom = xLabel ? 40 : 26;
+    const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
+
+    if (!points.length){ return; }
+    const xs = points.map(p=>p.x), ys = points.map(p=>p.y);
+    const xScale = niceScale(Math.min(0,...xs), Math.max(...xs), 5);
+    const yScale = niceScale(Math.min(0,...ys), Math.max(...ys), 5);
+    const xOf = v => padLeft + ((v-xScale.min)/(xScale.max-xScale.min))*plotW;
+    const yOf = v => padTop + plotH - ((v-yScale.min)/(yScale.max-yScale.min))*plotH;
+
+    ctx.strokeStyle = colors.grid; ctx.lineWidth=1; ctx.font='10px Inter, sans-serif';
+    yScale.ticks.forEach(t=>{
+      const y = yOf(t);
+      ctx.beginPath(); ctx.moveTo(padLeft,y); ctx.lineTo(w-padRight,y); ctx.stroke();
+      ctx.fillStyle = colors.text; ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText(fmtNum(t), padLeft-6, y);
+    });
+    xScale.ticks.forEach(t=>{
+      const x = xOf(t);
+      ctx.fillStyle = colors.text; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(fmtNum(t), x, h-padBottom+6);
+    });
+    if (xLabel){ ctx.textAlign='center'; ctx.fillText(xLabel, padLeft+plotW/2, h-16); }
+    if (yLabel){
+      ctx.save(); ctx.translate(12, padTop+plotH/2); ctx.rotate(-Math.PI/2);
+      ctx.textAlign='center'; ctx.fillText(yLabel, 0, 0); ctx.restore();
+    }
+
+    const dotColor = color || colors.teal;
+    const dots = points.map(p=>({ ...p, px: xOf(p.x), py: yOf(p.y) }));
+    dots.forEach(p=>{
+      ctx.beginPath(); ctx.arc(p.px, p.py, 3.2, 0, Math.PI*2);
+      ctx.fillStyle = dotColor+'AA'; ctx.fill();
+    });
+
+    canvas.onmousemove = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+      let nearest = null, bestD = 64; // radio de detección en px^2 (8px)
+      dots.forEach(p=>{ const d=(p.px-mx)**2+(p.py-my)**2; if (d<bestD){ bestD=d; nearest=p; } });
+      if (nearest) showTooltip(e.clientX, e.clientY, formatTooltip ? formatTooltip(nearest) : `x: ${fmtNum(nearest.x)}, y: ${fmtNum(nearest.y)}`);
+      else hideTooltip();
+    };
+    attachClearOnLeave(canvas);
+  }
+
+  return { bar, hbar, line, sparkline, waterfall, scatter, clear };
+})();
+
+
+let kpiSparkCounter = 0;
+
+// spec = { title, mode:'planvsejec'|'calc', planLabel, ejecLabel, planVal, ejecVal,
+//          calcVal, decimals, suffix, goodDirection, months, series }
+function renderKpiCard(container, spec){
+  const c = colors();
+  const decimals = spec.decimals ?? 1;
+  const suffix = spec.suffix || '';
+  const fmt = v => v===null||v===undefined ? '—' : fmtNum(v, decimals) + suffix;
+
+  let mainVal, devPct = null, status = 'gray';
+  if (spec.mode === 'calc'){
+    mainVal = spec.calcVal;
+  } else {
+    mainVal = spec.ejecVal;
+    devPct = deviation(spec.planVal, spec.ejecVal);
+    status = semaforoStatus(devPct, spec.goodDirection);
+  }
+
+  const card = document.createElement('div');
+  card.className = 'fade-in rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4';
+  if (spec.note) card.title = spec.note; // tooltip nativo al pasar el mouse — informativo sin ensuciar la interfaz
+
+  let bodyHtml = `
+    <div class="flex items-start justify-between gap-2">
+      <p class="text-[11px] uppercase tracking-wide text-slate-400 font-medium leading-snug">${escapeHtml(spec.title)}${spec.note?' ⓘ':''}</p>
+      <span class="semaforo-dot ${SEMAFORO_BG[status]} shrink-0 mt-0.5"></span>
+    </div>
+    <p class="font-mono-num font-bold text-2xl mt-1">${fmt(mainVal)}</p>
+  `;
+
+  if (spec.mode !== 'calc'){
+    bodyHtml += `
+      <div class="grid grid-cols-2 gap-2 mt-2 text-[11px]">
+        <div>
+          <p class="text-slate-400">${escapeHtml(spec.planLabel||'Plan')}</p>
+          <p class="font-mono-num font-semibold">${fmt(spec.planVal)}</p>
+        </div>
+        <div>
+          <p class="text-slate-400">Desviación</p>
+          <p class="font-mono-num font-semibold ${devPct===null?'text-slate-400':(devPct>=0?'text-teal':'text-rose')}">
+            ${devPct===null?'—':(devPct>=0?'+':'')+nf1.format(devPct)+'%'}
+          </p>
+        </div>
+      </div>`;
+  }
+
+  const sparkId = 'kpispark_' + (kpiSparkCounter++);
+  bodyHtml += `<canvas class="mt-2" style="width:100%;height:26px;display:block" id="${sparkId}"></canvas>`;
+  card.innerHTML = bodyHtml;
+  container.appendChild(card);
+
+  requestAnimationFrame(()=>{
+    const canvas = document.getElementById(sparkId);
+    if (!canvas || !spec.series || !spec.series.length) return;
+    const sparkColor = SEMAFORO_COLOR[status]==='#94A3B8' ? c.teal : SEMAFORO_COLOR[status];
+    MiniChart.sparkline(canvas, { data: spec.series, color: sparkColor });
+  });
+}
+
+// Tabla compacta de costos unitarios de referencia (guía operativa), sin
+// comparación Plan — solo el valor real calculado, para ubicar rápidamente
+// en qué se está gastando.
+function renderUnitCostGuide(container, items){
+  container.innerHTML = `
+    <table class="w-full text-xs">
+      <tbody class="divide-y divide-slate-100 dark:divide-panel-border/60">
+        ${items.map(it=>`
+          <tr>
+            <td class="py-2 pr-2 text-slate-500 dark:text-slate-400">${escapeHtml(it.label)}</td>
+            <td class="py-2 text-right font-mono-num font-semibold">${it.value===null||it.value===undefined?'—':fmtNum(it.value, it.decimals??3)+' '+(it.unit||'')}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderDeviationBar(container, {label, plan, real, unit, goodDirection}){
+  const devPct = deviation(plan, real);
+  const status = semaforoStatus(devPct, goodDirection||'lower');
+  const maxV = Math.max(plan||0, real||0, 1);
+  const planPct = Math.min(100, ((plan||0)/maxV)*100);
+  const realPct = Math.min(100, ((real||0)/maxV)*100);
+  const row = document.createElement('div');
+  row.innerHTML = `
+    <div class="flex items-center justify-between text-xs mb-1">
+      <span class="font-semibold flex items-center gap-1.5"><span class="semaforo-dot ${SEMAFORO_BG[status]}"></span>${escapeHtml(label)}</span>
+      <span class="font-mono-num ${devPct===null?'text-slate-400':(devPct<=0?'text-teal':'text-rose')}">${devPct===null?'—':(devPct>=0?'+':'')+nf1.format(devPct)+'%'}</span>
+    </div>
+    <div class="space-y-1">
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] w-16 text-slate-400 shrink-0">Plan</span>
+        <div class="flex-1 h-3 rounded bg-slate-100 dark:bg-panel-surface2 overflow-hidden"><div class="h-full bg-slate-400" style="width:${planPct}%"></div></div>
+        <span class="text-[10px] font-mono-num w-20 text-right shrink-0">${fmtNum(plan)}${unit||''}</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] w-16 text-slate-400 shrink-0">Real</span>
+        <div class="flex-1 h-3 rounded bg-slate-100 dark:bg-panel-surface2 overflow-hidden"><div class="h-full ${SEMAFORO_BG[status]}" style="width:${realPct}%"></div></div>
+        <span class="text-[10px] font-mono-num w-20 text-right shrink-0">${fmtNum(real)}${unit||''}</span>
+      </div>
+    </div>`;
+  container.appendChild(row);
+}
+
+/* ======================================================================
+   TAB 00 · CONTROL GERENCIAL
+   ====================================================================== */
+function renderTabControl(){
+  const f = filters.control;
+  const c = colors();
+
+  // Plan vs Ejec. es una serie corporativa (sin Proyecto/Fase/Banco/Material) — solo fecha.
+  const peRecs = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+  // TON ROTO y Frag. sí tienen esas dimensiones.
+  let tonRecs = applyDateFilter(DATA.tonRoto, DATE_COL.tonRoto, f.dateFrom, f.dateTo);
+  tonRecs = applyCategoryFilter(tonRecs, 'PROYECTO', f.proyecto);
+  tonRecs = applyCategoryFilter(tonRecs, 'Fase', f.fase);
+  let fragRecs = applyDateFilter(DATA.frag, DATE_COL.frag, f.dateFrom, f.dateTo);
+  fragRecs = applyCategoryFilter(fragRecs, 'PROYECTO', f.proyecto);
+  fragRecs = applyCategoryFilter(fragRecs, 'FASE', f.fase);
+  fragRecs = applyCategoryFilter(fragRecs, 'BANCO', f.banco);
+  fragRecs = applyCategoryFilter(fragRecs, 'MATERIAL', f.material);
+  let blastRecs = applyDateFilter(DATA.blasting, DATE_COL.blasting, f.dateFrom, f.dateTo);
+  blastRecs = applyCategoryFilter(blastRecs, 'PROYECTO', f.proyecto);
+  const drillRecs = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
+  const vibRecs = applyDateFilter(DATA.vib, DATE_COL.vib, f.dateFrom, f.dateTo);
+  const pePcRecs = applyDateFilter(DATA.planEjecPC, DATE_COL.planEjecPC, f.dateFrom, f.dateTo);
+  const drillPcRecs = applyDateFilter(DATA.drillingPC, DATE_COL.drillingPC, f.dateFrom, f.dateTo);
+  const blastPcRecs = applyDateFilter(DATA.blastingPC, DATE_COL.blastingPC, f.dateFrom, f.dateTo);
+
+  const {min, max} = dateMinMax(peRecs.map(r=>r[DATE_COL.planEjec]).filter(isDateVal));
+  const months = continuousMonths(min, max);
+
+  const kpiContainer = document.getElementById('kpi_control');
+  kpiContainer.innerHTML = '';
+
+  if (!DATA.planEjec.length){
+    kpiContainer.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hoja "Plan vs Ejec." no disponible — no se pueden calcular los KPIs corporativos.</div>';
+  } else {
+    const tonPlan = sumCol(peRecs, 'TONELAJE ROTO DIA (PLAN)').sum;
+    const tonEjec = sumCol(peRecs, 'TONELAJE ROTO POR DISPARO (EJECUTADO)').sum;
+    renderKpiCard(kpiContainer, { title:'Tonelaje Roto', planVal:tonPlan, ejecVal:tonEjec, decimals:0, suffix:' t', goodDirection:'higher',
+      months, series: monthlySum(peRecs, DATE_COL.planEjec, 'TONELAJE ROTO POR DISPARO (EJECUTADO)', months) });
+
+    const tonMinPlan = sumCol(peRecs,'TON MINADO DIA (PLAN)').sum, tonMinEjec = sumCol(peRecs,'TONELAJE MINADO MATERIAL INSITU DIA (EJECUTADO)').sum;
+    renderKpiCard(kpiContainer, { title:'Tonelaje Minado', planVal:tonMinPlan, ejecVal:tonMinEjec, decimals:0, suffix:' t', goodDirection:'higher',
+      months, series: monthlySum(peRecs, DATE_COL.planEjec, 'TONELAJE MINADO MATERIAL INSITU DIA (EJECUTADO)', months) });
+
+    const metPlan = sumCol(peRecs,'METROS (PLAN)').sum, metEjec = sumCol(peRecs,'METROS (EJECUTADO)').sum;
+    renderKpiCard(kpiContainer, { title:'Metros Perforados', planVal:metPlan, ejecVal:metEjec, decimals:0, suffix:' m', goodDirection:'higher',
+      months, series: monthlySum(peRecs, DATE_COL.planEjec, 'METROS (EJECUTADO)', months) });
+
+    const utilPlan = avgNonZero(peRecs,'UTILIZACION PLAN (%)'), utilEjec = avgNonZero(peRecs,'UTILIZACION EJEC (%)');
+    renderKpiCard(kpiContainer, { title:'Utilización', planVal:utilPlan, ejecVal:utilEjec, decimals:1, suffix:'%', goodDirection:'higher',
+      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'UTILIZACION EJEC (%)', months, true) });
+
+    const dmPlan = avgNonZero(peRecs,'D.M. PLAN (%)'), dmEjec = avgNonZero(peRecs,'D.M. EJEC (%)');
+    renderKpiCard(kpiContainer, { title:'Disp. Mecánica', planVal:dmPlan, ejecVal:dmEjec, decimals:1, suffix:'%', goodDirection:'higher',
+      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'D.M. EJEC (%)', months, true) });
+
+    const velPlan = avgNonZero(peRecs,'VELOC. PLAN (m/Hra)'), velEjec = avgNonZero(peRecs,'VELOC. EJEC (m/Hr)');
+    renderKpiCard(kpiContainer, { title:'Velocidad', planVal:velPlan, ejecVal:velEjec, decimals:1, suffix:' m/hr', goodDirection:'higher',
+      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'VELOC. EJEC (m/Hr)', months, true) });
+  }
+
+  // ---- COSTOS UNITARIOS P&V ----
+  const kpiCostos = document.getElementById('kpi_control_costos');
+  kpiCostos.innerHTML = '';
+  if (!DATA.blasting.length && !DATA.drilling.length){
+    kpiCostos.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hojas de costo no disponibles.</div>';
+  } else {
+    const gastoVol = sumCol(blastRecs,'GASTO DE EXPLOSIVO (US$)').sum;
+    const gastoPerf = sumCol(drillRecs,'GASTO TOTAL PERFORACION (US$)').sum;
+    const tonMinado = tonMinadoEjecSum(peRecs);
+    const metrosEjec = sumCol(peRecs,'METROS (EJECUTADO)').sum;
+    const kgExplosivo = sumCol(blastRecs,'TOTAL EXPLOSIVO (Kg)').sum;
+
+    const costoPerfTM = tonMinado? gastoPerf/tonMinado : null;
+    const costoPerfM = metrosEjec? gastoPerf/metrosEjec : null;
+    const costoVolTM = tonMinado? gastoVol/tonMinado : null;
+    const costoVolKg = kgExplosivo? gastoVol/kgExplosivo : null;
+    const kgPorTM = tonMinado? kgExplosivo/tonMinado : null;
+
+    renderKpiCard(kpiCostos, { title:'Perforación US$/TM minada', mode:'calc', calcVal:costoPerfTM, decimals:3, suffix:' US$/t',
+      months, series: months.map(m=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? g/t : null; }) });
+    renderKpiCard(kpiCostos, { title:'Perforación US$/m perforado', mode:'calc', calcVal:costoPerfM, decimals:2, suffix:' US$/m',
+      months, series: months.map(m=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; const mt=monthlySum(peRecs,DATE_COL.planEjec,'METROS (EJECUTADO)',[m])[0]; return mt? g/mt : null; }) });
+    renderKpiCard(kpiCostos, { title:'Gasto Acum. Perforación', mode:'calc', calcVal:gastoPerf, decimals:0, suffix:' US$',
+      months, series: cumulativeByMonth(monthlySum(drillRecs, DATE_COL.drilling, 'GASTO TOTAL PERFORACION (US$)', months)) });
+    renderKpiCard(kpiCostos, { title:'Voladura US$/TM minada', mode:'calc', calcVal:costoVolTM, decimals:3, suffix:' US$/t',
+      months, series: months.map(m=>{ const g=monthlySum(blastRecs,DATE_COL.blasting,'GASTO DE EXPLOSIVO (US$)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? g/t : null; }) });
+    renderKpiCard(kpiCostos, { title:'Voladura US$/Kg explosivo', mode:'calc', calcVal:costoVolKg, decimals:2, suffix:' US$/kg',
+      months, series: months.map(m=>{ const g=monthlySum(blastRecs,DATE_COL.blasting,'GASTO DE EXPLOSIVO (US$)',[m])[0]; const k=monthlySum(blastRecs,DATE_COL.blasting,'TOTAL EXPLOSIVO (Kg)',[m])[0]; return k? g/k : null; }) });
+    renderKpiCard(kpiCostos, { title:'Kg Explosivo / TM minada', mode:'calc', calcVal:kgPorTM, decimals:3, suffix:' kg/t',
+      months, series: months.map(m=>{ const k=monthlySum(blastRecs,DATE_COL.blasting,'TOTAL EXPLOSIVO (Kg)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? k/t : null; }) });
+  }
+
+  // ---- Gráfico acumulado corrido: Plan vs Ejecutado (Tonelaje Roto) ----
+  const acumCanvas = document.getElementById('chart_control_acum');
+  if (!DATA.planEjec.length || months.length===0){
+    MiniChart.clear(acumCanvas);
+  } else {
+    const planMonthly = monthlySum(peRecs, DATE_COL.planEjec, 'TONELAJE ROTO DIA (PLAN)', months);
+    const ejecMonthly = monthlySum(peRecs, DATE_COL.planEjec, 'TONELAJE ROTO POR DISPARO (EJECUTADO)', months);
+    MiniChart.line(acumCanvas, {
+      labels: months.map(monthLabel), colors: c,
+      formatTooltip: v=>fmtNum(v)+' t',
+      datasets: [
+        { label:'Plan acumulado', data: cumulativeByMonth(planMonthly), color: c.text },
+        { label:'Ejecutado acumulado', data: cumulativeByMonth(ejecMonthly), color: c.teal, fill:true },
+      ]
+    });
+  }
+
+  // Gráfico secundario: Plan vs Ejecutado — Tonelaje Roto Mensual (detalle)
+  const canvas = document.getElementById('chart_control_main');
+  const devRow = document.getElementById('dev_row_control');
+  devRow.innerHTML = '';
+  if (!DATA.planEjec.length || months.length===0){
+    MiniChart.clear(canvas);
+  } else {
+    const planSeries = monthlySum(peRecs, DATE_COL.planEjec, 'TONELAJE ROTO DIA (PLAN)', months);
+    const ejecSeries = monthlySum(peRecs, DATE_COL.planEjec, 'TONELAJE ROTO POR DISPARO (EJECUTADO)', months);
+    MiniChart.bar(canvas, {
+      labels: months.map(monthLabel),
+      colors: c,
+      formatY: v=>fmtNum(v),
+      formatTooltip: v=>fmtNum(v)+' t',
+      datasets: [
+        { label:'Plan', data:planSeries, color: c.text+'88' },
+        { label:'Ejecutado', data:ejecSeries, color: c.teal },
+      ]
+    });
+
+    devRow.innerHTML = months.map((m,i)=>{
+      const dev = deviation(planSeries[i], ejecSeries[i]);
+      const status = semaforoStatus(dev, 'higher');
+      return `<div class="flex-1 text-[9px] font-mono-num" style="color:${SEMAFORO_COLOR[status]}">${dev===null?'—':(dev>=0?'+':'')+dev.toFixed(0)+'%'}</div>`;
+    }).join('');
+  }
+
+  // ---- P80 mini-bloque ----
+  const kpiP80 = document.getElementById('kpi_control_p80');
+  const p80Canvas = document.getElementById('chart_control_p80');
+  if (!DATA.frag.length){
+    kpiP80.innerHTML = '<div class="col-span-full text-xs text-slate-400 text-center py-3">Hoja "Frag. PortaM" no disponible.</div>';
+    MiniChart.clear(p80Canvas);
+  } else {
+    const p80Real = sumCol(fragRecs,'P80 (pulg)').avg, p80Target = sumCol(fragRecs,'Target P80 (Pulg.)').avg;
+    const stats = describeStats(fragRecs, 'P80 (pulg)');
+    const cumplen = fragRecs.length ? (fragRecs.filter(r=>String(r['Alcanzó target?']).trim().toUpperCase()==='SI').length/fragRecs.length)*100 : null;
+    const miniStat = (label,val)=>`<div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 px-2 py-1.5"><p class="text-[9px] uppercase text-slate-400">${label}</p><p class="font-mono-num text-sm font-semibold">${val}</p></div>`;
+    kpiP80.innerHTML =
+      miniStat('P80 actual', fmtNum(p80Real,2)+' pulg') +
+      miniStat('Target', fmtNum(p80Target,2)+' pulg') +
+      miniStat('Cumplimiento', cumplen===null?'—':fmtNum(cumplen,0)+'%') +
+      miniStat('Variabilidad (CV)', stats&&stats.cv!==null?fmtNum(stats.cv,0)+'%':'—');
+    const p80Months = monthlyAvg(fragRecs, DATE_COL.frag, 'P80 (pulg)', months);
+    const targetMonths = monthlyAvg(fragRecs, DATE_COL.frag, 'Target P80 (Pulg.)', months);
+    MiniChart.line(p80Canvas, {
+      labels: months.map(monthLabel), colors: c,
+      formatTooltip: v=>fmtNum(v,2)+' pulg',
+      datasets: [
+        { label:'P80', data: p80Months, color: c.teal, fill:true },
+        { label:'Target', data: targetMonths, color: c.amber },
+      ]
+    });
+  }
+
+  // ---- Vibraciones mini-bloque ----
+  const kpiVib = document.getElementById('kpi_control_vib');
+  const vibWorst = document.getElementById('vib_worst_control');
+  if (!DATA.vib.length){
+    kpiVib.innerHTML = '<div class="col-span-full text-xs text-slate-400 text-center py-3">Hojas "Vib &amp; Air Blast" no disponibles.</div>';
+    vibWorst.innerHTML = '';
+  } else {
+    const ppvAvg = sumCol(vibRecs,'PPV VECTOR SUMA').avg, ppvMax = Math.max(...extractNumericValues(vibRecs,'PPV VECTOR SUMA'), 0);
+    const abAvg = sumCol(vibRecs,'AIR BLAST Db(L)').avg;
+    const abVals = extractNumericValues(vibRecs,'AIR BLAST Db(L)');
+    const abMax = abVals.length ? Math.max(...abVals) : null;
+    const miniStat = (label,val)=>`<div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 px-2 py-1.5"><p class="text-[9px] uppercase text-slate-400">${label}</p><p class="font-mono-num text-sm font-semibold">${val}</p></div>`;
+    kpiVib.innerHTML =
+      miniStat('PPV promedio', fmtNum(ppvAvg,2)+' mm/s') +
+      miniStat('PPV máximo', ppvMax?fmtNum(ppvMax,2)+' mm/s':'—') +
+      miniStat('Air Blast prom.', fmtNum(abAvg,1)+' dB') +
+      miniStat('Air Blast máx.', abMax!==null?fmtNum(abMax,1)+' dB':'—');
+    // Proyecto/zona con mayor PPV
+    let worst = null;
+    for (const r of vibRecs){
+      const v = parseNumber(r['PPV VECTOR SUMA']);
+      if (v!==null && (!worst || v>worst.v)) worst = { v, r };
+    }
+    vibWorst.innerHTML = worst
+      ? `Mayor PPV en <b>${escapeHtml(String(worst.r['PROYECTO']||'—'))}</b> (${escapeHtml(String(worst.r['PUNTO MONITOREO #1']||'—'))}): <span class="font-mono-num text-rose">${fmtNum(worst.v,2)} mm/s</span> el ${isDateVal(worst.r[DATE_COL.vib])?fmtDate(worst.r[DATE_COL.vib]):'—'}.`
+      : '';
+  }
+
+  // ---- Principales Desvíos (auto-ranking de |desviación%| across todo el panel) ----
+  const desvios = collectDesviaciones(peRecs, fragRecs, pePcRecs);
+  const top = desvios.slice(0,8);
+  const tbodyDesvios = document.getElementById('table_desvios');
+  const CRIT_LABEL = { red:'🔴 Crítico', orange:'🟠 Atención', green:'🟢 Controlado' };
+  tbodyDesvios.innerHTML = top.length ? top.map(d=>{
+    const status = semaforoStatus(d.dev, d.goodDirection);
+    return `<tr>
+      <td class="py-1.5 pr-2 font-medium">${escapeHtml(d.label)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(d.plan,1)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(d.ejec,1)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num ${d.dev>=0?'text-teal':'text-rose'}">${d.dev>=0?'+':''}${nf1.format(d.dev)}%</td>
+      <td class="py-1.5 pr-2">${CRIT_LABEL[status]||'—'}</td>
+      <td class="py-1.5 text-slate-500 dark:text-slate-400">${escapeHtml(d.impacto||'—')}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" class="text-center text-slate-400 py-6">Sin datos suficientes para calcular desviaciones</td></tr>`;
+
+  // ---- ¿Dónde debemos actuar? ----
+  const oportunidades = document.getElementById('oportunidades_control');
+  const cards = [];
+
+  if (top.length){
+    const worst = top[0];
+    cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
+      <p class="text-xs font-semibold mb-1">📌 Mayor desviación del plan</p>
+      <p class="text-sm font-display font-700">${escapeHtml(worst.label)}</p>
+      <p class="text-xs text-slate-400 mt-0.5">Desviación de <span class="font-mono-num ${worst.dev>=0?'text-teal':'text-rose'}">${worst.dev>=0?'+':''}${nf1.format(worst.dev)}%</span> respecto al plan. Impacto: ${escapeHtml(worst.impacto||'—')}.</p>
+    </div>`);
+  }
+
+  if (DATA.drilling.length){
+    const equipos = distinctValues(drillRecs, 'Perforadora');
+    const oees = equipos.map(eq=> avgNonZero(drillRecs.filter(r=>String(r['Perforadora']||'').trim()===eq),'OEE')).filter(v=>v!==null);
+    if (oees.length){
+      const fleetAvg = oees.reduce((a,v)=>a+v,0)/oees.length;
+      const ranked = equipos.map(eq=>{
+        const oee = avgNonZero(drillRecs.filter(r=>String(r['Perforadora']||'').trim()===eq),'OEE');
+        return { eq, oee, dev: oee!==null ? ((oee-fleetAvg)/fleetAvg)*100 : null };
+      }).filter(x=>x.dev!==null).sort((a,b)=>a.dev-b.dev);
+      if (ranked.length){
+        const w = ranked[0];
+        cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
+          <p class="text-xs font-semibold mb-1">🔧 Equipo con menor productividad</p>
+          <p class="text-sm font-display font-700">${escapeHtml(w.eq)}</p>
+          <p class="text-xs text-slate-400 mt-0.5">OEE ${fmtPct(w.oee)} · ${nf1.format(w.dev)}% vs promedio de flota.</p>
+        </div>`);
+      }
+    }
+  }
+
+  if (DATA.frag.length){
+    const zoneMap = new Map();
+    for (const r of fragRecs){
+      const key = `${String(r['FASE']||'(Sin dato)').trim()} / ${String(r['BANCO']||'(Sin dato)').trim()}`;
+      if (!zoneMap.has(key)) zoneMap.set(key, []);
+      zoneMap.get(key).push(r);
+    }
+    let worstZone = null;
+    for (const [zone, recs] of zoneMap.entries()){
+      const p80 = sumCol(recs,'P80 (pulg)').avg, tgt = sumCol(recs,'Target P80 (Pulg.)').avg;
+      if (p80===null||tgt===null||tgt===0) continue;
+      const dev = ((p80-tgt)/tgt)*100;
+      if (!worstZone || dev>worstZone.dev) worstZone = { zone, p80, tgt, dev };
+    }
+    if (worstZone){
+      cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
+        <p class="text-xs font-semibold mb-1">🪨 Peor fragmentación por zona</p>
+        <p class="text-sm font-display font-700">${escapeHtml(worstZone.zone)}</p>
+        <p class="text-xs text-slate-400 mt-0.5">P80 ${fmtNum(worstZone.p80,2)} pulg vs target ${fmtNum(worstZone.tgt,2)} pulg (<span class="text-rose font-mono-num">+${nf1.format(worstZone.dev)}%</span>).</p>
+      </div>`);
+    }
+  }
+
+  if (DATA.vib.length){
+    let maxPpv = null;
+    for (const r of vibRecs){
+      const ppv = parseNumber(r['PPV VECTOR SUMA']);
+      if (ppv!==null && (maxPpv===null || ppv>maxPpv.val)) maxPpv = { val:ppv, r };
+    }
+    if (maxPpv){
+      cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
+        <p class="text-xs font-semibold mb-1">📡 Evento de vibración más crítico</p>
+        <p class="text-sm font-display font-700">${fmtNum(maxPpv.val,2)} mm/s</p>
+        <p class="text-xs text-slate-400 mt-0.5">${escapeHtml(String(maxPpv.r['PROYECTO']||'—'))} · ${isDateVal(maxPpv.r[DATE_COL.vib])?fmtDate(maxPpv.r[DATE_COL.vib]):'—'}</p>
+      </div>`);
+    }
+  }
+
+  oportunidades.innerHTML = cards.length ? cards.join('') : '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Aún no hay suficientes datos para identificar oportunidades.</div>';
+
+  // ---- Relaciones Costo–Performance ----
+  // Costo Perforación US$/TM ↔ Utilización
+  const relCostoPerfCanvas = document.getElementById('chart_rel_costoperf_util');
+  if (DATA.planEjec.length && DATA.drilling.length && months.length){
+    const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
+    const costoPerfSeries = months.map((m,i)=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; return tonMinadoM[i]? g/tonMinadoM[i] : null; });
+    const utilSeries = monthlyAvg(peRecs, DATE_COL.planEjec, 'UTILIZACION EJEC (%)', months, true);
+    MiniChart.line(relCostoPerfCanvas, {
+      labels: months.map(monthLabel), colors: c,
+      formatY: v=>fmtNum(v,3), formatY2: v=>fmtNum(v)+'%',
+      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,1)+'%' : fmtNum(v,3)+' US$/t',
+      datasets: [
+        { label:'US$/TM', data:costoPerfSeries, color:c.rose },
+        { label:'Utilización %', data:utilSeries, color:c.indigo, yAxisID:'y2' },
+      ]
+    });
+  } else MiniChart.clear(relCostoPerfCanvas);
+
+  // Costo Voladura US$/TM ↔ Kg Explosivo/TM
+  const relCostoVolCanvas = document.getElementById('chart_rel_costovol_kg');
+  if (DATA.planEjec.length && DATA.blasting.length && months.length){
+    const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
+    const costoVolSeries = months.map((m,i)=>{ const g=monthlySum(blastRecs,DATE_COL.blasting,'GASTO DE EXPLOSIVO (US$)',[m])[0]; return tonMinadoM[i]? g/tonMinadoM[i] : null; });
+    const kgPorTSeries = months.map((m,i)=>{ const k=monthlySum(blastRecs,DATE_COL.blasting,'TOTAL EXPLOSIVO (Kg)',[m])[0]; return tonMinadoM[i]? k/tonMinadoM[i] : null; });
+    MiniChart.line(relCostoVolCanvas, {
+      labels: months.map(monthLabel), colors: c,
+      formatY: v=>fmtNum(v,3), formatY2: v=>fmtNum(v,3),
+      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,3)+' kg/t' : fmtNum(v,3)+' US$/t',
+      datasets: [
+        { label:'US$/TM', data:costoVolSeries, color:c.rose },
+        { label:'Kg/TM', data:kgPorTSeries, color:c.indigo, yAxisID:'y2' },
+      ]
+    });
+  } else MiniChart.clear(relCostoVolCanvas);
+
+  // P80 ↔ Factor de Potencia
+  const relP80FpCanvas = document.getElementById('chart_rel_p80_fp');
+  if (DATA.frag.length && DATA.blasting.length && months.length){
+    const p80Series = monthlyAvg(fragRecs, DATE_COL.frag, 'P80 (pulg)', months);
+    const fpSeries = monthlyAvg(blastRecs, DATE_COL.blasting, 'F.P. (TEORICA)', months, true);
+    MiniChart.line(relP80FpCanvas, {
+      labels: months.map(monthLabel), colors: c,
+      formatY: v=>fmtNum(v,2), formatY2: v=>fmtNum(v,2),
+      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,2)+' F.P.' : fmtNum(v,2)+' pulg',
+      datasets: [
+        { label:'P80 (pulg)', data:p80Series, color:c.teal },
+        { label:'Factor de Potencia', data:fpSeries, color:c.amber, yAxisID:'y2' },
+      ]
+    });
+  } else MiniChart.clear(relP80FpCanvas);
+}
+
+/* ======================================================================
+   TAB 02 · VOLADURA
+   ====================================================================== */
+function renderTabVoladura(){
+  const f = filters.voladura;
+  const c = colors();
+
+  const peRecs = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+  let blastRecs = applyDateFilter(DATA.blasting, DATE_COL.blasting, f.dateFrom, f.dateTo);
+  blastRecs = applyCategoryFilter(blastRecs, 'PROYECTO', f.proyecto);
+
+  const {min, max} = dateMinMax(peRecs.map(r=>r[DATE_COL.planEjec]).filter(isDateVal));
+  const months = continuousMonths(min, max);
+
+  const kpiRatios = document.getElementById('kpi_voladura_ratios');
+  kpiRatios.innerHTML = '';
+  if (!DATA.blasting.length){
+    kpiRatios.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hoja "Blasting" no disponible.</div>';
+  } else {
+    const totalExplosivo = sumCol(blastRecs,'TOTAL EXPLOSIVO (Kg)').sum;
+    const tonMinado = tonMinadoEjecSum(peRecs);
+    const kgPorT = tonMinado ? totalExplosivo/tonMinado : null;
+    renderKpiCard(kpiRatios, { title:'Kg Explosivo / T', mode:'calc', calcVal:kgPorT, decimals:3, suffix:' kg/t',
+      months, series: months.map(m=>{ const e=monthlySum(blastRecs,DATE_COL.blasting,'TOTAL EXPLOSIVO (Kg)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? e/t : null; }) });
+
+    renderKpiCard(kpiRatios, { title:'Kg / Taladro', mode:'calc', calcVal: avgNonZero(blastRecs,'KILOS POR TALADRO'), decimals:1, suffix:' kg',
+      months, series: monthlyAvg(blastRecs, DATE_COL.blasting, 'KILOS POR TALADRO', months, true) });
+
+    renderKpiCard(kpiRatios, { title:'Factor de Potencia', mode:'calc', calcVal: avgNonZero(blastRecs,'F.P. (TEORICA)'), decimals:2, suffix:'',
+      months, series: monthlyAvg(blastRecs, DATE_COL.blasting, 'F.P. (TEORICA)', months, true) });
+
+    const gastoExpl = sumCol(blastRecs,'GASTO DE EXPLOSIVO (US$)').sum;
+    const costoPorT = tonMinado ? gastoExpl/tonMinado : null;
+    renderKpiCard(kpiRatios, { title:'Costo Explosivo / T', mode:'calc', calcVal:costoPorT, decimals:3, suffix:' US$/t',
+      months, series: months.map(m=>{ const g=monthlySum(blastRecs,DATE_COL.blasting,'GASTO DE EXPLOSIVO (US$)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? g/t : null; }) });
+  }
+
+  const AGENTES_VOLADURA = [
+    { label:'Nitrato', plan:'PLAN DE NITRATO (kg)', ejec:'CONSUMO NITRATO (kg)', unit:'kg' },
+    { label:'Diésel', plan:'PLAN DE DIESEL (kg)', ejec:'CONSUMO DIESEL (kg)', unit:'kg' },
+    { label:'Emulsión', plan:'PLAN DE EMULSION (kg)', ejec:'CONSUMO EMULSION (kg)', unit:'kg' },
+    { label:'Solución Gasificante L11', plan:'PLAN DE SOLUCION GASIF. L11 (kg)', ejec:'CONSUMO SOLUCION GASIF. L11 (kg)', unit:'kg' },
+    { label:'Booster', plan:'PLAN BOOSTER (kg)', ejec:'CONSUMO BOOSTER (kg)', unit:'kg' },
+    { label:'Detonador Electrónico', plan:'PLAN DETONADOR ELECT. (und)', ejec:'CONSUMO DETONADOR ELECT. (und)', unit:'und' },
+    { label:'Cable de Conexión', plan:'PLAN CABLE DE CONEXIÓN (m)', ejec:'CONSUMO CABLE DE CONEXIÓN (m)', unit:'m' },
+    { label:'Taponex', plan:'PLAN TAPONEX (und)', ejec:'CONSUMO TAPONEX (und)', unit:'und' },
+    { label:'Cartuflex', plan:'PLAN CARTUFLEX (und)', ejec:'CONSUMO CARTUFLEX (und)', unit:'und' },
+    { label:'Emulsión Encartuchada', plan:'PLAN EMULS. ENCART (kg)', ejec:'CONSUMO EMULS. ENCART (kg)', unit:'kg' },
+  ];
+  renderConsumablesModule(peRecs, AGENTES_VOLADURA, months, 'table_consumibles_voladura', 'chart_pareto_voladura', 'chart_voladura_acum', c, !DATA.planEjec.length);
+
+  // Guía de costos unitarios
+  const guide = document.getElementById('guide_voladura');
+  if (DATA.blasting.length){
+    const totalExplosivoKg = sumCol(blastRecs,'TOTAL EXPLOSIVO (Kg)').sum;
+    const gastoExpl = sumCol(blastRecs,'GASTO DE EXPLOSIVO (US$)').sum;
+    renderUnitCostGuide(guide, [
+      { label:'Costo por Kg de explosivo', value: totalExplosivoKg? gastoExpl/totalExplosivoKg : null, unit:'US$/kg' },
+      { label:'Costo por Tonelada minada (Voladura)', value: tonMinadoEjecSum(peRecs)? gastoExpl/tonMinadoEjecSum(peRecs) : null, unit:'US$/t' },
+      { label:'Gasto diario promedio', value: sumCol(blastRecs,'GASTO DIARIO (US$)').avg, unit:'US$/día' },
+    ]);
+  } else {
+    guide.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Hoja "Blasting" no disponible.</p>';
+  }
+}
+
+// Módulo genérico de consumibles: tabla ordenada por |desviación|, Pareto y
+// tendencia de acumulado (solo agentes en kg, para que la suma tenga sentido
+// físico — no se mezclan kg con unidades o metros).
+function renderConsumablesModule(peRecs, agents, months, tableBodyId, paretoCanvasId, accumCanvasId, c, noData){
+  const tbody = document.getElementById(tableBodyId);
+  const paretoCanvas = document.getElementById(paretoCanvasId);
+  const accumCanvas = accumCanvasId ? document.getElementById(accumCanvasId) : null;
+
+  if (noData){
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6">Hoja de plan no disponible.</td></tr>`;
+    MiniChart.clear(paretoCanvas);
+    if (accumCanvas) MiniChart.clear(accumCanvas);
+    return;
+  }
+
+  const rows = agents.map(a=>{
+    const plan = sumCol(peRecs, a.plan).sum, real = sumCol(peRecs, a.ejec).sum;
+    if (plan===0 && real===0) return null;
+    const dev = deviation(plan, real);
+    return { ...a, plan, real, dev };
+  }).filter(Boolean).sort((a,b)=> Math.abs(b.dev??0) - Math.abs(a.dev??0));
+
+  tbody.innerHTML = rows.length ? rows.map(r=>{
+    const status = semaforoStatus(r.dev, 'lower');
+    const CRIT_LABEL = { red:'🔴 Crítico', orange:'🟠 Atención', green:'🟢 Controlado', gray:'—' };
+    return `<tr>
+      <td class="py-1.5 pr-2 font-medium">${escapeHtml(r.label)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.plan,1)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.real,1)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num ${r.dev===null?'text-slate-400':r.dev<=0?'text-teal':'text-rose'}">${r.dev===null?'—':(r.dev>=0?'+':'')+nf1.format(r.dev)+'%'}</td>
+      <td class="py-1.5">${CRIT_LABEL[status]}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5" class="text-center text-slate-400 py-6">Sin consumibles con datos en el período filtrado.</td></tr>`;
+
+  const withDev = rows.filter(r=>r.dev!==null);
+  if (withDev.length){
+    MiniChart.hbar(paretoCanvas, {
+      labels: withDev.map(r=>r.label), colors: c,
+      formatTooltip: v=>nf1.format(v)+'%',
+      datasets: [{ data: withDev.map(r=>Math.abs(r.dev)), color: c.rose }]
+    });
+  } else MiniChart.clear(paretoCanvas);
+
+  if (accumCanvas){
+    const kgAgents = agents.filter(a=>a.unit==='kg');
+    if (kgAgents.length){
+      const planTotal = months.map(()=>0), realTotal = months.map(()=>0);
+      for (const a of kgAgents){
+        const pM = monthlySum(peRecs, DATE_COL.planEjec, a.plan, months);
+        const rM = monthlySum(peRecs, DATE_COL.planEjec, a.ejec, months);
+        pM.forEach((v,i)=> planTotal[i]+=v);
+        rM.forEach((v,i)=> realTotal[i]+=v);
+      }
+      MiniChart.line(accumCanvas, {
+        labels: months.map(monthLabel), colors: c,
+        formatTooltip: v=>fmtNum(v)+' kg',
+        datasets: [
+          { label:'Plan acumulado', data: cumulativeByMonth(planTotal), color: c.text },
+          { label:'Consumo acumulado', data: cumulativeByMonth(realTotal), color: c.teal, fill:true },
+        ]
+      });
+    } else MiniChart.clear(accumCanvas);
+  }
+}
+
+/* ======================================================================
+   TAB 02 · VOLADURA PRE-CORTE
+   ====================================================================== */
+function renderTabVoladuraPC(){
+  const f = filters.voladura_pc;
+  const c = colors();
+
+  const pePcRecs = applyDateFilter(DATA.planEjecPC, DATE_COL.planEjecPC, f.dateFrom, f.dateTo);
+  let blastPcRecs = applyDateFilter(DATA.blastingPC, DATE_COL.blastingPC, f.dateFrom, f.dateTo);
+  blastPcRecs = applyCategoryFilter(blastPcRecs, 'PROYECTO', f.proyecto);
+
+  const {min, max} = dateMinMax(pePcRecs.map(r=>r[DATE_COL.planEjecPC]).filter(isDateVal));
+  const months = continuousMonths(min, max);
+
+  const kpiRatios = document.getElementById('kpi_voladura_pc_ratios');
+  kpiRatios.innerHTML = '';
+  if (!DATA.blastingPC.length){
+    kpiRatios.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hoja "Blasting PC" no disponible.</div>';
+  } else {
+    renderKpiCard(kpiRatios, { title:'Total Explosivo', mode:'calc', calcVal: sumCol(blastPcRecs,'TOTAL EXPLOSIVO (Kg)').sum, decimals:0, suffix:' kg',
+      months, series: monthlySum(blastPcRecs, DATE_COL.blastingPC, 'TOTAL EXPLOSIVO (Kg)', months) });
+    renderKpiCard(kpiRatios, { title:'Kg / Taladro', mode:'calc', calcVal: avgNonZero(blastPcRecs,'KILOS POR TALADRO'), decimals:1, suffix:' kg',
+      months, series: monthlyAvg(blastPcRecs, DATE_COL.blastingPC, 'KILOS POR TALADRO', months, true) });
+    renderKpiCard(kpiRatios, { title:'Cordón Detonante', mode:'calc', calcVal: sumCol(blastPcRecs,'CORDON DETONANTE (mts)').sum, decimals:0, suffix:' mts',
+      months, series: monthlySum(blastPcRecs, DATE_COL.blastingPC, 'CORDON DETONANTE (mts)', months) });
+    renderKpiCard(kpiRatios, { title:'Gasto Explosivo', mode:'calc', calcVal: sumCol(blastPcRecs,'GASTO DE EXPLOSIVO (US$)').sum, decimals:0, suffix:' US$',
+      months, series: monthlySum(blastPcRecs, DATE_COL.blastingPC, 'GASTO DE EXPLOSIVO (US$)', months) });
+  }
+
+  const AGENTES_VOLADURA_PC = [
+    { label:'Enaline', plan:'PLAN DE ENALINE (kg)', ejec:'CONSUMO DE ENALINE (kg)', unit:'kg' },
+    { label:'Booster', plan:'PLAN BOOSTER (kg)', ejec:'CONSUMO BOOSTER (kg)', unit:'kg' },
+    { label:'Detonador Electrónico', plan:'PLAN DETONADOR ELECT. (und)', ejec:'CONSUMO DETONADOR ELECT. (und)', unit:'und' },
+    { label:'Taponex', plan:'PLAN TAPONEX (und)', ejec:'CONSUMO TAPONEX (und)', unit:'und' },
+  ];
+  renderConsumablesModule(pePcRecs, AGENTES_VOLADURA_PC, months, 'table_consumibles_voladura_pc', 'chart_pareto_voladura_pc', null, c, !DATA.planEjecPC.length);
+
+  const guide = document.getElementById('guide_voladura_pc');
+  if (DATA.blastingPC.length){
+    const totalExplosivoKg = sumCol(blastPcRecs,'TOTAL EXPLOSIVO (Kg)').sum;
+    const gastoExpl = sumCol(blastPcRecs,'GASTO DE EXPLOSIVO (US$)').sum;
+    const metrosEjec = sumCol(pePcRecs,'METROS (EJECUTADO)').sum;
+    renderUnitCostGuide(guide, [
+      { label:'Costo por Kg de explosivo', value: totalExplosivoKg? gastoExpl/totalExplosivoKg : null, unit:'US$/kg' },
+      { label:'Costo por metro de Pre-Corte', value: metrosEjec? gastoExpl/metrosEjec : null, unit:'US$/m' },
+      { label:'Gasto diario promedio', value: sumCol(blastPcRecs,'GASTO DIARIO (US$)').avg, unit:'US$/día' },
+    ]);
+  } else {
+    guide.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Hoja "Blasting PC" no disponible.</p>';
+  }
+}
+
+/* ======================================================================
+   TAB 03 · FRAGMENTACIÓN
+   ====================================================================== */
+function renderTabFrag(){
+  const f = filters.frag;
+  const c = colors();
+
+  const kpiContainer = document.getElementById('kpi_frag');
+  kpiContainer.innerHTML = '';
+  const chartCanvas = document.getElementById('chart_frag_p80');
+  const tbody = document.getElementById('table_frag_ranking');
+
+  if (!DATA.frag.length){
+    kpiContainer.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hoja "Frag. PortaM" no disponible.</div>';
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6">Sin datos</td></tr>`;
+    return;
+  }
+
+  let recs = applyDateFilter(DATA.frag, DATE_COL.frag, f.dateFrom, f.dateTo);
+  recs = applyCategoryFilter(recs, 'PROYECTO', f.proyecto);
+  recs = applyCategoryFilter(recs, 'FASE', f.fase);
+  recs = applyCategoryFilter(recs, 'BANCO', f.banco);
+  recs = applyCategoryFilter(recs, 'MATERIAL', f.material);
+
+  const {min, max} = dateMinMax(recs.map(r=>r[DATE_COL.frag]).filter(isDateVal));
+  const months = continuousMonths(min, max);
+
+  // KPIs
+  const total = recs.length;
+  const cumplen = recs.filter(r=> String(r['Alcanzó target?']).trim().toUpperCase()==='SI').length;
+  const pctCumple = total ? (cumplen/total)*100 : null;
+  renderKpiCard(kpiContainer, { title:'% Cumplimiento Target', mode:'calc', calcVal:pctCumple, decimals:1, suffix:'%',
+    months, series: months.map(m=>{ const mr = recs.filter(r=>isDateVal(r[DATE_COL.frag]) && monthKey(r[DATE_COL.frag])===m); if(!mr.length) return null; return (mr.filter(r=>String(r['Alcanzó target?']).trim().toUpperCase()==='SI').length/mr.length)*100; }) });
+
+  const p80avg = sumCol(recs,'P80 (pulg)').avg;
+  renderKpiCard(kpiContainer, { title:'P80 Promedio', mode:'calc', calcVal:p80avg, decimals:2, suffix:' pulg',
+    months, series: monthlyAvg(recs, DATE_COL.frag, 'P80 (pulg)', months) });
+
+  let peorDev = null;
+  for (const r of recs){
+    const p80 = parseNumber(r['P80 (pulg)']), tgt = parseNumber(r['Target P80 (Pulg.)']);
+    if (p80===null||tgt===null||tgt===0) continue;
+    const dev = ((p80-tgt)/tgt)*100;
+    if (peorDev===null || dev>peorDev) peorDev = dev;
+  }
+  renderKpiCard(kpiContainer, { title:'Peor Desviación P80', mode:'calc', calcVal:peorDev, decimals:1, suffix:'%' });
+
+  // Chart P80 vs Target por Fase
+  const fases = distinctValues(recs, 'FASE');
+  if (fases.length && chartCanvas){
+    const p80ByFase = fases.map(fase => sumCol(recs.filter(r=>String(r['FASE']||'').trim()===fase), 'P80 (pulg)').avg);
+    const targetByFase = fases.map(fase => sumCol(recs.filter(r=>String(r['FASE']||'').trim()===fase), 'Target P80 (Pulg.)').avg);
+    MiniChart.bar(chartCanvas, {
+      labels: fases, colors: c,
+      formatTooltip: v=>fmtNum(v,2)+' pulg',
+      datasets: [
+        { label:'P80 Real', data:p80ByFase, color: c.teal },
+        { label:'Target', data:targetByFase, color: c.text+'88' },
+      ]
+    });
+  } else if (chartCanvas){
+    MiniChart.clear(chartCanvas);
+  }
+
+  // Ranking (Zona = Fase / Banco)
+  const zoneMap = new Map();
+  for (const r of recs){
+    const fase = String(r['FASE']||'(Sin dato)').trim();
+    const banco = String(r['BANCO']||'(Sin dato)').trim();
+    const key = `${fase} / ${banco}`;
+    if (!zoneMap.has(key)) zoneMap.set(key, []);
+    zoneMap.get(key).push(r);
+  }
+  let ranking = [];
+  for (const [zone, zrecs] of zoneMap.entries()){
+    const p80 = sumCol(zrecs,'P80 (pulg)').avg;
+    const tgt = sumCol(zrecs,'Target P80 (Pulg.)').avg;
+    if (p80===null||tgt===null||tgt===0) continue;
+    const dev = ((p80-tgt)/tgt)*100;
+    ranking.push({ zone, p80, tgt, dev });
+  }
+  ranking.sort((a,b)=> b.dev - a.dev);
+  ranking = ranking.slice(0, 15);
+
+  if (!ranking.length){
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6">Sin datos para los filtros actuales</td></tr>`;
+  } else {
+    tbody.innerHTML = ranking.map((r,i)=>{
+      const status = semaforoStatus(r.dev, 'lower');
+      const icon = status==='red'?'🔴':status==='orange'?'🟠':'🟢';
+      return `<tr>
+        <td class="py-1.5 pr-2">${icon} ${i+1}</td>
+        <td class="py-1.5 pr-2">${escapeHtml(r.zone)}</td>
+        <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.p80,2)}</td>
+        <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.tgt,2)}</td>
+        <td class="py-1.5 text-right font-mono-num ${r.dev<=0?'text-teal':'text-rose'}">${r.dev>=0?'+':''}${nf1.format(r.dev)}%</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+/* ======================================================================
+   TAB 04 · PERFORACIÓN & PERFORMANCE
+   ====================================================================== */
+function renderTabPerforacion(){
+  renderPerforacionModule({
+    f: filters.perforacion, peData: DATA.planEjec, drillData: DATA.drilling, drillSheetName: 'Drilling',
+    idPrefix: 'perf', kpiTopId: 'kpi_perforacion_top', equipoLabel: 'Perforadora',
+  });
+}
+
+// Módulo genérico de Perforación: Producción y Pre-Corte comparten exactamente
+// los mismos nombres de columna en sus respectivas hojas Plan vs Ejec./Drilling,
+// así que ambos módulos reusan esta única implementación.
+function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefix, kpiTopId, equipoLabel }){
+  const c = colors();
+
+  const peRecs = applyDateFilter(peData, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+  let drillRecs = applyDateFilter(drillData, DATE_COL.drilling, f.dateFrom, f.dateTo);
+  drillRecs = applyCategoryFilter(drillRecs, 'Perforadora', f.equipo);
+
+  const {min, max} = dateMinMax(peRecs.map(r=>r[DATE_COL.planEjec]).filter(isDateVal));
+  const months = continuousMonths(min, max);
+  const {min:dmin, max:dmax} = dateMinMax(drillRecs.map(r=>r[DATE_COL.drilling]).filter(isDateVal));
+  const drillMonths = continuousMonths(dmin, dmax);
+
+  const kpiTop = document.getElementById(kpiTopId);
+  kpiTop.innerHTML = '';
+  if (!peData.length){
+    kpiTop.innerHTML = `<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hoja de plan no disponible.</div>`;
+  } else {
+    const metPlan = sumCol(peRecs,'METROS (PLAN)').sum, metEjec = sumCol(peRecs,'METROS (EJECUTADO)').sum;
+    renderKpiCard(kpiTop, { title:'Metros', planVal:metPlan, ejecVal:metEjec, decimals:0, suffix:' m', goodDirection:'higher',
+      months, series: monthlySum(peRecs, DATE_COL.planEjec, 'METROS (EJECUTADO)', months) });
+
+    const talPlan = sumCol(peRecs,'TALADROS DIA (PLAN)').sum, talEjec = sumCol(peRecs,'TALADROS (EJECUTADO)').sum;
+    renderKpiCard(kpiTop, { title:'Taladros', planVal:talPlan, ejecVal:talEjec, decimals:0, suffix:'', goodDirection:'higher',
+      months, series: monthlySum(peRecs, DATE_COL.planEjec, 'TALADROS (EJECUTADO)', months) });
+
+    const utilPlan = avgNonZero(peRecs,'UTILIZACION PLAN (%)'), utilEjec = avgNonZero(peRecs,'UTILIZACION EJEC (%)');
+    renderKpiCard(kpiTop, { title:'Utilización', planVal:utilPlan, ejecVal:utilEjec, decimals:1, suffix:'%', goodDirection:'higher',
+      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'UTILIZACION EJEC (%)', months, true) });
+
+    const dmPlan = avgNonZero(peRecs,'D.M. PLAN (%)'), dmEjec = avgNonZero(peRecs,'D.M. EJEC (%)');
+    renderKpiCard(kpiTop, { title:'Disponibilidad', planVal:dmPlan, ejecVal:dmEjec, decimals:1, suffix:'%', goodDirection:'higher',
+      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'D.M. EJEC (%)', months, true) });
+
+    const velPlan = avgNonZero(peRecs,'VELOC. PLAN (m/Hra)'), velEjec = avgNonZero(peRecs,'VELOC. EJEC (m/Hr)');
+    renderKpiCard(kpiTop, { title:'Velocidad', planVal:velPlan, ejecVal:velEjec, decimals:1, suffix:' m/hr', goodDirection:'higher',
+      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'VELOC. EJEC (m/Hr)', months, true) });
+
+    const usagePlan = avgNonZero(peRecs,'USAGE PLAN (%)'), usageEjec = avgNonZero(peRecs,'USAGE EJEC (%)');
+    if (usagePlan!==null){
+      renderKpiCard(kpiTop, { title:'Usage', planVal:usagePlan, ejecVal:usageEjec, decimals:1, suffix:'%', goodDirection:'higher',
+        months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'USAGE EJEC (%)', months, true) });
+    } else if (usageEjec!==null){
+      // Sin Plan de Usage disponible en esta hoja (ocurre en Pre-Corte) — se
+      // muestra solo el real, sin comparación inventada.
+      renderKpiCard(kpiTop, { title:'Usage', mode:'calc', calcVal:usageEjec, decimals:1, suffix:'%',
+        note:'Sin Plan de Usage disponible en el Excel para este módulo — se muestra solo el valor ejecutado.',
+        months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'USAGE EJEC (%)', months, true) });
+    }
+  }
+
+  const trendCanvas = document.getElementById(`chart_${idPrefix}_trend`);
+  if (!drillData.length || drillMonths.length===0){
+    MiniChart.clear(trendCanvas);
+  } else {
+    const metrosSeries = monthlySum(drillRecs, DATE_COL.drilling, 'Metros Perforados', drillMonths);
+    MiniChart.line(trendCanvas, {
+      labels: drillMonths.map(monthLabel), colors: c,
+      formatTooltip: v=>fmtNum(v)+' m',
+      datasets: [{ label:'Metros Perforados', data:metrosSeries, color:c.teal, fill:true }]
+    });
+  }
+
+  const rankCanvas = document.getElementById(`chart_${idPrefix}_ranking`);
+  const matrizBody = document.getElementById(`table_${idPrefix}_matriz`);
+  const highlights = document.getElementById(`highlights_${idPrefix==='perf'?'perforacion':'perforacion_pc'}`);
+  highlights.innerHTML = '';
+
+  if (!drillData.length){
+    MiniChart.clear(rankCanvas);
+    matrizBody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6">Hoja "${escapeHtml(drillSheetName)}" no disponible</td></tr>`;
+    return;
+  }
+
+  const perforadoras = distinctValues(drillRecs, 'Perforadora');
+  const metrosPorEquipo = perforadoras.map(p => sumCol(drillRecs.filter(r=>String(r['Perforadora']||'').trim()===p), 'Metros Perforados').sum);
+  const rankOrder = perforadoras.map((p,i)=>({p, v:metrosPorEquipo[i]})).sort((a,b)=>b.v-a.v);
+  MiniChart.hbar(rankCanvas, {
+    labels: rankOrder.map(x=>x.p), colors: c,
+    formatTooltip: v=>fmtNum(v)+' m',
+    datasets: [{ data: rankOrder.map(x=>x.v), color:c.indigo }]
+  });
+
+  const matriz = perforadoras.map(p=>{
+    const recs = drillRecs.filter(r=>String(r['Perforadora']||'').trim()===p);
+    return {
+      p,
+      util: avgNonZero(recs,'Utilización'),
+      dm: avgNonZero(recs,'Disp. Mecánica'),
+      oee: avgNonZero(recs,'OEE'),
+      vel: avgNonZero(recs,'Velocidad'),
+    };
+  });
+  const cellColor = v => v===null ? 'text-slate-400' : v>=80 ? 'text-teal' : v>=60 ? 'text-amber' : 'text-rose';
+  matrizBody.innerHTML = matriz.map(m=>`
+    <tr>
+      <td class="py-1.5 pr-2 font-medium">${escapeHtml(m.p)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num ${cellColor(m.util)}">${fmtPct(m.util)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num ${cellColor(m.dm)}">${fmtPct(m.dm)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num ${cellColor(m.oee)}">${fmtPct(m.oee)}</td>
+      <td class="py-1.5 text-right font-mono-num">${fmtNum(m.vel,1)}</td>
+    </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">Sin datos</td></tr>`;
+
+  const withOee = matriz.filter(m=>m.oee!==null);
+  if (withOee.length){
+    const fleetAvg = withOee.reduce((a,m)=>a+m.oee,0)/withOee.length;
+    const ranked = withOee.map(m=>({...m, dev:((m.oee-fleetAvg)/fleetAvg)*100})).sort((a,b)=>a.dev-b.dev);
+    const peor = ranked[0];
+    const oportunidad = ranked.length>1 ? ranked[1] : null;
+    const mejor = ranked[ranked.length-1];
+
+    const card = (icon, title, item, colorClass) => `
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <p class="text-xs font-semibold mb-1">${icon} ${title}</p>
+        <p class="font-display font-700 text-lg">${escapeHtml(item.p)}</p>
+        <p class="text-xs text-slate-400 mt-1">OEE: <span class="font-mono-num ${colorClass}">${fmtPct(item.oee)}</span> · Desv. vs flota: <span class="font-mono-num ${colorClass}">${item.dev>=0?'+':''}${nf1.format(item.dev)}%</span></p>
+      </div>`;
+    highlights.innerHTML =
+      card('🔴','Equipo con mayor desviación', peor, 'text-rose') +
+      (oportunidad ? card('🟠','Principal oportunidad', oportunidad, 'text-amber') : '') +
+      card('🟢','Mejor desempeño', mejor, 'text-teal');
+  }
+
+  // Consumo de Aceros — Real vs Plan
+  const acerosTableId = idPrefix==='perf' ? 'table_aceros_perforacion' : 'table_aceros_perforacion_pc';
+  const acerosParetoId = idPrefix==='perf' ? 'chart_pareto_aceros_perforacion' : 'chart_pareto_aceros_perforacion_pc';
+  const acerosBody = document.getElementById(acerosTableId);
+  const acerosPareto = document.getElementById(acerosParetoId);
+  const metrosEjecTotal = sumCol(peRecs,'METROS (EJECUTADO)').sum;
+  if (acerosBody){
+    if (!peData.length){
+      acerosBody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-4">Hoja de plan no disponible.</td></tr>`;
+      if (acerosPareto) MiniChart.clear(acerosPareto);
+    } else {
+      const ACEROS = [
+        { label:'Brocas', plan:'PLAN BROCAS (und)', ejec:'CONSUMO BROCAS (und)' },
+        { label:'Martillos', plan:'PLAN DE MARTILLOS (und)', ejec:'CONSUMO MARTILLOS (und)' },
+        { label:'Chuck', plan:'PLAN CHUCK (Und)', ejec:'CONSUMO CHUCK (Und)' },
+        { label:'Barras', plan:'PLAN BARRAS (und)', ejec:'CONSUMO BARRAS (und)' },
+        { label:'Centralizador', plan:'PLAN CENTRALIZADOR (und)', ejec:'CONSUMO CENTRALIZADOR (und)' },
+        { label:'Bit Sub 5" Pin/Box', plan:'PLAN BIT SUB 5" PIN/BOX (und)', ejec:'CONSUMO BIT SUB 5" PIN/BOX (und)' },
+        { label:'Bit Sub 5" Pin/Pin', plan:'PLAN BIT SUB 5" PIN/PIN (und)', ejec:'CONSUMO BIT SUB 5" PIN/PIN (und)' },
+        // "Top Sub 10" Pin Box" se excluye en Producción: ~39% de sus registros son
+        // valores atípicos extremos (errores de tipeo en el Excel fuente, ej. 1861.8
+        // cuando el resto del histórico ronda 0.02) — no es un dato confiable.
+        // En Pre-Corte esa misma columna sí está limpia y se incluye.
+        ...(idPrefix!=='perf' ? [{ label:'Top Sub 10" Pin Box', plan:'PLAN TOP SUB 10" PIN BOX (und)', ejec:'CONSUMO PLAN TOP SUB 10" PIN BOX (und)' }] : []),
+      ];
+      const rowsData = ACEROS.map(a=>{
+        const planVals = extractNumericValues(peRecs, a.plan);
+        const plan = sumCol(peRecs, a.plan).sum, real = sumCol(peRecs, a.ejec).sum;
+        if (plan===0 && real===0) return null; // ítem sin ningún dato en el período filtrado
+        // Confiabilidad del Plan: si casi no varía y cubre muy pocos días, es un
+        // valor placeholder (tasa fija mal cargada), no un plan diario real —
+        // en ese caso se muestra solo el consumo real, sin comparación engañosa.
+        const distinctPlan = new Set(planVals.map(v=>Math.round(v*1e6))).size;
+        const coverage = peRecs.length ? planVals.length/peRecs.length : 0;
+        const planReliable = distinctPlan > 5 && coverage > 0.3;
+        const per1000m = metrosEjecTotal ? (real/metrosEjecTotal)*1000 : null;
+        const dev = planReliable ? deviation(plan, real) : null;
+        return { label:a.label, plan: planReliable?plan:null, real, per1000m, dev, planReliable };
+      }).filter(Boolean).sort((a,b)=> Math.abs(b.dev??-1) - Math.abs(a.dev??-1));
+
+      acerosBody.innerHTML = rowsData.length ? rowsData.map(r=>{
+        if (!r.planReliable){
+          return `<tr>
+            <td class="py-1.5 pr-2 font-medium">${escapeHtml(r.label)}</td>
+            <td class="py-1.5 pr-2 text-right font-mono-num text-slate-400" title="Plan no disponible de forma confiable para este ítem (datos insuficientes o constantes)">—</td>
+            <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.real,1)}</td>
+            <td class="py-1.5 pr-2 text-right font-mono-num">${r.per1000m===null?'—':fmtNum(r.per1000m,2)}</td>
+            <td class="py-1.5 text-right text-slate-400">—</td>
+          </tr>`;
+        }
+        const status = semaforoStatus(r.dev, 'lower');
+        return `<tr>
+          <td class="py-1.5 pr-2 font-medium">${escapeHtml(r.label)}</td>
+          <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.plan,1)}</td>
+          <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.real,1)}</td>
+          <td class="py-1.5 pr-2 text-right font-mono-num">${r.per1000m===null?'—':fmtNum(r.per1000m,2)}</td>
+          <td class="py-1.5 text-right font-mono-num ${r.dev===null?'text-slate-400':r.dev<=0?'text-teal':'text-rose'}">
+            <span class="semaforo-dot ${SEMAFORO_BG[status]}"></span> ${r.dev===null?'—':(r.dev>=0?'+':'')+nf1.format(r.dev)+'%'}
+          </td>
+        </tr>`;
+      }).join('') : `<tr><td colspan="5" class="text-center text-slate-400 py-4">Sin datos para el período filtrado.</td></tr>`;
+
+      if (acerosPareto){
+        const withDev = rowsData.filter(r=>r.dev!==null);
+        if (withDev.length){
+          MiniChart.hbar(acerosPareto, {
+            labels: withDev.map(r=>r.label), colors: c,
+            formatTooltip: v=>nf1.format(v)+'%',
+            datasets: [{ data: withDev.map(r=>Math.abs(r.dev)), color: c.amber }]
+          });
+        } else MiniChart.clear(acerosPareto);
+      }
+    }
+  }
+
+  // Guía de costos unitarios
+  const guideId = idPrefix==='perf' ? 'guide_perforacion' : 'guide_perforacion_pc';
+  const guide = document.getElementById(guideId);
+  if (guide){
+    if (!drillData.length){
+      guide.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Hoja "${escapeHtml(drillSheetName)}" no disponible.</p>`;
+    } else {
+      const gastoPerf = sumCol(drillRecs,'GASTO TOTAL PERFORACION (US$)').sum;
+      const metros = sumCol(drillRecs,'Metros Perforados').sum;
+      const hrOper = sumCol(drillRecs,'Hr. Oper.').sum;
+      renderUnitCostGuide(guide, [
+        { label:'Costo por metro perforado', value: metros? gastoPerf/metros : null, unit:'US$/m' },
+        { label:'Costo por hora operativa', value: hrOper? gastoPerf/hrOper : null, unit:'US$/hr' },
+        { label:'Gasto diario en combustible (prom.)', value: sumCol(drillRecs,'GASTO DIARIO COMBUSTIBLE').avg, unit:'US$/día' },
+      ]);
+    }
+  }
+}
+
+function renderTabPerforacionPC(){
+  renderPerforacionModule({
+    f: filters.perforacion_pc, peData: DATA.planEjecPC, drillData: DATA.drillingPC, drillSheetName: 'DrillingPC',
+    idPrefix: 'perf_pc', kpiTopId: 'kpi_perforacion_pc_top', equipoLabel: 'Perforadora',
+  });
+}
+
+/* ======================================================================
+   TAB 05 · VIBRACIONES & AIR BLAST
+   ====================================================================== */
+function renderTabVibraciones(){
+  const f = filters.vibraciones;
+  const c = colors();
+
+  const events = document.getElementById('events_vibraciones');
+  const trendCanvas = document.getElementById('chart_vib_trend');
+  const scatterCanvas = document.getElementById('chart_vib_ppv_taladros');
+  events.innerHTML = '';
+
+  if (!DATA.vib.length){
+    events.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hojas "Vib & Air Blast." no disponibles.</div>';
+    MiniChart.clear(trendCanvas);
+    MiniChart.clear(scatterCanvas);
+    return;
+  }
+
+  let recs = applyDateFilter(DATA.vib, DATE_COL.vib, f.dateFrom, f.dateTo);
+  recs = applyCategoryFilter(recs, 'PROYECTO', f.proyecto);
+
+  if (!recs.length){
+    events.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Sin datos para los filtros actuales.</div>';
+    MiniChart.clear(trendCanvas);
+    MiniChart.clear(scatterCanvas);
+    return;
+  }
+
+  const {min, max} = dateMinMax(recs.map(r=>r[DATE_COL.vib]).filter(isDateVal));
+  const months = continuousMonths(min, max);
+
+  let maxPpv = null, maxAir = null;
+  for (const r of recs){
+    const ppv = parseNumber(r['PPV VECTOR SUMA']);
+    if (ppv!==null && (maxPpv===null || ppv>maxPpv.val)) maxPpv = { val:ppv, r };
+    const air = parseNumber(r['AIR BLAST Db(L)']);
+    if (air!==null && (maxAir===null || air>maxAir.val)) maxAir = { val:air, r };
+  }
+
+  function eventCard(icon, title, ev, unit, targetCol){
+    if (!ev) return `<div class="rounded-2xl border border-dashed border-slate-300 dark:border-panel-border p-4 flex items-center justify-center text-xs text-slate-400">${escapeHtml(title)}: sin datos</div>`;
+    const r = ev.r;
+    const target = targetCol ? parseNumber(r[targetCol]) : null;
+    const exceeds = target!==null && ev.val > target;
+    return `<div class="rounded-2xl border ${exceeds?'border-rose/40':'border-slate-200 dark:border-panel-border'} bg-white dark:bg-panel-surface p-4">
+      <p class="text-xs font-semibold mb-1">${icon} ${escapeHtml(title)}</p>
+      <p class="font-mono-num font-bold text-2xl ${exceeds?'text-rose':''}">${fmtNum(ev.val,2)}${unit}</p>
+      ${target!==null ? `<p class="text-[11px] text-slate-400 mt-0.5">Target: ${fmtNum(target,2)}${unit} ${exceeds?' — <span class="text-rose font-semibold">excede el límite</span>':''}</p>` : ''}
+      <div class="grid grid-cols-2 gap-2 mt-2 text-[11px]">
+        <div><p class="text-slate-400">Proyecto</p><p class="font-medium truncate" title="${escapeHtml(String(r['PROYECTO']||'—'))}">${escapeHtml(String(r['PROYECTO']||'—'))}</p></div>
+        <div><p class="text-slate-400">Punto monitoreo</p><p class="font-medium truncate">${escapeHtml(String(r['PUNTO MONITOREO #1']||'—'))}</p></div>
+        <div><p class="text-slate-400">Fecha</p><p class="font-mono-num">${isDateVal(r[DATE_COL.vib])?fmtDate(r[DATE_COL.vib]):'—'}</p></div>
+      </div>
+    </div>`;
+  }
+
+  events.innerHTML =
+    eventCard('🔴','Mayor PPV (Vector Suma)', maxPpv, ' mm/s') +
+    eventCard('🔴','Mayor Air Blast', maxAir, ' dB', 'Target AIR BLAST');
+
+  if (months.length){
+    const ppvSeries = monthlyAvg(recs, DATE_COL.vib, 'PPV VECTOR SUMA', months);
+    const airSeries = monthlyAvg(recs, DATE_COL.vib, 'AIR BLAST Db(L)', months);
+    MiniChart.line(trendCanvas, {
+      labels: months.map(monthLabel), colors: c,
+      formatY: v=>fmtNum(v),
+      formatY2: v=>fmtNum(v),
+      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v)+' dB' : fmtNum(v)+' mm/s',
+      datasets: [
+        { label:'PPV Vector Suma (mm/s)', data:ppvSeries, color:c.rose },
+        { label:'Air Blast (dB)', data:airSeries, color:c.indigo, yAxisID:'y2' },
+      ]
+    });
+  } else {
+    MiniChart.clear(trendCanvas);
+  }
+
+  // PPV ↔ Número de Taladros (proxy real de tamaño/carga del disparo)
+  const scatterPoints = recs
+    .map(r=>({ x: parseNumber(r['NÚMERO DE TALADROS']), y: parseNumber(r['PPV VECTOR SUMA']), proyecto: r['PROYECTO'] }))
+    .filter(p=>p.x!==null && p.y!==null);
+  if (scatterPoints.length >= 3){
+    MiniChart.scatter(scatterCanvas, {
+      points: scatterPoints, colors: c, color: c.rose,
+      xLabel: 'Número de taladros', yLabel: 'PPV (mm/s)',
+      formatTooltip: p => `${escapeHtml(String(p.proyecto||'—'))}<br>Taladros: ${fmtNum(p.x)} · PPV: ${fmtNum(p.y,2)} mm/s`
+    });
+  } else {
+    MiniChart.clear(scatterCanvas);
+  }
+}
+
+/* ======================================================================
+   TAB 07 · ESTADÍSTICA & DEMORAS
+   ====================================================================== */
+function renderTabEstadistica(){
+  const f = filters.estadistica;
+
+  const peRecs = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+  const drillRecs = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
+  const drillPcRecs = applyDateFilter(DATA.drillingPC, DATE_COL.drillingPC, f.dateFrom, f.dateTo);
+  const fragRecs = applyDateFilter(DATA.frag, DATE_COL.frag, f.dateFrom, f.dateTo);
+  const vibRecs = applyDateFilter(DATA.vib, DATE_COL.vib, f.dateFrom, f.dateTo);
+  const blastRecs = applyDateFilter(DATA.blasting, DATE_COL.blasting, f.dateFrom, f.dateTo);
+
+  // ---- Tabla de estadística descriptiva sobre indicadores clave ----
+  const statTargets = [
+    { label:'Utilización Perforación (%)', records:drillRecs, col:'Utilización' },
+    { label:'Disp. Mecánica Perforación (%)', records:drillRecs, col:'Disp. Mecánica' },
+    { label:'OEE Perforación (%)', records:drillRecs, col:'OEE' },
+    { label:'Velocidad Perforación (m/hr)', records:drillRecs, col:'Velocidad' },
+    { label:'Metros Perforados (día)', records:drillRecs, col:'Metros Perforados' },
+    { label:'Tonelaje Roto Ejecutado (día)', records:peRecs, col:'TONELAJE ROTO POR DISPARO (EJECUTADO)' },
+    { label:'P80 Fragmentación (pulg)', records:fragRecs, col:'P80 (pulg)' },
+    { label:'PPV Vector Suma (mm/s)', records:vibRecs, col:'PPV VECTOR SUMA' },
+    { label:'Air Blast (dB)', records:vibRecs, col:'AIR BLAST Db(L)' },
+    { label:'Kg Explosivo/Taladro', records:blastRecs, col:'KILOS POR TALADRO' },
+  ];
+  const tbody = document.getElementById('table_stats');
+  const rows = statTargets.map(t=>({ t, s: describeStats(t.records, t.col) })).filter(x=>x.s);
+  tbody.innerHTML = rows.length ? rows.map(({t,s})=>`
+    <tr>
+      <td class="py-1.5 pr-2 font-medium">${escapeHtml(t.label)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.mean,2)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.median,2)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.sd,2)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${s.cv===null?'—':fmtNum(s.cv,1)+'%'}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.p10,2)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.p90,2)}</td>
+      <td class="py-1.5 text-right font-mono-num ${s.outliers>0?'text-amber':''}">${s.n} datos${s.outliers>0?` · ${s.outliers} atíp.`:''}</td>
+    </tr>`).join('') : `<tr><td colspan="8" class="text-center text-slate-400 py-6">Sin datos suficientes para estos indicadores en el período/filtros actuales</td></tr>`;
+
+  // ---- Análisis de demoras (Producción + Pre-Corte) ----
+  const kpiDemoras = document.getElementById('kpi_demoras');
+  kpiDemoras.innerHTML = '';
+  const allDrill = drillRecs.map(r=>({...r, __modulo:'Producción'})).concat(drillPcRecs.map(r=>({...r, __modulo:'Pre-Corte'})));
+
+  if (!DATA.drilling.length && !DATA.drillingPC.length){
+    kpiDemoras.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hojas "Drilling"/"DrillingPC" no disponibles.</div>';
+    MiniChart.clear(document.getElementById('chart_demoras_pareto'));
+    MiniChart.clear(document.getElementById('chart_demoras_equipo'));
+    return;
+  }
+
+  const totalOper = sumCol(allDrill, 'Demoras Oper.').sum;
+  const totalNoOper = sumCol(allDrill, 'Demoras No Oper.').sum;
+  const totalFalla = sumCol(allDrill, 'Hr. Falla Mec.').sum;
+  const totalDemoras = totalOper + totalNoOper + totalFalla;
+  const totalHrOper = sumCol(allDrill, 'Hr. Oper.').sum;
+
+  const {min:dmin, max:dmax} = dateMinMax(allDrill.map(r=>r[DATE_COL.drilling]).filter(isDateVal));
+  const dMonths = continuousMonths(dmin, dmax);
+
+  function demorasCard(container, title, val, suffix, series){
+    renderKpiCard(container, { title, mode:'calc', calcVal:val, decimals:0, suffix, months:dMonths, series });
+  }
+  demorasCard(kpiDemoras, 'Total Horas de Demora', totalDemoras, ' hr', dMonths.map(m=>{
+    const recs = allDrill.filter(r=>isDateVal(r[DATE_COL.drilling]) && monthKey(r[DATE_COL.drilling])===m);
+    return sumCol(recs,'Demoras Oper.').sum + sumCol(recs,'Demoras No Oper.').sum + sumCol(recs,'Hr. Falla Mec.').sum;
+  }));
+  demorasCard(kpiDemoras, 'Demora Operativa', totalOper, ' hr', monthlySum(allDrill, DATE_COL.drilling, 'Demoras Oper.', dMonths));
+  demorasCard(kpiDemoras, 'Demora No Operativa', totalNoOper, ' hr', monthlySum(allDrill, DATE_COL.drilling, 'Demoras No Oper.', dMonths));
+  demorasCard(kpiDemoras, 'Falla Mecánica', totalFalla, ' hr', monthlySum(allDrill, DATE_COL.drilling, 'Hr. Falla Mec.', dMonths));
+
+  // Pareto por categoría
+  const paretoCanvas = document.getElementById('chart_demoras_pareto');
+  const categorias = [
+    {k:'Demora Operativa', v: totalOper},
+    {k:'Demora No Operativa', v: totalNoOper},
+    {k:'Falla Mecánica', v: totalFalla},
+  ].sort((a,b)=>b.v-a.v);
+  const c = colors();
+  MiniChart.bar(paretoCanvas, {
+    labels: categorias.map(x=>x.k), colors:c,
+    formatTooltip: v=>fmtNum(v)+' hr',
+    datasets: [{ data: categorias.map(x=>x.v), color: c.amber }]
+  });
+
+  // Equipo con mayor demora total (Producción + Pre-Corte combinados)
+  const equipoCanvas = document.getElementById('chart_demoras_equipo');
+  const equipos = distinctValues(allDrill, 'Perforadora');
+  const demoraPorEquipo = equipos.map(eq=>{
+    const recs = allDrill.filter(r=>String(r['Perforadora']||'').trim()===eq);
+    return { eq, v: sumCol(recs,'Demoras Oper.').sum + sumCol(recs,'Demoras No Oper.').sum + sumCol(recs,'Hr. Falla Mec.').sum };
+  }).sort((a,b)=>b.v-a.v);
+  MiniChart.hbar(equipoCanvas, {
+    labels: demoraPorEquipo.map(x=>x.eq), colors:c,
+    formatTooltip: v=>fmtNum(v)+' hr',
+    datasets: [{ data: demoraPorEquipo.map(x=>x.v), color: c.rose }]
+  });
+}
+
+/* ======================================================================
+   TAB 08 · COSTOS
+   ====================================================================== */
+function renderTabCostos(){
+  const f = filters.costos;
+  const c = colors();
+
+  const drillRecs = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
+  const drillPcRecs = applyDateFilter(DATA.drillingPC, DATE_COL.drillingPC, f.dateFrom, f.dateTo);
+  const blastRecs = applyDateFilter(DATA.blasting, DATE_COL.blasting, f.dateFrom, f.dateTo);
+  const blastPcRecs = applyDateFilter(DATA.blastingPC, DATE_COL.blastingPC, f.dateFrom, f.dateTo);
+  const peRecs = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+
+  const kpiTop = document.getElementById('kpi_costos_top');
+  kpiTop.innerHTML = '';
+
+  if (!DATA.drilling.length && !DATA.blasting.length){
+    kpiTop.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hojas de costo no disponibles.</div>';
+    MiniChart.clear(document.getElementById('chart_costos_trend'));
+    MiniChart.clear(document.getElementById('chart_costos_componentes'));
+    MiniChart.clear(document.getElementById('chart_costos_waterfall'));
+    return;
+  }
+
+  const {min, max} = dateMinMax(
+    drillRecs.map(r=>r[DATE_COL.drilling]).concat(blastRecs.map(r=>r[DATE_COL.blasting])).filter(isDateVal)
+  );
+  const months = continuousMonths(min, max);
+
+  const gastoPerfProd = sumCol(drillRecs, 'GASTO TOTAL PERFORACION (US$)').sum;
+  const gastoPerfPC = sumCol(drillPcRecs, 'GASTO TOTAL PERFORACION (US$)').sum;
+  const gastoVolProd = sumCol(blastRecs, 'GASTO DE EXPLOSIVO (US$)').sum;
+  const gastoVolPC = sumCol(blastPcRecs, 'GASTO DE EXPLOSIVO (US$)').sum;
+  const costoTotalEjec = gastoPerfProd + gastoPerfPC + gastoVolProd + gastoVolPC;
+  const tonMinado = tonMinadoEjecSum(peRecs);
+
+  renderKpiCard(kpiTop, { title:'Costo Total Ejecutado', mode:'calc', calcVal:costoTotalEjec, decimals:0, suffix:' US$',
+    months, series: months.map(m=>
+      monthlySum(drillRecs, DATE_COL.drilling, 'GASTO TOTAL PERFORACION (US$)', [m])[0] +
+      monthlySum(drillPcRecs, DATE_COL.drillingPC, 'GASTO TOTAL PERFORACION (US$)', [m])[0] +
+      monthlySum(blastRecs, DATE_COL.blasting, 'GASTO DE EXPLOSIVO (US$)', [m])[0] +
+      monthlySum(blastPcRecs, DATE_COL.blastingPC, 'GASTO DE EXPLOSIVO (US$)', [m])[0]) });
+
+  renderKpiCard(kpiTop, { title:'$/TM Voladura', mode:'calc', calcVal: tonMinado? gastoVolProd/tonMinado : null, decimals:3, suffix:' US$/t',
+    months, series: months.map(m=>{ const g=monthlySum(blastRecs,DATE_COL.blasting,'GASTO DE EXPLOSIVO (US$)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? g/t : null; }) });
+
+  renderKpiCard(kpiTop, { title:'$/TM Perforación', mode:'calc', calcVal: tonMinado? gastoPerfProd/tonMinado : null, decimals:3, suffix:' US$/t',
+    months, series: months.map(m=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? g/t : null; }) });
+
+  // Costo Plan vs Ejecutado — solo disponible en el Excel para el rango en que
+  // "Gasto en perforacion"/"Gasto en Voladura" (Plan, US$) tienen datos.
+  const planRecsAvail = DATA.planEjec.filter(r=> r['Gasto en perforacion']!==null || r['Gasto en Voladura']!==null);
+  const {min:pmin, max:pmax} = dateMinMax(planRecsAvail.map(r=>r[DATE_COL.planEjec]).filter(isDateVal));
+  let costoPlanCard = null;
+  if (pmin && pmax){
+    const overlapFrom = f.dateFrom && f.dateFrom>pmin ? f.dateFrom : pmin;
+    const overlapTo = f.dateTo && f.dateTo<pmax ? f.dateTo : pmax;
+    if (overlapFrom <= overlapTo){
+      const peOverlap = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, overlapFrom, overlapTo);
+      const drillOverlap = applyDateFilter(DATA.drilling, DATE_COL.drilling, overlapFrom, overlapTo);
+      const blastOverlap = applyDateFilter(DATA.blasting, DATE_COL.blasting, overlapFrom, overlapTo);
+      const planCost = sumCol(peOverlap,'Gasto en perforacion').sum + sumCol(peOverlap,'Gasto en Voladura').sum;
+      const ejecCost = sumCol(drillOverlap,'GASTO TOTAL PERFORACION (US$)').sum + sumCol(blastOverlap,'GASTO DE EXPLOSIVO (US$)').sum;
+      const overlapMonths = continuousMonths(overlapFrom, overlapTo);
+      renderKpiCard(kpiTop, { title:'Costo Plan vs Ejecutado', planVal:planCost, ejecVal:ejecCost, decimals:0, suffix:' US$', goodDirection:'lower',
+        note: `Plan de costo (USD) disponible en el Excel solo del ${fmtDate(pmin)} al ${fmtDate(pmax)} (Producción). Esta tarjeta usa únicamente esa ventana.`,
+        months: overlapMonths, series: overlapMonths.map(m=>
+          monthlySum(drillOverlap, DATE_COL.drilling, 'GASTO TOTAL PERFORACION (US$)', [m])[0] +
+          monthlySum(blastOverlap, DATE_COL.blasting, 'GASTO DE EXPLOSIVO (US$)', [m])[0]) });
+      costoPlanCard = { planCost, ejecCost, overlapFrom, overlapTo };
+    }
+  }
+
+  // Tendencia mensual del costo ejecutado
+  const trendCanvas = document.getElementById('chart_costos_trend');
+  if (months.length){
+    const serieTotal = months.map(m=>
+      monthlySum(drillRecs, DATE_COL.drilling, 'GASTO TOTAL PERFORACION (US$)', [m])[0] +
+      monthlySum(drillPcRecs, DATE_COL.drillingPC, 'GASTO TOTAL PERFORACION (US$)', [m])[0] +
+      monthlySum(blastRecs, DATE_COL.blasting, 'GASTO DE EXPLOSIVO (US$)', [m])[0] +
+      monthlySum(blastPcRecs, DATE_COL.blastingPC, 'GASTO DE EXPLOSIVO (US$)', [m])[0]);
+    MiniChart.line(trendCanvas, {
+      labels: months.map(monthLabel), colors:c,
+      formatTooltip: v=>fmtNum(v)+' US$',
+      datasets: [{ label:'Costo Total Ejecutado', data:serieTotal, color:c.teal, fill:true }]
+    });
+  } else MiniChart.clear(trendCanvas);
+
+  // Componentes del costo ejecutado (ranking)
+  const compCanvas = document.getElementById('chart_costos_componentes');
+  const componentes = [
+    { k:'Voladura Producción', v:gastoVolProd },
+    { k:'Perforación Producción', v:gastoPerfProd },
+    { k:'Voladura Pre-Corte', v:gastoVolPC },
+    { k:'Perforación Pre-Corte', v:gastoPerfPC },
+  ].filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  if (componentes.length){
+    MiniChart.hbar(compCanvas, {
+      labels: componentes.map(x=>x.k), colors:c,
+      formatTooltip: v=>fmtNum(v)+' US$',
+      datasets: [{ data: componentes.map(x=>x.v), color:c.indigo }]
+    });
+  } else MiniChart.clear(compCanvas);
+
+  // Puente Plan → Ejecutado
+  const wfCanvas = document.getElementById('chart_costos_waterfall');
+  if (costoPlanCard){
+    const { planCost, ejecCost, overlapFrom, overlapTo } = costoPlanCard;
+    const peOv = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, overlapFrom, overlapTo);
+    const drillOv = applyDateFilter(DATA.drilling, DATE_COL.drilling, overlapFrom, overlapTo);
+    const blastOv = applyDateFilter(DATA.blasting, DATE_COL.blasting, overlapFrom, overlapTo);
+    const planPerf = sumCol(peOv,'Gasto en perforacion').sum, planVol = sumCol(peOv,'Gasto en Voladura').sum;
+    const ejecPerf = sumCol(drillOv,'GASTO TOTAL PERFORACION (US$)').sum, ejecVol = sumCol(blastOv,'GASTO DE EXPLOSIVO (US$)').sum;
+    MiniChart.waterfall(wfCanvas, {
+      colors: c, formatTooltip: v=>fmtNum(v)+' US$',
+      steps: [
+        { label:'Plan', value: planCost, type:'total' },
+        { label:'Δ Voladura', value: ejecVol-planVol, type:'delta' },
+        { label:'Δ Perforación', value: ejecPerf-planPerf, type:'delta' },
+        { label:'Ejecutado', value: ejecCost, type:'total' },
+      ]
+    });
+  } else {
+    MiniChart.clear(wfCanvas);
+  }
+}
+
+
+function applyTheme(mode){
+  document.documentElement.classList.toggle('dark', mode==='dark');
+  try{ localStorage.setItem('bi_theme_v3', mode); }catch(e){}
+  if (DATA.planEjec.length || DATA.drilling.length) renderTab(currentTab);
+}
+document.getElementById('btnTheme').addEventListener('click', ()=>{
+  applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+});
+/* ======================================================================
+   REDIBUJADO AL CAMBIAR TAMAÑO (MiniChart mide el contenedor en cada render)
+   ====================================================================== */
+let resizeDebounce;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeDebounce);
+  resizeDebounce = setTimeout(()=>{
+    if (DATA.planEjec.length || DATA.drilling.length) renderTab(currentTab);
+  }, 200);
+});
+
+(function initTheme(){
+  let saved = null;
+  try{ saved = localStorage.getItem('bi_theme_v3'); }catch(e){}
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+})();
+</script>
+</body>
+</html>
