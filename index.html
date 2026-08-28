@@ -415,12 +415,12 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">P80 vs Target por Fase</h4>
-          <p class="text-xs text-slate-400 mb-3">¿Dónde estamos fuera del target? — promedio de P80 real vs target por fase</p>
+          <p class="text-xs text-slate-400 mb-3">¿Dónde estamos fuera del target? — Mineral, P80 real vs target por fase</p>
           <div style="height:320px"><canvas id="chart_frag_p80"></canvas></div>
         </div>
         <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Ranking de desviación</h4>
-          <p class="text-xs text-slate-400 mb-3">Zona = Fase / Banco, ordenado de mayor a menor desviación</p>
+          <p class="text-xs text-slate-400 mb-3">Zona = Fase / Banco (solo Mineral), ordenado de mayor a menor desviación</p>
           <div class="overflow-auto max-h-[320px]">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px] sticky top-0 bg-white dark:bg-panel-surface">
@@ -943,6 +943,21 @@ function deviation(plan, ejec){
 /* ======================================================================
    ESTADÍSTICA DESCRIPTIVA GENÉRICA
    ====================================================================== */
+// Filtra a registros de Mineral ('M') — el Target P80 real (3 pulg) solo aplica
+// a mineral; Desmonte ('D') tiene un target distinto (8 pulg, fragmentación
+// más gruesa porque no requiere el mismo control de tamaño para chancado).
+// Promediar ambos materiales junto da un "target" mixto sin sentido operativo
+// (verificado: 1,494 registros en 3, 312 en 8 -> promedio engañoso de 3.87).
+function mineralOnly(records){
+  return records.filter(r => String(r['MATERIAL']||'').trim().toUpperCase()==='M');
+}
+
+// Simétrico a mineralOnly — Desmonte tiene su propio Target P80 (8 pulg, más
+// grueso porque no requiere el mismo control de tamaño que el mineral).
+function desmonteOnly(records){
+  return records.filter(r => String(r['MATERIAL']||'').trim().toUpperCase()==='D');
+}
+
 function extractNumericValues(records, col){
   const out = [];
   for (const r of records){ const v = parseNumber(r[col]); if (v!==null) out.push(v); }
@@ -1048,7 +1063,8 @@ function collectDesviaciones(peRecs, fragRecs, pePcRecs){
     if (worstAcero) addDesvio(`Consumo ${worstAcero.label} (acero)`, worstAcero.plan, worstAcero.ejec, 'lower', 'Costo');
   }
   if (DATA.frag.length){
-    addDesvio('P80 vs Target', sumCol(fragRecs,'Target P80 (Pulg.)').avg, sumCol(fragRecs,'P80 (pulg)').avg, 'lower', 'Fragmentación');
+    const fragMineral = mineralOnly(fragRecs);
+    addDesvio('P80 vs Target', sumCol(fragMineral,'Target P80 (Pulg.)').avg, sumCol(fragMineral,'P80 (pulg)').avg, 'lower', 'Fragmentación');
   }
   if (DATA.planEjecPC.length){
     addDesvio('Metros Pre-Corte', sumCol(pePcRecs,'METROS (PLAN)').sum, sumCol(pePcRecs,'METROS (EJECUTADO)').sum, 'higher', 'Producción futura');
@@ -2307,7 +2323,7 @@ function renderTabControl(){
   }
 
   if (DATA.frag.length){
-    const p80Dev = deviation(sumCol(fragRecs,'Target P80 (Pulg.)').avg, sumCol(fragRecs,'P80 (pulg)').avg);
+    const p80Dev = deviation(sumCol(mineralOnly(fragRecs),'Target P80 (Pulg.)').avg, sumCol(mineralOnly(fragRecs),'P80 (pulg)').avg);
     if (p80Dev!==null) categories.push({ label:'Fragmentación', status: semaforoStatus(p80Dev, 'lower') });
   }
 
@@ -2515,9 +2531,17 @@ function renderTabControl(){
     cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'🔊', title:'Air Blast', unit:'Db', planVal:abPlan, realVal:abReal, decimals:0, goodDirection:'lower' }));
   }
   if (DATA.frag.length){
-    const p80Real = sumCol(fragRecs, 'P80 (pulg)').avg;
-    const p80Plan = sumCol(fragRecs, 'Target P80 (Pulg.)').avg;
-    cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'🪨', title:'P80', unit:'pulg', planVal:p80Plan, realVal:p80Real, decimals:2, goodDirection:'lower' }));
+    const fragMineralCards = mineralOnly(fragRecs);
+    const p80Real = sumCol(fragMineralCards, 'P80 (pulg)').avg;
+    const p80Plan = sumCol(fragMineralCards, 'Target P80 (Pulg.)').avg;
+    cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'🪨', title:'P80 (Mineral)', unit:'pulg', planVal:p80Plan, realVal:p80Real, decimals:2, goodDirection:'lower' }));
+
+    const fragDesmonteCards = desmonteOnly(fragRecs);
+    const p80RealD = sumCol(fragDesmonteCards, 'P80 (pulg)').avg;
+    const p80PlanD = sumCol(fragDesmonteCards, 'Target P80 (Pulg.)').avg;
+    if (fragDesmonteCards.length){
+      cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'🪨', title:'P80 (Desmonte)', unit:'pulg', planVal:p80PlanD, realVal:p80RealD, decimals:2, goodDirection:'lower' }));
+    }
   }
   if (!targetCardsContainer.children.length){
     targetCardsContainer.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hojas necesarias no disponibles.</div>';
@@ -2550,23 +2574,27 @@ function renderTabControl(){
     kpiP80.innerHTML = '<div class="col-span-full text-xs text-slate-400 text-center py-3">Hoja "Frag. PortaM" no disponible.</div>';
     MiniChart.clear(p80Canvas);
   } else {
-    const p80Real = sumCol(fragRecs,'P80 (pulg)').avg, p80Target = sumCol(fragRecs,'Target P80 (Pulg.)').avg;
-    const stats = describeStats(fragRecs, 'P80 (pulg)');
-    const cumplen = fragRecs.length ? (fragRecs.filter(r=>String(r['Alcanzó target?']).trim().toUpperCase()==='SI').length/fragRecs.length)*100 : null;
+    const fragMineral = mineralOnly(fragRecs);
+    const p80Real = sumCol(fragMineral,'P80 (pulg)').avg, p80Target = sumCol(fragMineral,'Target P80 (Pulg.)').avg;
+    const stats = describeStats(fragMineral, 'P80 (pulg)');
+    const cumplen = fragMineral.length ? (fragMineral.filter(r=>String(r['Alcanzó target?']).trim().toUpperCase()==='SI').length/fragMineral.length)*100 : null;
     const miniStat = (label,val)=>`<div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 px-2 py-1.5"><p class="text-[9px] uppercase text-slate-400">${label}</p><p class="font-mono-num text-sm font-semibold">${val}</p></div>`;
     kpiP80.innerHTML =
-      miniStat('P80 actual', fmtNum(p80Real,2)+' pulg') +
+      miniStat('P80 actual (Mineral)', fmtNum(p80Real,2)+' pulg') +
       miniStat('Target', fmtNum(p80Target,2)+' pulg') +
       miniStat('Cumplimiento', cumplen===null?'—':fmtNum(cumplen,0)+'%') +
       miniStat('Variabilidad (CV)', stats&&stats.cv!==null?fmtNum(stats.cv,0)+'%':'—');
-    const p80Months = monthlyAvg(fragRecs, DATE_COL.frag, 'P80 (pulg)', months);
-    const targetMonths = monthlyAvg(fragRecs, DATE_COL.frag, 'Target P80 (Pulg.)', months);
+    const p80Months = monthlyAvg(fragMineral, DATE_COL.frag, 'P80 (pulg)', months);
+    const targetMonths = monthlyAvg(fragMineral, DATE_COL.frag, 'Target P80 (Pulg.)', months);
+    const fragDesmonte = desmonteOnly(fragRecs);
+    const p80MonthsD = fragDesmonte.length ? monthlyAvg(fragDesmonte, DATE_COL.frag, 'P80 (pulg)', months) : null;
     MiniChart.line(p80Canvas, {
       labels: months.map(monthLabel), colors: c,
       formatTooltip: v=>fmtNum(v,2)+' pulg',
       datasets: [
-        { label:'P80', data: p80Months, color: c.teal, fill:true },
-        { label:'Target', data: targetMonths, color: c.amber },
+        { label:'P80 (Mineral)', data: p80Months, color: c.teal, fill:true },
+        { label:'Target Mineral', data: targetMonths, color: c.amber },
+        ...(p80MonthsD ? [{ label:'P80 (Desmonte)', data: p80MonthsD, color: c.indigo }] : []),
       ]
     });
   }
@@ -2610,7 +2638,7 @@ function renderTabControl(){
       <td class="py-1.5 pr-2 font-medium">${escapeHtml(d.label)}</td>
       <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(d.plan,1)}</td>
       <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(d.ejec,1)}</td>
-      <td class="py-1.5 pr-2 text-right font-mono-num ${d.dev>=0?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${d.dev>=0?'+':''}${nf1.format(d.dev)}%</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num ${(d.goodDirection==='higher'?d.dev>=0:d.dev<=0)?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${d.dev>=0?'+':''}${nf1.format(d.dev)}%</td>
       <td class="py-1.5 pr-2">${CRIT_LABEL[status]||'—'}</td>
       <td class="py-1.5 text-slate-500 dark:text-slate-400">${escapeHtml(d.impacto||'—')}</td>
     </tr>`;
@@ -2625,7 +2653,7 @@ function renderTabControl(){
     cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
       <p class="text-xs font-semibold mb-1">📌 Mayor desviación del plan</p>
       <p class="text-sm font-display font-700">${escapeHtml(worst.label)}</p>
-      <p class="text-xs text-slate-400 mt-0.5">Desviación de <span class="font-mono-num ${worst.dev>=0?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${worst.dev>=0?'+':''}${nf1.format(worst.dev)}%</span> respecto al plan. Impacto: ${escapeHtml(worst.impacto||'—')}.</p>
+      <p class="text-xs text-slate-400 mt-0.5">Desviación de <span class="font-mono-num ${(worst.goodDirection==='higher'?worst.dev>=0:worst.dev<=0)?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${worst.dev>=0?'+':''}${nf1.format(worst.dev)}%</span> respecto al plan. Impacto: ${escapeHtml(worst.impacto||'—')}.</p>
     </div>`);
   }
 
@@ -2651,7 +2679,7 @@ function renderTabControl(){
 
   if (DATA.frag.length){
     const zoneMap = new Map();
-    for (const r of fragRecs){
+    for (const r of mineralOnly(fragRecs)){
       const key = `${String(r['FASE']||'(Sin dato)').trim()} / ${String(r['BANCO']||'(Sin dato)').trim()}`;
       if (!zoneMap.has(key)) zoneMap.set(key, []);
       zoneMap.get(key).push(r);
@@ -2727,7 +2755,7 @@ function renderTabControl(){
   // P80 ↔ Factor de Potencia
   const relP80FpCanvas = document.getElementById('chart_rel_p80_fp');
   if (DATA.frag.length && DATA.blasting.length && months.length){
-    const p80Series = monthlyAvg(fragRecs, DATE_COL.frag, 'P80 (pulg)', months);
+    const p80Series = monthlyAvg(mineralOnly(fragRecs), DATE_COL.frag, 'P80 (pulg)', months);
     const fpSeries = monthlyAvg(blastRecs, DATE_COL.blasting, 'F.P. (TEORICA)', months, true);
     MiniChart.line(relP80FpCanvas, {
       labels: months.map(monthLabel), colors: c,
@@ -3018,9 +3046,10 @@ function renderTabFrag(){
   renderKpiCard(kpiContainer, { title:'% Cumplimiento Target', mode:'calc', calcVal:pctCumple, decimals:1, suffix:'%',
     months, series: months.map(m=>{ const mr = recs.filter(r=>isDateVal(r[DATE_COL.frag]) && monthKey(r[DATE_COL.frag])===m); if(!mr.length) return null; return (mr.filter(r=>String(r['Alcanzó target?']).trim().toUpperCase()==='SI').length/mr.length)*100; }) });
 
-  const p80avg = sumCol(recs,'P80 (pulg)').avg;
-  renderKpiCard(kpiContainer, { title:'P80 Promedio', mode:'calc', calcVal:p80avg, decimals:2, suffix:' pulg',
-    months, series: monthlyAvg(recs, DATE_COL.frag, 'P80 (pulg)', months) });
+  const fragMineralTab = mineralOnly(recs);
+  const p80avg = sumCol(fragMineralTab,'P80 (pulg)').avg;
+  renderKpiCard(kpiContainer, { title:'P80 Promedio (Mineral)', mode:'calc', calcVal:p80avg, decimals:2, suffix:' pulg',
+    months, series: monthlyAvg(fragMineralTab, DATE_COL.frag, 'P80 (pulg)', months) });
 
   let peorDev = null;
   for (const r of recs){
@@ -3032,10 +3061,10 @@ function renderTabFrag(){
   renderKpiCard(kpiContainer, { title:'Peor Desviación P80', mode:'calc', calcVal:peorDev, decimals:1, suffix:'%' });
 
   // Chart P80 vs Target por Fase
-  const fases = distinctValues(recs, 'FASE');
+  const fases = distinctValues(fragMineralTab, 'FASE');
   if (fases.length && chartCanvas){
-    const p80ByFase = fases.map(fase => sumCol(recs.filter(r=>String(r['FASE']||'').trim()===fase), 'P80 (pulg)').avg);
-    const targetByFase = fases.map(fase => sumCol(recs.filter(r=>String(r['FASE']||'').trim()===fase), 'Target P80 (Pulg.)').avg);
+    const p80ByFase = fases.map(fase => sumCol(fragMineralTab.filter(r=>String(r['FASE']||'').trim()===fase), 'P80 (pulg)').avg);
+    const targetByFase = fases.map(fase => sumCol(fragMineralTab.filter(r=>String(r['FASE']||'').trim()===fase), 'Target P80 (Pulg.)').avg);
     MiniChart.bar(chartCanvas, {
       labels: fases, colors: c,
       formatTooltip: v=>fmtNum(v,2)+' pulg',
@@ -3050,7 +3079,7 @@ function renderTabFrag(){
 
   // Ranking (Zona = Fase / Banco)
   const zoneMap = new Map();
-  for (const r of recs){
+  for (const r of mineralOnly(recs)){
     const fase = String(r['FASE']||'(Sin dato)').trim();
     const banco = String(r['BANCO']||'(Sin dato)').trim();
     const key = `${fase} / ${banco}`;
@@ -3091,7 +3120,7 @@ function renderTabFrag(){
   const {min: fpMin, max: fpMax} = dateMinMax(recs.map(r=>r[DATE_COL.frag]).filter(isDateVal));
   const fpMonths = continuousMonths(fpMin, fpMax);
   if (DATA.blasting.length && fpMonths.length){
-    const p80Series = monthlyAvg(recs, DATE_COL.frag, 'P80 (pulg)', fpMonths);
+    const p80Series = monthlyAvg(mineralOnly(recs), DATE_COL.frag, 'P80 (pulg)', fpMonths);
     const fpSeries = monthlyAvg(blastRecsForFp, DATE_COL.blasting, 'F.P. (TEORICA)', fpMonths, true);
     MiniChart.line(p80FpCanvas, {
       labels: fpMonths.map(monthLabel), colors: c,
