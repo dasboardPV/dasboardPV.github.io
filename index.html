@@ -54,6 +54,33 @@
   .tab-btn[data-active="true"] { color: #2DD4BF; border-color:#2DD4BF; background: rgba(45,212,191,.08); }
   .semaforo-dot { width:9px; height:9px; border-radius:9999px; display:inline-block; }
   .checklist::-webkit-scrollbar { width: 6px; }
+
+  /* ===================== IMPRESIÓN / EXPORTAR A PDF =====================
+     Solo se imprime la pestaña activa, en modo claro, sin la barra de
+     pestañas ni los controles de carga/actualización — pensado para que
+     alguien lo pegue en una presentación o lo mande por correo como PDF. */
+  #printHeader { display: none; }
+  @media print {
+    body { background: #fff !important; }
+    header, #tabBarWrap, #filters_control, [data-filter-wrap], .fms-btn,
+    #btnRefresh, #btnUpload, #btnTheme, #btnExport, #dropZone,
+    #btnAlertas, .clear-filters-btn, .filters-card { display: none !important; }
+    #printHeader { display: flex !important; }
+    main { max-width: 100% !important; padding: 0 !important; }
+    /* Las cuadrículas (CSS Grid) no paginan bien: si una tarjeta de la fila no
+       cabe, el navegador salta TODA la fila a la siguiente página, dejando
+       huecos enormes. Se apilan en columna para que cada tarjeta fluya sola. */
+    .grid { display: block !important; }
+    .grid > * { margin-bottom: 10px; }
+    .rounded-2xl, .rounded-xl { border: 1px solid #cbd5e1 !important; box-shadow: none !important; }
+    /* Solo se evita partir tarjetas GRANDES a la mitad (gráficos, tablas) —
+       las tarjetas KPI pequeñas no lo necesitan y forzarlo en todas generaba
+       saltos de página con espacio en blanco excesivo. */
+    div[style*="height:2"], div[style*="height:3"], table { break-inside: avoid; }
+    canvas { max-width: 100% !important; }
+    a[href]:after { content: none !important; }
+    @page { margin: 12mm; }
+  }
 </style>
 </head>
 
@@ -82,6 +109,10 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v6h-6"/></svg>
         Actualizar datos
       </button>
+      <button id="btnExport" class="hidden items-center gap-1.5 text-sm font-medium rounded-lg border border-slate-300 dark:border-panel-border bg-white dark:bg-panel-surface2 hover:bg-slate-50 dark:hover:bg-panel-surface px-3 py-2 transition" title="Exporta la pestaña actual como PDF (usa 'Guardar como PDF' en el diálogo de impresión)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+        <span class="hidden sm:inline">Exportar / Imprimir</span>
+      </button>
       <button id="btnUpload" class="flex items-center gap-1.5 text-sm font-semibold rounded-lg bg-slate-900 dark:bg-teal text-white dark:text-panel-bg hover:opacity-90 px-3.5 py-2 transition shadow-sm">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
         Cargar archivo
@@ -107,6 +138,7 @@
         <button data-tab="vibraciones" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">06 · Vibraciones &amp; Air Blast</button>
         <button data-tab="estadistica" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">07 · Estadística &amp; Demoras</button>
         <button data-tab="costos" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">08 · Costos</button>
+        <button data-tab="bsm" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">09 · BSM</button>
       </div>
     </div>
     <!-- Degradados que indican que hay más pestañas al desplazar (9 pestañas en total) -->
@@ -117,6 +149,13 @@
   </div>
 </header>
 
+<div id="printHeader" class="hidden items-center justify-between pb-4 mb-2 border-b-2 border-slate-800">
+  <div>
+    <p class="font-display font-700 text-lg">Panel Gerencial V3 — <span id="printTabName"></span></p>
+    <p class="text-xs text-slate-500">Perforación · Voladura · Fragmentación · Vibraciones</p>
+  </div>
+  <p class="text-xs text-slate-500" id="printDate"></p>
+</div>
 <main class="max-w-[1700px] mx-auto px-4 sm:px-6 py-6">
 
   <!-- EMPTY STATE -->
@@ -128,6 +167,7 @@
       <h2 class="font-display font-700 text-xl">Esperando datos</h2>
       <p class="text-slate-500 dark:text-slate-400 text-sm mt-1.5 max-w-lg mx-auto">Carga <b>BD_Compilados_P_V_LIMPIO.xlsx</b> (o el archivo con la misma estructura) para generar el panel gerencial: Control Gerencial, Voladura, Fragmentación, Perforación y Vibraciones.</p>
       <button id="btnUpload2" class="mt-6 inline-flex items-center gap-2 text-sm font-semibold rounded-lg bg-slate-900 dark:bg-teal text-white dark:text-panel-bg hover:opacity-90 px-4 py-2.5 transition shadow-sm">Seleccionar archivo</button>
+      <button id="btnReconectar" class="hidden mt-6 inline-flex items-center gap-2 text-sm font-semibold rounded-lg bg-teal text-panel-bg hover:opacity-90 px-4 py-2.5 transition shadow-sm">🔗 Reconectar con tu archivo Excel (1 clic)</button>
       <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-4 font-mono-num">.XLSX &nbsp;·&nbsp; .XLS</p>
     </div>
   </div>
@@ -140,7 +180,7 @@
 
     <!-- ===================== TAB: 00 CONTROL GERENCIAL ===================== -->
     <section data-panel="control" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="control" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -149,8 +189,7 @@
           </button>
         </div>
         <div id="filters_control" class="flex flex-wrap items-center gap-2"></div>
-        <p class="text-[11px] text-slate-400 mt-2">Proyecto / Fase / Banco / Material se aplican solo a los paneles cuya fuente de datos tiene esa dimensión (Tonelaje por proyecto, Fragmentación). El comparativo Plan vs Ejecutado es una serie corporativa diaria y no se segmenta por proyecto.</p>
-      </div>
+              </div>
 
       <!-- Semáforo general + Cumplimiento YTD: lectura de salud en 3 segundos -->
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
@@ -169,16 +208,14 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Tonelaje Roto — Plan Acumulado vs Ejecutado Acumulado</h4>
-          <p class="text-xs text-slate-400 mb-3">Acumulado corrido del período — permite ver si la brecha se cierra, se mantiene o se amplía.</p>
-          <div style="height:300px"><canvas id="chart_control_acum"></canvas></div>
+                    <div style="height:300px"><canvas id="chart_control_acum"></canvas></div>
         </div>
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Detalle mensual</h4>
-          <p class="text-xs text-slate-400 mb-3">Plan vs Ejecutado por mes, con desviación.</p>
-          <div style="height:230px"><canvas id="chart_control_main"></canvas></div>
-          <div id="dev_row_control" class="flex mt-1 text-center"></div>
+                    <div style="height:230px"><canvas id="chart_control_main"></canvas></div>
+          <div class="overflow-x-auto"><div id="dev_row_control" class="flex mt-1 text-center min-w-max"></div></div>
         </div>
       </div>
 
@@ -190,30 +227,43 @@
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">Cumplimiento por Indicador — resumen</h4>
-        <p class="text-xs text-slate-400 mb-3">Todos los indicadores anteriores, ordenados de mayor a menor cumplimiento, con línea de referencia en 100%.</p>
-        <div style="height:280px"><canvas id="chart_cumplimiento_resumen"></canvas></div>
+                <div style="height:280px"><canvas id="chart_cumplimiento_resumen"></canvas></div>
+      </div>
+
+      <!-- Comparativo entre Proyectos -->
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+          <h4 class="font-display font-700 text-base">📊 Comparativo entre Proyectos</h4>
+          <div id="comparativo_proyecto_selector" class="relative shrink-0"></div>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">Solo indicadores disponibles por proyecto.</p>
+        <div class="overflow-auto">
+          <table class="w-full text-xs min-w-[500px]">
+            <thead class="text-slate-400 uppercase text-[10px]">
+              <tr id="comparativo_proyecto_head"><th class="text-left py-1.5 pr-2">Indicador</th></tr>
+            </thead>
+            <tbody id="comparativo_proyecto_body" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- P80 y VIBRACIONES -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">🪨 P80 — Calidad de Fragmentación</h4>
-          <p class="text-xs text-slate-400 mb-3">¿Estamos logrando la fragmentación objetivo?</p>
-          <div id="kpi_control_p80" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
+                    <div id="kpi_control_p80" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
           <div style="height:180px"><canvas id="chart_control_p80"></canvas></div>
         </div>
-        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">📳 Vibraciones &amp; Air Blast</h4>
-          <p class="text-xs text-slate-400 mb-3">No solo el promedio — también el máximo y dónde ocurre.</p>
-          <div id="kpi_control_vib" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
+                    <div id="kpi_control_vib" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
           <div id="vib_worst_control" class="text-xs text-slate-500 dark:text-slate-400"></div>
         </div>
       </div>
 
       <div class="rounded-2xl border border-rose/30 bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1 flex items-center gap-2"><span class="semaforo-dot bg-rose"></span> Principales Desvíos</h4>
-        <p class="text-xs text-slate-400 mb-3">Los indicadores con mayor desviación |%| respecto a su plan, en todo el panel — clasificados por criticidad e impacto.</p>
-        <div class="overflow-auto">
+                <div class="overflow-auto">
           <table class="w-full text-xs min-w-[620px]">
             <thead class="text-slate-400 uppercase text-[10px]">
               <tr>
@@ -232,14 +282,12 @@
 
       <div class="rounded-2xl border border-amber/30 bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">¿Dónde debemos actuar?</h4>
-        <p class="text-xs text-slate-400 mb-3">Focos de mejora identificados automáticamente a partir de los datos cargados.</p>
-        <div id="oportunidades_control" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                <div id="oportunidades_control" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
       </div>
 
       <div>
         <h4 class="font-display font-700 text-base mb-1">📈 Relaciones Costo–Performance</h4>
-        <p class="text-xs text-slate-400 mb-3">¿Estamos gastando más y obteniendo mejores resultados, o simplemente gastando más? — series mensuales, eje dual.</p>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
             <h5 class="font-display font-600 text-sm mb-2">Costo Perforación US$/TM ↔ Utilización</h5>
             <div style="height:200px"><canvas id="chart_rel_costoperf_util"></canvas></div>
@@ -253,13 +301,12 @@
             <div style="height:200px"><canvas id="chart_rel_p80_fp"></canvas></div>
           </div>
         </div>
-        <p class="text-[11px] text-slate-400 mt-2">PPV ↔ tamaño de disparo se muestra en <b>06 · Vibraciones</b> usando "Número de Taladros" como proxy real de carga — no existe en el Excel un campo directo de tonelaje/carga vinculado a cada medición de vibración.</p>
-      </div>
+              </div>
     </section>
 
     <!-- ===================== TAB: 02 VOLADURA ===================== -->
     <section data-panel="voladura" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="voladura" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -276,9 +323,9 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Consumibles — Real vs Plan (ordenado por desviación)</h4>
-          <p class="text-xs text-slate-400 mb-3">Todos los agentes con Plan y/o Consumo disponibles en el Excel — mayor desviación primero.</p>
+          <p class="text-xs text-slate-400 mb-3">Ordenado por mayor desviación.</p>
           <div class="overflow-auto">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px]">
@@ -288,24 +335,21 @@
             </table>
           </div>
         </div>
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Pareto de desviaciones</h4>
-          <p class="text-xs text-slate-400 mb-3">|Desviación %| por agente — dónde enfocar primero.</p>
-          <div style="height:280px"><canvas id="chart_pareto_voladura"></canvas></div>
+                    <div style="height:280px"><canvas id="chart_pareto_voladura"></canvas></div>
         </div>
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">Explosivos totales — Plan Acumulado vs Consumo Acumulado</h4>
-        <p class="text-xs text-slate-400 mb-3">Suma de todos los agentes (kg/und equivalente) — acumulado corrido del período.</p>
-        <div style="height:260px"><canvas id="chart_voladura_acum"></canvas></div>
+                <div style="height:260px"><canvas id="chart_voladura_acum"></canvas></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costo Real por Taladro Cargado — por agente</h4>
-          <p class="text-xs text-slate-400 mb-2">Consumo real × precio unitario, dividido entre taladros del período. Diesel incluye conversión S/.→US$ y densidad aproximada (ver nota).</p>
-          <div class="overflow-auto">
+                    <div class="overflow-auto">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px]">
                 <tr><th class="text-left py-1.5 pr-2">Agente</th><th class="text-right py-1.5 pr-2">Consumo</th><th class="text-right py-1.5 pr-2">Costo (US$)</th><th class="text-right py-1.5 pr-2">US$/Taladro</th><th class="text-right py-1.5">% del total</th></tr>
@@ -315,7 +359,7 @@
             </table>
           </div>
         </div>
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Composición del costo por taladro</h4>
           <div style="height:280px"><canvas id="chart_costo_taladro_voladura"></canvas></div>
         </div>
@@ -323,14 +367,13 @@
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
-        <p class="text-xs text-slate-400 mb-2">Para ubicar rápidamente dónde se concentra el gasto de voladura.</p>
-        <div id="guide_voladura"></div>
+                <div id="guide_voladura"></div>
       </div>
     </section>
 
     <!-- ===================== TAB: 02 VOLADURA PRE-CORTE ===================== -->
     <section data-panel="voladura_pc" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="voladura_pc" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -339,7 +382,7 @@
           </button>
         </div>
         <div id="filters_voladura_pc" class="flex flex-wrap items-center gap-2"></div>
-        <p class="text-[11px] text-slate-400 mt-2">Fuentes: "Blasting PC" y "Plan vs Ejec. PC" — el precorte no genera tonelaje roto (es voladura perimetral de control de talud), por eso no se muestra ese indicador aquí.</p>
+        <p class="text-[11px] text-slate-400 mt-2">El precorte no genera tonelaje roto.</p>
       </div>
 
       <div>
@@ -348,7 +391,7 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Consumibles — Real vs Plan (ordenado por desviación)</h4>
           <div class="overflow-auto">
             <table class="w-full text-xs">
@@ -359,7 +402,7 @@
             </table>
           </div>
         </div>
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Pareto de desviaciones</h4>
           <div style="height:260px"><canvas id="chart_pareto_voladura_pc"></canvas></div>
         </div>
@@ -367,14 +410,14 @@
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">Explosivos totales — Plan Acumulado vs Consumo Acumulado</h4>
-        <p class="text-xs text-slate-400 mb-3">Enaline + Booster (agentes en kg) — acumulado corrido del período.</p>
+        <p class="text-xs text-slate-400 mb-3">Enaline + Booster (kg).</p>
         <div style="height:220px"><canvas id="chart_voladura_pc_acum"></canvas></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costo Real por Taladro Cargado — por agente</h4>
-          <p class="text-xs text-slate-400 mb-2">Solo agentes con precio unitario disponible (Enaline no tiene precio de referencia registrado).</p>
+          <p class="text-xs text-slate-400 mb-2">Solo agentes con precio registrado.</p>
           <div class="overflow-auto">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px]">
@@ -385,7 +428,7 @@
             </table>
           </div>
         </div>
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Composición del costo por taladro</h4>
           <div style="height:240px"><canvas id="chart_costo_taladro_voladura_pc"></canvas></div>
         </div>
@@ -399,7 +442,7 @@
 
     <!-- ===================== TAB: 03 FRAGMENTACIÓN ===================== -->
     <section data-panel="frag" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="frag" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -413,14 +456,14 @@
       <div id="kpi_frag" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">P80 vs Target por Fase</h4>
-          <p class="text-xs text-slate-400 mb-3">¿Dónde estamos fuera del target? — Mineral, P80 real vs target por fase</p>
+          <p class="text-xs text-slate-400 mb-3">Mineral — P80 real vs target por fase.</p>
           <div style="height:320px"><canvas id="chart_frag_p80"></canvas></div>
         </div>
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Ranking de desviación</h4>
-          <p class="text-xs text-slate-400 mb-3">Zona = Fase / Banco (solo Mineral), ordenado de mayor a menor desviación</p>
+          <p class="text-xs text-slate-400 mb-3">Fase / Banco — solo Mineral.</p>
           <div class="overflow-auto max-h-[320px]">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px] sticky top-0 bg-white dark:bg-panel-surface">
@@ -440,14 +483,13 @@
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">P80 ↔ Factor de Potencia</h4>
-        <p class="text-xs text-slate-400 mb-3">¿La fragmentación se explica por el diseño de la voladura? — tendencia mensual, eje dual.</p>
-        <div style="height:260px"><canvas id="chart_frag_p80_fp"></canvas></div>
+                <div style="height:260px"><canvas id="chart_frag_p80_fp"></canvas></div>
       </div>
     </section>
 
     <!-- ===================== TAB: 04 PERFORACIÓN & PERFORMANCE ===================== -->
     <section data-panel="perforacion" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="perforacion" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -456,8 +498,7 @@
           </button>
         </div>
         <div id="filters_perforacion" class="flex flex-wrap items-center gap-2"></div>
-        <p class="text-[11px] text-slate-400 mt-2">Metros/Utilización/Disp./Velocidad Real vs Plan son series corporativas (hoja "Plan vs Ejec."). El ranking y matriz por perforadora usan la hoja "Drilling" y se filtran solo por fecha.</p>
-      </div>
+              </div>
 
       <div id="kpi_perforacion_top" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3"></div>
 
@@ -467,11 +508,11 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-3">Ranking por perforadora — Metros totales</h4>
           <div style="height:280px"><canvas id="chart_perf_ranking"></canvas></div>
         </div>
-        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-3">Matriz de desempeño</h4>
           <div class="overflow-auto max-h-[280px]">
             <table class="w-full text-xs">
@@ -493,9 +534,9 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="highlights_perforacion"></div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Consumo de Aceros — Real vs Plan</h4>
-          <p class="text-xs text-slate-400 mb-2">Ordenado por mayor desviación — incluye intensidad por 1000 m perforados.</p>
+          <p class="text-xs text-slate-400 mb-2">Incluye intensidad por 1000 m.</p>
           <div class="overflow-auto">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px]">
@@ -505,30 +546,27 @@
             </table>
           </div>
         </div>
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Pareto de sobreconsumo</h4>
-          <p class="text-xs text-slate-400 mb-2">|Desviación %| por ítem de acero.</p>
-          <div style="height:220px"><canvas id="chart_pareto_aceros_perforacion"></canvas></div>
+                    <div style="height:220px"><canvas id="chart_pareto_aceros_perforacion"></canvas></div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costo por Taladro Perforado</h4>
-          <p class="text-xs text-slate-400 mb-2">Combustible + Aceros = costo total real por taladro (US$/tal).</p>
-          <div style="height:240px"><canvas id="chart_costo_taladro_perforacion"></canvas></div>
+                    <div style="height:240px"><canvas id="chart_costo_taladro_perforacion"></canvas></div>
         </div>
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
-          <p class="text-xs text-slate-400 mb-2">Para ubicar rápidamente dónde se concentra el gasto de perforación.</p>
-          <div id="guide_perforacion"></div>
+                    <div id="guide_perforacion"></div>
         </div>
       </div>
     </section>
 
     <!-- ===================== TAB: 04 PERFORACIÓN PRE-CORTE ===================== -->
     <section data-panel="perforacion_pc" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="perforacion_pc" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -537,7 +575,7 @@
           </button>
         </div>
         <div id="filters_perforacion_pc" class="flex flex-wrap items-center gap-2"></div>
-        <p class="text-[11px] text-slate-400 mt-2">Fuente: "DrillingPC" (equipos distintos a producción: DI650i, ROCL8-01) y "Plan vs Ejec. PC".</p>
+        <p class="text-[11px] text-slate-400 mt-2">Equipos: DI650i, ROCL8-01.</p>
       </div>
 
       <div id="kpi_perforacion_pc_top" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3"></div>
@@ -548,11 +586,11 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-3">Ranking por equipo — Metros totales</h4>
           <div style="height:280px"><canvas id="chart_perf_pc_ranking"></canvas></div>
         </div>
-        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-3">Matriz de desempeño</h4>
           <div class="overflow-auto max-h-[280px]">
             <table class="w-full text-xs">
@@ -574,7 +612,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="highlights_perforacion_pc"></div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Consumo de Aceros — Real vs Plan</h4>
           <div class="overflow-auto">
             <table class="w-full text-xs">
@@ -585,18 +623,18 @@
             </table>
           </div>
         </div>
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Pareto de sobreconsumo</h4>
           <div style="height:200px"><canvas id="chart_pareto_aceros_perforacion_pc"></canvas></div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costo por Taladro Perforado</h4>
           <div style="height:220px"><canvas id="chart_costo_taladro_perforacion_pc"></canvas></div>
         </div>
-        <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
           <div id="guide_perforacion_pc"></div>
         </div>
@@ -605,7 +643,7 @@
 
     <!-- ===================== TAB: 05 VIBRACIONES & AIR BLAST ===================== -->
     <section data-panel="vibraciones" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="vibraciones" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -628,14 +666,14 @@
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">PPV ↔ Tamaño del disparo</h4>
-        <p class="text-xs text-slate-400 mb-3">Cada punto es una medición real — "Número de Taladros" como proxy de carga (el Excel no registra tonelaje/carga por medición de vibración).</p>
+        <p class="text-xs text-slate-400 mb-3">Proxy de carga: Número de Taladros.</p>
         <div style="height:280px"><canvas id="chart_vib_ppv_taladros"></canvas></div>
       </div>
     </section>
 
     <!-- ===================== TAB: 07 ESTADÍSTICA & DEMORAS ===================== -->
     <section data-panel="estadistica" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="estadistica" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -648,8 +686,7 @@
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">Estadística descriptiva — indicadores clave</h4>
-        <p class="text-xs text-slate-400 mb-3">Promedio, mediana, desviación estándar, coeficiente de variación y percentiles — para ver más allá del promedio.</p>
-        <div class="overflow-auto">
+                <div class="overflow-auto">
           <table class="w-full text-xs min-w-[720px]">
             <thead class="text-slate-400 uppercase text-[10px]">
               <tr>
@@ -672,12 +709,12 @@
         <h4 class="font-display font-700 text-base mb-3">Análisis de demoras — Perforación (Producción + Pre-Corte)</h4>
         <div id="kpi_demoras" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4"></div>
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div class="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
             <h5 class="font-display font-600 text-sm mb-1">Pareto por categoría de demora</h5>
-            <p class="text-[11px] text-slate-400 mb-3">El Excel registra horas por categoría (Operativa / No operativa / Falla mecánica), sin causa específica por evento. Para un Pareto de causas reales, se necesitaría capturar el motivo de cada demora.</p>
+            <p class="text-[11px] text-slate-400 mb-3">Por categoría de hora, sin causa específica por evento.</p>
             <div style="height:240px"><canvas id="chart_demoras_pareto"></canvas></div>
           </div>
-          <div class="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
             <h5 class="font-display font-600 text-sm mb-3">Equipo con mayor demora total</h5>
             <div style="height:240px"><canvas id="chart_demoras_equipo"></canvas></div>
           </div>
@@ -687,7 +724,7 @@
 
     <!-- ===================== TAB: 08 COSTOS ===================== -->
     <section data-panel="costos" class="space-y-6">
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
           <button data-clear="costos" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
@@ -706,15 +743,65 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-3">Componentes del costo ejecutado</h4>
           <div style="height:260px"><canvas id="chart_costos_componentes"></canvas></div>
         </div>
-        <div class="lg:col-span-6 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Puente Plan → Ejecutado</h4>
-          <p class="text-[11px] text-slate-400 mb-2">Voladura + Perforación, solo en el período con Plan de costo disponible en el Excel.</p>
+          <p class="text-[11px] text-slate-400 mb-2">Solo período con Plan de costo disponible.</p>
           <div style="height:240px"><canvas id="chart_costos_waterfall"></canvas></div>
         </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: 09 BSM (Business System Management) ===================== -->
+    <section data-panel="bsm" class="space-y-6">
+      <div class="rounded-2xl border border-indigo-200 dark:border-panel-border bg-indigo-50/60 dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">🎯 Business System Management — Perforación y Voladura</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Seguimiento de capacidad, brechas y plan de cierre para Perforación y Voladura.</p>
+      </div>
+
+      <div>
+        <h4 class="font-display font-700 text-base mb-1">01 · ¿Qué nos plantea el plan? — Escenarios de capacidad</h4>
+        <p id="bsm_metodologia" class="text-xs text-slate-400 mb-3"></p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+            <h5 class="font-display font-600 text-sm mb-2">Perforación de Producción — Tonelaje Roto Anual</h5>
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px]"><tr><th class="text-left py-1.5 pr-2">Escenario</th><th class="text-right py-1.5">M t/año</th></tr></thead>
+              <tbody id="bsm_tabla_produccion" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+            <h5 class="font-display font-600 text-sm mb-2">Perforación de Precorte — Metraje Anual</h5>
+            <table class="w-full text-xs">
+              <thead class="text-slate-400 uppercase text-[10px]"><tr><th class="text-left py-1.5 pr-2">Escenario</th><th class="text-right py-1.5">Miles m/año</th></tr></thead>
+              <tbody id="bsm_tabla_precorte" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-display font-700 text-base mb-3">02 · ¿Cómo estamos? — Capacidad instalada actual</h4>
+        <div id="bsm_kpi_actual" class="grid grid-cols-1 sm:grid-cols-3 gap-4"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">03 · Brechas del Sistema — Actual vs. Escenario P75</h4>
+        <p class="text-xs text-slate-400 mb-3">Actual vs. escenario P75.</p>
+        <div id="bsm_brechas"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-3">04 · Plan de Acción — Cómo vamos a llegar</h4>
+        <div id="bsm_plan_accion" class="space-y-3"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">05 · Modelo de Gestión — Cadencia de Seguimiento</h4>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="bsm_cadencia"></div>
       </div>
     </section>
 
@@ -1149,6 +1236,11 @@ const filters = {
   costos:         { dateFrom:null, dateTo:null },
 };
 
+// Selección persistente para el Comparativo entre Proyectos (Resumen
+// Gerencial) — separada de los filtros normales porque no filtra el resto
+// del panel, solo alimenta esa tabla comparativa específica.
+const comparativoProyectosSel = new Set();
+
 // Config declarativo de qué chips de dimensión mostrar en cada pestaña, y de
 // qué hoja/columna provienen sus opciones. Facilita agregar pestañas nuevas
 // sin duplicar lógica de filtros.
@@ -1212,6 +1304,48 @@ const supportsFileSystemAccess = 'showOpenFilePicker' in window;
 let fsAccessUnavailable = false; // se activa si la API existe pero falla al usarla (p.ej. contexto file://)
 let currentFileHandle = null;
 
+// Persistencia real del acceso al archivo entre sesiones del navegador (cerrar
+// pestaña, reiniciar el navegador, etc.) usando IndexedDB — el "handle" del
+// File System Access API se puede guardar ahí y recuperarse después, algo que
+// una variable de JavaScript normal NO puede hacer (se pierde al recargar).
+const IDB_NAME = 'panel_pv_v3', IDB_STORE = 'handles', IDB_KEY = 'excel_file_handle';
+function idbOpen(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = ()=> req.result.createObjectStore(IDB_STORE);
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function idbSaveHandle(handle){
+  try{
+    const db = await idbOpen();
+    await new Promise((resolve,reject)=>{
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(handle, IDB_KEY);
+      tx.oncomplete = resolve; tx.onerror = ()=>reject(tx.error);
+    });
+  }catch(e){ console.warn('No se pudo guardar el acceso al archivo para la próxima vez:', e); }
+}
+async function idbLoadHandle(){
+  try{
+    const db = await idbOpen();
+    return await new Promise((resolve,reject)=>{
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+      req.onsuccess = ()=> resolve(req.result || null);
+      req.onerror = ()=> reject(req.error);
+    });
+  }catch(e){ return null; }
+}
+async function idbClearHandle(){
+  try{
+    const db = await idbOpen();
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).delete(IDB_KEY);
+  }catch(e){ /* no crítico */ }
+}
+
 async function pickFileViaFSAccess(){
   try{
     const [handle] = await window.showOpenFilePicker({
@@ -1219,6 +1353,7 @@ async function pickFileViaFSAccess(){
       excludeAcceptAllOption: false, multiple: false,
     });
     currentFileHandle = handle;
+    idbSaveHandle(handle); // recordar para la próxima vez que se abra el link, sin pedirlo de nuevo
     const file = await handle.getFile();
     handleFile(file);
   } catch(err){
@@ -1246,6 +1381,7 @@ async function refreshFromHandle(){
       }
       if (perm !== 'granted'){
         currentFileHandle = null;
+        idbClearHandle();
         fileInput.click(); // respaldo silencioso — evita dejar al usuario sin poder continuar
         return;
       }
@@ -1255,6 +1391,7 @@ async function refreshFromHandle(){
   } catch(err){
     console.warn('No se pudo releer el archivo automáticamente, se pide de nuevo:', err);
     currentFileHandle = null;
+    idbClearHandle();
     fileInput.click();
   }
 }
@@ -1388,6 +1525,9 @@ function handleFile(file){
       btnRefresh.title = (supportsFileSystemAccess && !fsAccessUnavailable && currentFileHandle)
         ? 'Vuelve a leer el archivo desde su ubicación original (con los cambios que tenga), sin pedirlo de nuevo.'
         : 'Tu navegador no admite releer el archivo automáticamente — te pedirá seleccionarlo de nuevo. Usa Chrome o Edge para actualizar en un clic.';
+      const btnExport = document.getElementById('btnExport');
+      btnExport.classList.remove('hidden');
+      btnExport.classList.add('flex');
 
       initAllFilters();
       updateAlertsBadge();
@@ -1606,6 +1746,7 @@ function renderTab(tabKey){
     else if (tabKey==='vibraciones') renderTabVibraciones();
     else if (tabKey==='estadistica') renderTabEstadistica();
     else if (tabKey==='costos') renderTabCostos();
+    else if (tabKey==='bsm') renderTabBSM();
   } catch(err){
     console.error(`Error renderizando pestaña ${tabKey}:`, err);
     showMessage(`No se pudo generar la sección "${tabKey}". Verifica que el archivo tenga la estructura esperada.`, 'error');
@@ -2217,7 +2358,7 @@ function renderTargetCard(container, { icon, title, unit, planVal, realVal, deci
         <p class="text-[9px] text-slate-400 uppercase">Cumpl.</p>
       </div>
     </div>
-    <p class="font-mono-num font-semibold text-sm mt-2 ${dev===null?'text-slate-400':'text-indigo-500 dark:text-indigox'}">${dev===null?'—':(dev>=0?'+':'')+nf2.format(dev)}${dev!==null?' Desv.':''}</p>
+    <p class="font-mono-num font-semibold text-sm mt-2 ${dev===null?'text-slate-400':'text-indigo-500 dark:text-indigox'}">${dev===null?'—':(dev>=0?'+':'')+fmt(dev)}${dev!==null?' Desv.':''}</p>
     <div class="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold ${st.badgeBg} ${st.badgeText}">
       <span class="w-2 h-2 rounded-full ${st.dot}"></span>${st.label}
     </div>`;
@@ -2567,6 +2708,9 @@ function renderTabControl(){
     MiniChart.clear(resumenCanvas);
   }
 
+  // ---- Comparativo entre Proyectos ----
+  renderComparativoProyectos();
+
   // ---- P80 mini-bloque ----
   const kpiP80 = document.getElementById('kpi_control_p80');
   const p80Canvas = document.getElementById('chart_control_p80');
@@ -2767,6 +2911,82 @@ function renderTabControl(){
       ]
     });
   } else MiniChart.clear(relP80FpCanvas);
+}
+
+// Comparativo entre Proyectos — solo con indicadores que el Excel realmente
+// registra por proyecto (Tonelaje Roto, Costo/Kg Explosivo, P80, PPV). No
+// incluye Metros/Utilización/Velocidad porque Drilling no tiene columna de
+// Proyecto en la fuente de datos (verificado) — no se inventa esa dimensión.
+function renderComparativoProyectos(){
+  const selectorContainer = document.getElementById('comparativo_proyecto_selector');
+  const headRow = document.getElementById('comparativo_proyecto_head');
+  const body = document.getElementById('comparativo_proyecto_body');
+  if (!selectorContainer) return;
+
+  if (!DATA.tonRoto.length){
+    selectorContainer.innerHTML = '';
+    headRow.innerHTML = '<th class="text-left py-1.5 pr-2">Indicador</th>';
+    body.innerHTML = '<tr><td class="text-center text-slate-400 py-4">Hoja "TON ROTO" no disponible.</td></tr>';
+    return;
+  }
+
+  const allProjects = distinctValues(DATA.tonRoto, 'PROYECTO');
+
+  // Por defecto, si el usuario no ha elegido nada todavía, se muestran los 4
+  // proyectos con mayor Tonelaje Roto (los más relevantes de entrada).
+  if (comparativoProyectosSel.size === 0){
+    allProjects
+      .map(p => ({ p, sum: sumCol(DATA.tonRoto.filter(r=>String(r['PROYECTO']||'').trim()===p), 'Ton. Roto').sum }))
+      .sort((a,b)=>b.sum-a.sum).slice(0,4)
+      .forEach(r => comparativoProyectosSel.add(r.p));
+  }
+
+  buildDropdownMultiSelect(selectorContainer, 'Proyectos', allProjects, comparativoProyectosSel, ()=> renderComparativoProyectos());
+
+  const selected = allProjects.filter(p => comparativoProyectosSel.has(p));
+  if (!selected.length){
+    headRow.innerHTML = '<th class="text-left py-1.5 pr-2">Indicador</th>';
+    body.innerHTML = '<tr><td class="text-center text-slate-400 py-4">Selecciona al menos un proyecto.</td></tr>';
+    return;
+  }
+
+  headRow.innerHTML = '<th class="text-left py-1.5 pr-2">Indicador</th>' +
+    selected.map(p=>`<th class="text-right py-1.5 pr-2">${escapeHtml(p)}</th>`).join('');
+
+  const metrics = [
+    { label:'Tonelaje Roto (t)', calc: p => {
+      const recs = DATA.tonRoto.filter(r=>String(r['PROYECTO']||'').trim()===p);
+      return fmtNum(sumCol(recs,'Ton. Roto').sum, 0);
+    }},
+    { label:'Costo Explosivo (US$)', calc: p => {
+      if (!DATA.blasting.length) return '—';
+      const recs = DATA.blasting.filter(r=>String(r['PROYECTO']||'').trim()===p);
+      return recs.length ? fmtNum(sumCol(recs,'GASTO DE EXPLOSIVO (US$)').sum, 0) : '—';
+    }},
+    { label:'Kg Explosivo / T', calc: p => {
+      if (!DATA.blasting.length) return '—';
+      const blastRecs = DATA.blasting.filter(r=>String(r['PROYECTO']||'').trim()===p);
+      const tonRecs = DATA.tonRoto.filter(r=>String(r['PROYECTO']||'').trim()===p);
+      const kg = sumCol(blastRecs,'TOTAL EXPLOSIVO (Kg)').sum, ton = sumCol(tonRecs,'Ton. Roto').sum;
+      return ton ? fmtNum(kg/ton, 3) : '—';
+    }},
+    { label:'P80 Mineral (pulg)', calc: p => {
+      if (!DATA.frag.length) return '—';
+      const recs = mineralOnly(DATA.frag.filter(r=>String(r['PROYECTO']||'').trim()===p));
+      const v = sumCol(recs,'P80 (pulg)').avg;
+      return v!==null ? fmtNum(v,2) : '—';
+    }},
+    { label:'PPV Máximo (mm/s)', calc: p => {
+      if (!DATA.vib.length) return '—';
+      const recs = DATA.vib.filter(r=>String(r['PROYECTO']||'').trim()===p);
+      const vals = extractNumericValues(recs, 'PPV VECTOR SUMA');
+      return vals.length ? fmtNum(Math.max(...vals), 2) : '—';
+    }},
+  ];
+
+  body.innerHTML = metrics.map(m=>
+    `<tr><td class="py-1.5 pr-2 font-medium">${escapeHtml(m.label)}</td>${selected.map(p=>`<td class="py-1.5 pr-2 text-right font-mono-num">${m.calc(p)}</td>`).join('')}</tr>`
+  ).join('');
 }
 
 /* ======================================================================
@@ -3760,6 +3980,162 @@ function renderTabCostos(){
   }
 }
 
+/* ======================================================================
+   TAB 09 · BSM (Business System Management)
+   ====================================================================== */
+// Calcula escenarios Promedio/P75/P90 anualizados a partir de los TOTALES
+// MENSUALES reales del Excel — se excluye siempre el último mes calendario
+// presente en los datos, porque por definición todavía se está cargando
+// (verificado: el último mes disponible corta a mitad de mes). No se
+// inventa ningún número: todo sale de agrupar y calcular percentiles sobre
+// los datos reales.
+function calcularEscenarioAnual(records, dateCol, valueCol){
+  const monthly = new Map();
+  for (const r of records){
+    const d = r[dateCol], v = parseNumber(r[valueCol]);
+    if (!isDateVal(d) || v===null) continue;
+    const k = monthKey(d);
+    monthly.set(k, (monthly.get(k)||0) + v);
+  }
+  const keys = Array.from(monthly.keys()).sort();
+  if (keys.length < 2) return null;
+  const lastMonth = keys[keys.length-1];
+  const usedKeys = keys.filter(k=>k!==lastMonth);
+  const vals = usedKeys.map(k=>monthly.get(k)).sort((a,b)=>a-b);
+  if (!vals.length) return null;
+  const pct = (p)=>{
+    const idx = (p/100)*(vals.length-1);
+    const lo = Math.floor(idx), hi = Math.ceil(idx);
+    return vals[lo] + (vals[hi]-vals[lo])*(idx-lo);
+  };
+  const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+  return { avgAnual: avg*12, p75Anual: pct(75)*12, p90Anual: pct(90)*12, mesesUsados: vals.length,
+    ultimoMesExcluido: lastMonth, periodoDesde: usedKeys[0], periodoHasta: usedKeys[usedKeys.length-1] };
+}
+
+function renderTabBSM(){
+  const c = colors();
+
+  const escProd = DATA.planEjec.length ? calcularEscenarioAnual(DATA.planEjec, DATE_COL.planEjec, 'TONELAJE ROTO POR DISPARO (EJECUTADO)') : null;
+  const escPC = DATA.planEjecPC.length ? calcularEscenarioAnual(DATA.planEjecPC, DATE_COL.planEjecPC, 'METROS (EJECUTADO)') : null;
+
+  const metodologia = document.getElementById('bsm_metodologia');
+  metodologia.textContent = escProd
+    ? `Basado en el desempeño mensual real de ${monthLabel(escProd.periodoDesde)} a ${monthLabel(escProd.periodoHasta)}, anualizado.`
+    : 'Hoja "Plan vs Ejec." no disponible.';
+
+  const tablaProd = document.getElementById('bsm_tabla_produccion');
+  if (escProd){
+    tablaProd.innerHTML = `
+      <tr><td class="py-1.5 pr-2">Promedio</td><td class="py-1.5 text-right font-mono-num font-bold">${fmtNum(escProd.avgAnual/1e6,1)}</td></tr>
+      <tr class="bg-amber/10"><td class="py-1.5 pr-2 font-semibold">P75 (exigido)</td><td class="py-1.5 text-right font-mono-num font-bold text-amber">${fmtNum(escProd.p75Anual/1e6,1)}</td></tr>
+      <tr><td class="py-1.5 pr-2">P90 (máxima exigencia)</td><td class="py-1.5 text-right font-mono-num font-bold">${fmtNum(escProd.p90Anual/1e6,1)}</td></tr>`;
+  } else {
+    tablaProd.innerHTML = `<tr><td colspan="2" class="text-center text-slate-400 py-4">Sin datos</td></tr>`;
+  }
+
+  const tablaPC = document.getElementById('bsm_tabla_precorte');
+  if (escPC){
+    tablaPC.innerHTML = `
+      <tr><td class="py-1.5 pr-2">Promedio</td><td class="py-1.5 text-right font-mono-num font-bold">${fmtNum(escPC.avgAnual/1e3,1)}</td></tr>
+      <tr class="bg-amber/10"><td class="py-1.5 pr-2 font-semibold">P75</td><td class="py-1.5 text-right font-mono-num font-bold text-amber">${fmtNum(escPC.p75Anual/1e3,1)}</td></tr>
+      <tr><td class="py-1.5 pr-2">P90</td><td class="py-1.5 text-right font-mono-num font-bold">${fmtNum(escPC.p90Anual/1e3,1)}</td></tr>`;
+  } else {
+    tablaPC.innerHTML = `<tr><td colspan="2" class="text-center text-slate-400 py-4">Sin datos</td></tr>`;
+  }
+
+  // ---- ¿Cómo estamos? ----
+  const kpiActual = document.getElementById('bsm_kpi_actual');
+  kpiActual.innerHTML = '';
+  const miniCard = (icon,title,val,unit,detail,color)=>`
+    <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+      <p class="text-[11px] uppercase tracking-wide text-slate-400 font-semibold mb-1">${icon} ${escapeHtml(title)}</p>
+      <p class="font-mono-num font-extrabold text-2xl" style="color:${color}">${val}</p>
+      <p class="text-xs text-slate-400">${unit}</p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2">${detail}</p>
+    </div>`;
+  if (escProd){
+    kpiActual.innerHTML += miniCard('⛏️','Perforación Producción', fmtNum(escProd.avgAnual/1e6,1), 'M t/año (promedio real anualizado)', `Escenario P75 exigido: ${fmtNum(escProd.p75Anual/1e6,1)} M t/año`, c.text);
+  }
+  if (escPC){
+    kpiActual.innerHTML += miniCard('🪨','Perforación Precorte', fmtNum(escPC.avgAnual/1e3,1), 'miles m/año (promedio real anualizado)', `Escenario P75 exigido: ${fmtNum(escPC.p75Anual/1e3,1)} miles m/año`, c.text);
+  }
+  if (DATA.blasting.length){
+    const gastoExplTotal = sumCol(DATA.blasting,'GASTO DE EXPLOSIVO (US$)').sum;
+    const tonMinadoTotal = tonMinadoEjecSum(DATA.planEjec);
+    kpiActual.innerHTML += miniCard('💰','Voladura', tonMinadoTotal? fmtNum(gastoExplTotal/tonMinadoTotal,3):'—', 'US$/t minada (todo el período)', 'Sin límite de flota conocido — el Camión Fábrica no es cuello de botella según el análisis de capacidad.', c.amber);
+  }
+
+  // ---- Brechas del Sistema ----
+  const brechasContainer = document.getElementById('bsm_brechas');
+  if (escProd && escPC){
+    const rows = [
+      { label:'Perforación Producción', actual:escProd.avgAnual/1e6, meta:escProd.p75Anual/1e6, unidad:'M t/año', accion:'Sostener 3 perforadoras activas de forma constante' },
+      { label:'Perforación Precorte', actual:escPC.avgAnual/1e3, meta:escPC.p75Anual/1e3, unidad:'miles m/año', accion:'Evaluar 2da perforadora de precorte si el plan exige el escenario P75' },
+    ];
+    brechasContainer.innerHTML = rows.map(r=>{
+      const brecha = r.meta - r.actual;
+      const brechaPct = r.actual? (brecha/r.actual)*100 : null;
+      const barMax = Math.max(r.actual, r.meta) * 1.05;
+      const wActual = (r.actual/barMax)*100, wMeta = (r.meta/barMax)*100;
+      return `<div class="mb-4 last:mb-0">
+        <div class="flex items-center justify-between text-xs mb-1"><span class="font-semibold">${escapeHtml(r.label)}</span><span class="text-slate-400">${r.accion}</span></div>
+        <div class="flex items-center gap-2 mb-1">
+          <div class="h-6 rounded bg-slate-500 flex items-center px-2 text-white text-[10px] font-semibold" style="width:${wActual}%">Actual: ${fmtNum(r.actual,1)} ${r.unidad}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="h-6 rounded flex items-center px-2 text-[10px] font-semibold" style="width:${wMeta}%; background-color:${c.amber}; color:#0F233B">P75: ${fmtNum(r.meta,1)} ${r.unidad}</div>
+        </div>
+        <p class="text-[11px] text-rose mt-1">Brecha: +${fmtNum(brecha,1)} ${r.unidad} (${brechaPct!==null?fmtNum(brechaPct,0):'—'}% sobre el actual)</p>
+      </div>`;
+    }).join('');
+  } else {
+    brechasContainer.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Datos insuficientes para calcular brechas.</p>';
+  }
+
+  // ---- Plan de Acción (estratégico — no varía con los datos, es la decisión de gestión) ----
+  const planAccion = document.getElementById('bsm_plan_accion');
+  const acciones = [
+    { proceso:'PERFORACIÓN DE PRODUCCIÓN', items:[
+      { acc:'Activar la 3ra perforadora de forma constante (no ocasional)', owner:'Superintendencia Perforación', plazo:'Inmediato' },
+      { acc:'Incorporar personal adicional para operar el 3er equipo de forma continua', owner:'RR.HH. / Operaciones', plazo:'30 días' },
+    ]},
+    { proceso:'PERFORACIÓN DE PRECORTE', items:[
+      { acc:'Evaluar 2da perforadora de precorte si el plan exige el escenario P75 de forma sostenida', owner:'Gerencia de Operaciones', plazo:'60–90 días' },
+    ]},
+    { proceso:'VOLADURA', items:[
+      { acc:'Sin acción crítica — capacidad del Camión Fábrica no limita al sistema', owner:'Enaex / Supervisión Voladura', plazo:'Monitoreo' },
+    ]},
+  ];
+  planAccion.innerHTML = acciones.map(g=>`
+    <div>
+      <div class="bg-slate-900 dark:bg-panel-surface2 text-white dark:text-slate-200 text-xs font-bold px-3 py-1.5 rounded-t-lg">${escapeHtml(g.proceso)}</div>
+      <div class="border border-t-0 border-slate-200 dark:border-panel-border rounded-b-lg divide-y divide-slate-100 dark:divide-panel-border/60">
+        ${g.items.map(it=>`<div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs">
+          <span class="text-slate-600 dark:text-slate-300">• ${escapeHtml(it.acc)}</span>
+          <span class="text-slate-400 whitespace-nowrap">${escapeHtml(it.owner)} · <b class="text-slate-700 dark:text-slate-200">${escapeHtml(it.plazo)}</b></span>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  // ---- Modelo de Gestión — Cadencia (estratégico, igual al BSM del PPT) ----
+  const cadencia = document.getElementById('bsm_cadencia');
+  const cadencias = [
+    { titulo:'DIARIA', subtitulo:'Pre-turno / Reunión de guardia', owner:'Jefe de Guardia', items:['Cumplimiento del turno anterior','Taladros y metros perforados','Disponibilidad de equipos del día'] },
+    { titulo:'SEMANAL', subtitulo:'Revisión de avance', owner:'Superintendente P&V', items:['Avance vs. plan mensual (usar este panel)','Utilización y Disp. Mecánica','Desviaciones y causas'] },
+    { titulo:'MENSUAL', subtitulo:'Revisión de capacidad', owner:'Gerencia de Operaciones', items:['Escenario real vs. P75/P90 (esta pestaña)','Estado de brechas y plan de acción','Ajuste de flota si corresponde'] },
+  ];
+  cadencia.innerHTML = cadencias.map(cd=>`
+    <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-slate-50/60 dark:bg-panel-surface2 p-4">
+      <span class="inline-block rounded-md text-xs font-bold px-2.5 py-1" style="background-color:${c.amber}; color:#0F233B">${cd.titulo}</span>
+      <p class="text-sm font-semibold mt-2">${escapeHtml(cd.subtitulo)}</p>
+      <p class="text-[11px] text-slate-400 italic mb-2">Responsable: ${escapeHtml(cd.owner)}</p>
+      <ul class="text-xs text-slate-500 dark:text-slate-400 space-y-1 list-disc list-inside">
+        ${cd.items.map(i=>`<li>${escapeHtml(i)}</li>`).join('')}
+      </ul>
+    </div>`).join('');
+}
+
 
 function applyTheme(mode){
   document.documentElement.classList.toggle('dark', mode==='dark');
@@ -3768,6 +4144,26 @@ function applyTheme(mode){
 }
 document.getElementById('btnTheme').addEventListener('click', ()=>{
   applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+});
+
+// Exportar / Imprimir — usa el diálogo nativo de impresión del navegador
+// (el usuario elige "Guardar como PDF" ahí) sobre SOLO la pestaña activa,
+// en modo claro (se ve mejor impreso), restaurando el tema original después.
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const activeBtn = document.querySelector(`.tab-btn[data-tab="${currentTab}"]`);
+  document.getElementById('printTabName').textContent = activeBtn ? activeBtn.textContent.trim() : '';
+  document.getElementById('printDate').textContent = 'Generado: ' + new Date().toLocaleString('es-PE', { dateStyle:'long', timeStyle:'short' });
+
+  const wasDark = document.documentElement.classList.contains('dark');
+  if (wasDark) document.documentElement.classList.remove('dark');
+
+  const restoreTheme = ()=>{
+    if (wasDark) document.documentElement.classList.add('dark');
+    window.removeEventListener('afterprint', restoreTheme);
+  };
+  window.addEventListener('afterprint', restoreTheme);
+
+  setTimeout(()=> window.print(), 50); // deja que el navegador aplique el modo claro antes de abrir el diálogo
 });
 /* ======================================================================
    REDIBUJADO AL CAMBIAR TAMAÑO (MiniChart mide el contenedor en cada render)
@@ -3786,6 +4182,36 @@ window.addEventListener('resize', ()=>{
   // Modo claro por defecto — se ve más profesional al proyectar en reuniones
   // o imprimir/exportar. Si el usuario elige oscuro manualmente, se recuerda.
   applyTheme(saved || 'light');
+})();
+
+// Al abrir el link de nuevo (nueva pestaña, navegador reiniciado, etc.),
+// intenta reconectar automáticamente con el Excel elegido la última vez,
+// usando el handle guardado en IndexedDB. Si el permiso del navegador sigue
+// vigente, carga los datos SIN pedir nada — de verdad "una sola vez". Si el
+// navegador pide reconfirmar el permiso (normal tras reiniciarlo), se
+// necesita 1 clic (por seguridad del navegador, no se puede saltar ese paso).
+(async function tryRestoreFileHandle(){
+  if (!supportsFileSystemAccess || fsAccessUnavailable) return;
+  try{
+    const handle = await idbLoadHandle();
+    if (!handle) return;
+    currentFileHandle = handle;
+    const perm = handle.queryPermission ? await handle.queryPermission({mode:'read'}) : 'granted';
+    if (perm === 'granted'){
+      const file = await handle.getFile();
+      handleFile(file); // cero clics — reconexión totalmente automática
+    } else {
+      // Requiere 1 clic para reconfirmar el permiso (exigencia de seguridad
+      // del navegador — no se puede pedir permiso sin una acción del usuario).
+      const btn = document.getElementById('btnReconectar');
+      if (btn){
+        btn.classList.remove('hidden');
+        btn.addEventListener('click', ()=> refreshFromHandle());
+      }
+    }
+  } catch(e){
+    console.warn('No se pudo reconectar automáticamente con el archivo recordado:', e);
+  }
 })();
 </script>
 </body>
