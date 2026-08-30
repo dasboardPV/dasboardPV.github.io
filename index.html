@@ -138,7 +138,7 @@
         <button data-tab="vibraciones" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">06 · Vibraciones &amp; Air Blast</button>
         <button data-tab="estadistica" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">07 · Estadística &amp; Demoras</button>
         <button data-tab="costos" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">08 · Costos</button>
-        <button data-tab="bsm" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">09 · BSM</button>
+        <button data-tab="bsm" class="tab-btn whitespace-nowrap px-3.5 py-2.5 border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-teal">09 · VSM</button>
       </div>
     </div>
     <!-- Degradados que indican que hay más pestañas al desplazar (9 pestañas en total) -->
@@ -189,7 +189,7 @@
           </button>
         </div>
         <div id="filters_control" class="flex flex-wrap items-center gap-2"></div>
-              </div>
+      </div>
 
       <!-- Semáforo general + Cumplimiento YTD: lectura de salud en 3 segundos -->
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
@@ -197,6 +197,17 @@
           <div id="semaforo_general" class="flex flex-wrap gap-2"></div>
           <div id="cumplimiento_ytd" class="text-sm"></div>
         </div>
+      </div>
+
+      <!-- Cumplimiento por Indicador: lo primero que se ve, compacto (2 filas) -->
+      <div>
+        <h4 class="font-display font-700 text-base mb-3">🎯 Cumplimiento por Indicador</h4>
+        <div id="target_cards_control" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">Cumplimiento por Indicador — resumen</h4>
+        <div style="height:280px"><canvas id="chart_cumplimiento_resumen"></canvas></div>
       </div>
 
       <div id="kpi_control" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"></div>
@@ -210,24 +221,13 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Tonelaje Roto — Plan Acumulado vs Ejecutado Acumulado</h4>
-                    <div style="height:300px"><canvas id="chart_control_acum"></canvas></div>
+          <div style="height:300px"><canvas id="chart_control_acum"></canvas></div>
         </div>
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Detalle mensual</h4>
-                    <div style="height:230px"><canvas id="chart_control_main"></canvas></div>
+          <div style="height:230px"><canvas id="chart_control_main"></canvas></div>
           <div class="overflow-x-auto"><div id="dev_row_control" class="flex mt-1 text-center min-w-max"></div></div>
         </div>
-      </div>
-
-      <!-- Cumplimiento por Indicador: Producción, Performance, Costos, Ambiental y Calidad -->
-      <div>
-        <h4 class="font-display font-700 text-base mb-3">🎯 Cumplimiento por Indicador</h4>
-        <div id="target_cards_control" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-      </div>
-
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-1">Cumplimiento por Indicador — resumen</h4>
-                <div style="height:280px"><canvas id="chart_cumplimiento_resumen"></canvas></div>
       </div>
 
       <!-- Comparativo entre Proyectos -->
@@ -247,23 +247,9 @@
         </div>
       </div>
 
-      <!-- P80 y VIBRACIONES -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-          <h4 class="font-display font-700 text-base mb-1">🪨 P80 — Calidad de Fragmentación</h4>
-                    <div id="kpi_control_p80" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
-          <div style="height:180px"><canvas id="chart_control_p80"></canvas></div>
-        </div>
-        <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-          <h4 class="font-display font-700 text-base mb-1">📳 Vibraciones &amp; Air Blast</h4>
-                    <div id="kpi_control_vib" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
-          <div id="vib_worst_control" class="text-xs text-slate-500 dark:text-slate-400"></div>
-        </div>
-      </div>
-
       <div class="rounded-2xl border border-rose/30 bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1 flex items-center gap-2"><span class="semaforo-dot bg-rose"></span> Principales Desvíos</h4>
-                <div class="overflow-auto">
+        <div class="overflow-auto">
           <table class="w-full text-xs min-w-[620px]">
             <thead class="text-slate-400 uppercase text-[10px]">
               <tr>
@@ -282,26 +268,14 @@
 
       <div class="rounded-2xl border border-amber/30 bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">¿Dónde debemos actuar?</h4>
-                <div id="oportunidades_control" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        <div id="oportunidades_control" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
       </div>
 
-      <div>
-        <h4 class="font-display font-700 text-base mb-1">📈 Relaciones Costo–Performance</h4>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-            <h5 class="font-display font-600 text-sm mb-2">Costo Perforación US$/TM ↔ Utilización</h5>
-            <div style="height:200px"><canvas id="chart_rel_costoperf_util"></canvas></div>
-          </div>
-          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-            <h5 class="font-display font-600 text-sm mb-2">Costo Voladura US$/TM ↔ Kg Explosivo/TM</h5>
-            <div style="height:200px"><canvas id="chart_rel_costovol_kg"></canvas></div>
-          </div>
-          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-            <h5 class="font-display font-600 text-sm mb-2">P80 ↔ Factor de Potencia</h5>
-            <div style="height:200px"><canvas id="chart_rel_p80_fp"></canvas></div>
-          </div>
-        </div>
-              </div>
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">💵 Distribución del Costo Ejecutado</h4>
+        <p class="text-xs text-slate-400 mb-3">Perforación vs. Voladura — dónde se concentra el gasto.</p>
+        <div style="height:240px"><canvas id="chart_control_costo_donut"></canvas></div>
+      </div>
     </section>
 
     <!-- ===================== TAB: 02 VOLADURA ===================== -->
@@ -323,7 +297,7 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-12 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Consumibles — Real vs Plan (ordenado por desviación)</h4>
           <p class="text-xs text-slate-400 mb-3">Ordenado por mayor desviación.</p>
           <div class="overflow-auto">
@@ -334,10 +308,6 @@
               <tbody id="table_consumibles_voladura" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
             </table>
           </div>
-        </div>
-        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-          <h4 class="font-display font-700 text-base mb-1">Pareto de desviaciones</h4>
-                    <div style="height:280px"><canvas id="chart_pareto_voladura"></canvas></div>
         </div>
       </div>
 
@@ -366,8 +336,27 @@
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">📈 Relaciones Costo–Performance</h4>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <h5 class="font-display font-600 text-sm mb-2">Costo Perforación US$/TM ↔ Utilización</h5>
+            <div style="height:200px"><canvas id="chart_rel_costoperf_util"></canvas></div>
+          </div>
+          <div>
+            <h5 class="font-display font-600 text-sm mb-2">Costo Voladura US$/TM ↔ Kg Explosivo/TM</h5>
+            <div style="height:200px"><canvas id="chart_rel_costovol_kg"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-amber/30 bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">¿Dónde debemos actuar?</h4>
+        <div id="oportunidades_voladura" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
-                <div id="guide_voladura"></div>
+        <div id="guide_voladura"></div>
       </div>
     </section>
 
@@ -391,7 +380,7 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-12 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Consumibles — Real vs Plan (ordenado por desviación)</h4>
           <div class="overflow-auto">
             <table class="w-full text-xs">
@@ -401,10 +390,6 @@
               <tbody id="table_consumibles_voladura_pc" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
             </table>
           </div>
-        </div>
-        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-          <h4 class="font-display font-700 text-base mb-1">Pareto de desviaciones</h4>
-          <div style="height:260px"><canvas id="chart_pareto_voladura_pc"></canvas></div>
         </div>
       </div>
 
@@ -430,8 +415,14 @@
         </div>
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Composición del costo por taladro</h4>
+          <p class="text-[11px] text-slate-400 mb-2">Incluye Enaline y Cordón Detonante (consumo real desde "Blasting PC").</p>
           <div style="height:240px"><canvas id="chart_costo_taladro_voladura_pc"></canvas></div>
         </div>
+      </div>
+
+      <div class="rounded-2xl border border-amber/30 bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">¿Dónde debemos actuar?</h4>
+        <div id="oportunidades_voladura_pc" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
@@ -548,7 +539,8 @@
         </div>
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Pareto de sobreconsumo</h4>
-                    <div style="height:220px"><canvas id="chart_pareto_aceros_perforacion"></canvas></div>
+          <p class="text-[11px] text-slate-400 mb-2">|Desviación %| de cada ítem vs. su Plan — no es cuánto se gastó, sino cuánto se alejó de lo planificado.</p>
+          <div style="height:220px"><canvas id="chart_pareto_aceros_perforacion"></canvas></div>
         </div>
       </div>
 
@@ -612,7 +604,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="highlights_perforacion_pc"></div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4" id="card_aceros_perforacion_pc_table">
           <h4 class="font-display font-700 text-base mb-1">Consumo de Aceros — Real vs Plan</h4>
           <div class="overflow-auto">
             <table class="w-full text-xs">
@@ -623,7 +615,7 @@
             </table>
           </div>
         </div>
-        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4" id="card_pareto_aceros_perforacion_pc">
           <h4 class="font-display font-700 text-base mb-1">Pareto de sobreconsumo</h4>
           <div style="height:200px"><canvas id="chart_pareto_aceros_perforacion_pc"></canvas></div>
         </div>
@@ -659,6 +651,8 @@
         <div id="events_vibraciones" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
       </div>
 
+      <div id="kpi_vib_promedios" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-3">Evolución mensual — PPV y Air Blast</h4>
         <div style="height:300px"><canvas id="chart_vib_trend"></canvas></div>
@@ -666,7 +660,7 @@
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">PPV ↔ Tamaño del disparo</h4>
-        <p class="text-xs text-slate-400 mb-3">Proxy de carga: Número de Taladros.</p>
+        <p class="text-xs text-slate-400 mb-3">Cada punto es un disparo real: a más taladros (voladuras más grandes), se esperaría más vibración — el Excel no registra tonelaje por disparo, por eso se usa el N° de taladros como proxy del tamaño.</p>
         <div style="height:280px"><canvas id="chart_vib_ppv_taladros"></canvas></div>
       </div>
     </section>
@@ -685,8 +679,8 @@
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-1">Estadística descriptiva — indicadores clave</h4>
-                <div class="overflow-auto">
+        <h4 class="font-display font-700 text-base mb-1">Estadística descriptiva — Producción</h4>
+        <div class="overflow-auto">
           <table class="w-full text-xs min-w-[720px]">
             <thead class="text-slate-400 uppercase text-[10px]">
               <tr>
@@ -705,18 +699,101 @@
         </div>
       </div>
 
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">Estadística descriptiva — Pre-Corte</h4>
+        <div class="overflow-auto">
+          <table class="w-full text-xs min-w-[720px]">
+            <thead class="text-slate-400 uppercase text-[10px]">
+              <tr>
+                <th class="text-left py-1.5 pr-2">Indicador</th>
+                <th class="text-right py-1.5 pr-2">Promedio</th>
+                <th class="text-right py-1.5 pr-2">Mediana</th>
+                <th class="text-right py-1.5 pr-2">Desv. Est.</th>
+                <th class="text-right py-1.5 pr-2">CV%</th>
+                <th class="text-right py-1.5 pr-2">P10</th>
+                <th class="text-right py-1.5 pr-2">P90</th>
+                <th class="text-right py-1.5">Atípicos</th>
+              </tr>
+            </thead>
+            <tbody id="table_stats_pc" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div>
-        <h4 class="font-display font-700 text-base mb-3">Análisis de demoras — Perforación (Producción + Pre-Corte)</h4>
+        <h4 class="font-display font-700 text-base mb-3">Análisis de demoras — Producción</h4>
         <div id="kpi_demoras" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4"></div>
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-            <h5 class="font-display font-600 text-sm mb-1">Pareto por categoría de demora</h5>
-            <p class="text-[11px] text-slate-400 mb-3">Por categoría de hora, sin causa específica por evento.</p>
-            <div style="height:240px"><canvas id="chart_demoras_pareto"></canvas></div>
+      </div>
+
+      <div>
+        <h4 class="font-display font-700 text-base mb-3">Análisis de demoras — Pre-Corte</h4>
+        <div id="kpi_demoras_pc" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h5 class="font-display font-600 text-sm mb-1">Pareto por categoría de demora</h5>
+          <p class="text-[11px] text-slate-400 mb-3">Producción + Pre-Corte, por categoría de hora.</p>
+          <div style="height:240px"><canvas id="chart_demoras_pareto"></canvas></div>
+        </div>
+        <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h5 class="font-display font-600 text-sm mb-1">Composición de demora por equipo</h5>
+          <p class="text-[11px] text-slate-400 mb-3">Qué tipo de demora domina en cada equipo — Operativa, No Operativa o Falla Mecánica.</p>
+          <div style="height:260px"><canvas id="chart_demoras_equipo"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Confiabilidad de Equipos — a partir del detalle evento-por-evento de ACTIVIDADES -->
+      <div id="confiabilidad_wrap" class="hidden">
+        <div class="rounded-2xl border-2 border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/40 dark:bg-panel-surface p-4 mb-4">
+          <h4 class="font-display font-700 text-base mb-1">🔧 Confiabilidad de Equipos — MTBF · MTTR</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">A partir del detalle evento-por-evento de la hoja "ACTIVIDADES" (2026). MTBF = tiempo operativo ÷ Nº de fallas · MTTR = tiempo de reparación ÷ Nº de fallas · Confiabilidad = MTBF ÷ (MTBF + MTTR).</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4 mb-4">
+          <h5 class="font-display font-700 text-sm mb-1">Ranking por Equipo — ¿cuál es más confiable?</h5>
+          <p class="text-[11px] text-slate-400 mb-2">Ordenado de mayor a menor Confiabilidad. Usa el filtro "Equipo" de arriba para ver solo uno.</p>
+          <div class="overflow-auto">
+            <table class="w-full text-xs min-w-[500px]">
+              <thead class="text-slate-400 uppercase text-[10px]">
+                <tr>
+                  <th class="text-left py-1.5 pr-2">Equipo</th>
+                  <th class="text-left py-1.5 pr-2">Grupo</th>
+                  <th class="text-right py-1.5 pr-2">MTBF (hr)</th>
+                  <th class="text-right py-1.5 pr-2">MTTR (hr)</th>
+                  <th class="text-right py-1.5 pr-2">Confiabilidad</th>
+                  <th class="text-right py-1.5">N° Fallas</th>
+                </tr>
+              </thead>
+              <tbody id="table_confiabilidad_ranking" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+            </table>
           </div>
-          <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-            <h5 class="font-display font-600 text-sm mb-3">Equipo con mayor demora total</h5>
-            <div style="height:240px"><canvas id="chart_demoras_equipo"></canvas></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="min-w-0">
+            <h5 class="font-display font-700 text-sm mb-2">⛏️ DM45 (Producción)</h5>
+            <div id="confiab_kpi_dm45" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
+            <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4 mb-4">
+              <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Pareto — Demoras Operativas</h6>
+              <div style="height:200px"><canvas id="chart_pareto_op_dm45"></canvas></div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+              <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada de Demoras</h6>
+              <div style="height:260px"><canvas id="chart_cascada_dm45"></canvas></div>
+            </div>
+          </div>
+          <div class="min-w-0">
+            <h5 class="font-display font-700 text-sm mb-2">🪨 Leopard / DI650i (Precorte)</h5>
+            <div id="confiab_kpi_leopard" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3"></div>
+            <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4 mb-4">
+              <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Pareto — Demoras Operativas</h6>
+              <div style="height:200px"><canvas id="chart_pareto_op_leopard"></canvas></div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+              <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada de Demoras</h6>
+              <div style="height:260px"><canvas id="chart_cascada_leopard"></canvas></div>
+            </div>
           </div>
         </div>
       </div>
@@ -753,12 +830,62 @@
           <div style="height:240px"><canvas id="chart_costos_waterfall"></canvas></div>
         </div>
       </div>
+
+      <div class="rounded-2xl border-2 border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/40 dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">💠 Dónde se concentra el costo — Perforación &amp; Voladura (Producción + Pre-Corte)</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Todo el período con datos, sin repetir los ratios US$/t y US$/m ya vistos en cada pestaña — aquí es composición y proporción.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h5 class="font-display font-600 text-sm mb-1">Por Sub-Área</h5>
+          <p class="text-[11px] text-slate-400 mb-2">Perforación vs. Voladura, costo total ejecutado.</p>
+          <div style="height:200px"><canvas id="chart_pie_subarea"></canvas></div>
+        </div>
+        <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h5 class="font-display font-600 text-sm mb-1">Agentes de Voladura</h5>
+          <p class="text-[11px] text-slate-400 mb-2">Producción + Pre-Corte combinados, con precios de referencia propios — el total puede no coincidir exactamente con la torta "Por Sub-Área" (esa usa el gasto ya calculado en el Excel).</p>
+          <div style="height:200px"><canvas id="chart_pie_agentes"></canvas></div>
+        </div>
+        <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h5 class="font-display font-600 text-sm mb-1">Aceros</h5>
+          <p class="text-[11px] text-slate-400 mb-2">Producción + Pre-Corte combinados.</p>
+          <div style="height:200px"><canvas id="chart_pie_aceros"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Sub-Área</h6>
+          <div style="height:200px"><canvas id="chart_cascada_subarea"></canvas></div>
+        </div>
+        <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Agentes de Voladura</h6>
+          <div style="height:200px"><canvas id="chart_cascada_agentes"></canvas></div>
+        </div>
+        <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+          <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Aceros</h6>
+          <div style="height:200px"><canvas id="chart_cascada_aceros"></canvas></div>
+        </div>
+      </div>
     </section>
 
-    <!-- ===================== TAB: 09 BSM (Business System Management) ===================== -->
+    <!-- ===================== TAB: 09 VSM (Value Stream Mapping) ===================== -->
     <section data-panel="bsm" class="space-y-6">
+      <div class="filters-card rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-display font-600 text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">Filtros</h3>
+          <button data-clear="bsm" class="clear-filters-btn text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
+          </button>
+        </div>
+        <div id="filters_bsm" class="flex flex-wrap items-center gap-2"></div>
+        <p class="text-[11px] text-slate-400 mt-2">Filtra el período de "¿Cómo estamos?" y "Capacidad Real Alcanzada". Los escenarios Promedio/P75/P90 siempre usan el histórico completo (necesitan varios meses para calcular percentiles).</p>
+      </div>
+
       <div class="rounded-2xl border border-indigo-200 dark:border-panel-border bg-indigo-50/60 dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-1">🎯 Business System Management — Perforación y Voladura</h4>
+        <h4 class="font-display font-700 text-base mb-1">🎯 VSM — Value Stream Mapping · Perforación y Voladura</h4>
         <p class="text-xs text-slate-500 dark:text-slate-400">Seguimiento de capacidad, brechas y plan de cierre para Perforación y Voladura.</p>
       </div>
 
@@ -789,18 +916,57 @@
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-1">03 · Brechas del Sistema — Actual vs. Escenario P75</h4>
+        <h4 class="font-display font-700 text-base mb-1">🔧 Capacidad Teórica de Diseño vs. Capacidad Real Alcanzada</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Estilo Value Stream Mapping — de abajo hacia arriba (equipos × tasas reales), comparado contra lo que realmente se ha logrado.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-slate-50/60 dark:bg-panel-surface2 p-4">
+            <p class="text-xs font-bold text-slate-500 uppercase mb-2">⛏️ Perforación de Producción</p>
+            <div id="bsm_vsm_perforacion" class="space-y-1 text-xs"></div>
+          </div>
+          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-slate-50/60 dark:bg-panel-surface2 p-4">
+            <p class="text-xs font-bold text-slate-500 uppercase mb-2">🪨 Perforación de Precorte (Leopard)</p>
+            <div id="bsm_vsm_precorte" class="space-y-1 text-xs"></div>
+          </div>
+          <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-slate-50/60 dark:bg-panel-surface2 p-4">
+            <p class="text-xs font-bold text-slate-500 uppercase mb-2">💥 Voladura (Camión Fábrica)</p>
+            <div id="bsm_vsm_voladura" class="space-y-1 text-xs"></div>
+          </div>
+        </div>
+        <div id="bsm_vsm_brecha" class="rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 px-4 py-3 text-xs"></div>
+      </div>
+
+      <div class="rounded-2xl border-2 border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/40 dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">03 · ¿Hasta dónde podemos llegar? — Techo de Capacidad del Sistema</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Si el plan de toneladas por mes sube, ¿hasta dónde aguanta la flota actual, y qué necesitamos para cada nivel?</p>
+        <div id="bsm_restriccion" class="mb-4"></div>
+        <div class="overflow-auto">
+          <table class="w-full text-xs">
+            <thead class="text-slate-400 uppercase text-[10px]">
+              <tr>
+                <th class="text-left py-1.5 pr-2">Meta mensual (Tonelaje Roto)</th>
+                <th class="text-left py-1.5 pr-2">¿Se puede cumplir?</th>
+                <th class="text-left py-1.5 pr-2">Configuración necesaria (Perforación)</th>
+                <th class="text-left py-1.5">Voladura — ¿limita?</th>
+              </tr>
+            </thead>
+            <tbody id="bsm_tabla_techo" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">04 · Brechas del Sistema — Actual vs. Escenario P75</h4>
         <p class="text-xs text-slate-400 mb-3">Actual vs. escenario P75.</p>
         <div id="bsm_brechas"></div>
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-3">04 · Plan de Acción — Cómo vamos a llegar</h4>
+        <h4 class="font-display font-700 text-base mb-3">05 · Plan de Acción — Cómo vamos a llegar</h4>
         <div id="bsm_plan_accion" class="space-y-3"></div>
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-1">05 · Modelo de Gestión — Cadencia de Seguimiento</h4>
+        <h4 class="font-display font-700 text-base mb-1">06 · Modelo de Gestión — Cadencia de Seguimiento</h4>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="bsm_cadencia"></div>
       </div>
     </section>
@@ -1089,18 +1255,30 @@ const PRECIO_DIESEL_USD_KG = (19.99 / TIPO_CAMBIO_PEN_USD) / (GAL_A_LITROS * DEN
 
 // Precios de agentes de voladura — clave = nombre exacto de la columna CONSUMO
 // en el Excel, valor = { price: US$ por unidad de esa columna, note: aclaración }
+// Precios actualizados según tabla oficial de "Costos de Agentes de Voladura"
+// (vigente agosto 2026) — reemplaza los precios anteriores, que eran de una
+// fuente más antigua. Se confirmó que es la MISMA tabla de referencia de
+// siempre (Taponex coincide exacto: 2.479 en ambas versiones), solo que esta
+// versión trae más columnas visibles, incluyendo Enaline y Cordón Detonante
+// (antes faltantes) — antes NO era que faltara agregar el agente, es que su
+// consumo real vive en "Blasting PC", no en "Plan vs Ejec. PC".
 const PRECIOS_VOLADURA = {
-  'CONSUMO NITRATO (kg)': { price: 0.6649 },
-  'CONSUMO EMULSION (kg)': { price: 0.9923 },
-  'CONSUMO SOLUCION GASIF. L11 (kg)': { price: 1.32 },
+  'CONSUMO NITRATO (kg)': { price: 0.7118 },
+  'CONSUMO EMULSION (kg)': { price: 0.69256 },
+  'CONSUMO SOLUCION GASIF. L11 (kg)': { price: 1.38987 },
   // Precio dado por pieza de 1 lb — se convierte kg consumidos a piezas.
-  'CONSUMO BOOSTER (kg)': { price: 4.12 / LB_A_KG, note:'Precio original US$4.12 por pieza de 1 lb' },
-  'CONSUMO DETONADOR ELECT. (und)': { price: 22.70 },
-  'CONSUMO CABLE DE CONEXIÓN (m)': { price: 0.2098 },
-  // Se asume que el precio ya es por unidad individual (no por el paquete de 2
-  // mencionado en la etiqueta "x 2 unidad") — a confirmar con el usuario.
-  'CONSUMO TAPONEX (und)': { price: 2.479, note:'Asumido por unidad individual, no por paquete x2' },
-  'CONSUMO DIESEL (kg)': { price: PRECIO_DIESEL_USD_KG, note:`Convertido de S/.19.99/gal (TC ${TIPO_CAMBIO_PEN_USD}, densidad ${DENSIDAD_DIESEL_KG_L} kg/L)` },
+  'CONSUMO BOOSTER (kg)': { price: 4.52884 / LB_A_KG, note:'Precio original US$4.52884 por pieza de 1 lb' },
+  'CONSUMO DETONADOR ELECT. (und)': { price: 20.72495 },
+  'CONSUMO CABLE DE CONEXIÓN (m)': { price: 0.24 },
+  'CONSUMO TAPONEX (und)': { price: 2.479 },
+  'CONSUMO DIESEL (kg)': { price: 1.4949 },
+  'CONSUMO CARTUFLEX (und)': { price: 6.4 },
+  'CONSUMO EMULS. ENCART (kg)': { price: 4.27 },
+  // Consumo real registrado en la hoja "Blasting PC", no en "Plan vs Ejec. PC"
+  // (verificado) — se agrega a la Composición del Costo por Taladro de
+  // Voladura Pre-Corte junto con Enaline.
+  'CORDON DETONANTE (mts)': { price: 0.31022, note:'Consumo real de la hoja "Blasting PC"' },
+  'CONSUMO DE ENALINE (kg)': { price: 5.90007 },
 };
 
 // Precios de aceros de perforación + vida útil objetivo (metros por unidad)
@@ -1113,6 +1291,25 @@ const PRECIOS_ACEROS = {
   'CONSUMO BIT SUB 5" PIN/BOX (und)': { price: 625.96, vidaUtilTarget: 8000 },
   'CONSUMO CENTRALIZADOR (und)': { price: 605.78, vidaUtilTarget: 8000 },
 };
+
+const AGENTES_VOLADURA = [
+  { label:'Nitrato', plan:'PLAN DE NITRATO (kg)', ejec:'CONSUMO NITRATO (kg)', unit:'kg' },
+  { label:'Diésel', plan:'PLAN DE DIESEL (kg)', ejec:'CONSUMO DIESEL (kg)', unit:'kg' },
+  { label:'Emulsión', plan:'PLAN DE EMULSION (kg)', ejec:'CONSUMO EMULSION (kg)', unit:'kg' },
+  { label:'Solución Gasificante L11', plan:'PLAN DE SOLUCION GASIF. L11 (kg)', ejec:'CONSUMO SOLUCION GASIF. L11 (kg)', unit:'kg' },
+  { label:'Booster', plan:'PLAN BOOSTER (kg)', ejec:'CONSUMO BOOSTER (kg)', unit:'kg' },
+  { label:'Detonador Electrónico', plan:'PLAN DETONADOR ELECT. (und)', ejec:'CONSUMO DETONADOR ELECT. (und)', unit:'und' },
+  { label:'Cable de Conexión', plan:'PLAN CABLE DE CONEXIÓN (m)', ejec:'CONSUMO CABLE DE CONEXIÓN (m)', unit:'m' },
+  { label:'Taponex', plan:'PLAN TAPONEX (und)', ejec:'CONSUMO TAPONEX (und)', unit:'und' },
+  { label:'Cartuflex', plan:'PLAN CARTUFLEX (und)', ejec:'CONSUMO CARTUFLEX (und)', unit:'und' },
+  { label:'Emulsión Encartuchada', plan:'PLAN EMULS. ENCART (kg)', ejec:'CONSUMO EMULS. ENCART (kg)', unit:'kg' },
+];
+const AGENTES_VOLADURA_PC = [
+  { label:'Enaline', plan:'PLAN DE ENALINE (kg)', ejec:'CONSUMO DE ENALINE (kg)', unit:'kg' },
+  { label:'Booster', plan:'PLAN BOOSTER (kg)', ejec:'CONSUMO BOOSTER (kg)', unit:'kg' },
+  { label:'Detonador Electrónico', plan:'PLAN DETONADOR ELECT. (und)', ejec:'CONSUMO DETONADOR ELECT. (und)', unit:'und' },
+  { label:'Taponex', plan:'PLAN TAPONEX (und)', ejec:'CONSUMO TAPONEX (und)', unit:'und' },
+];
 
 function collectDesviaciones(peRecs, fragRecs, pePcRecs){
   const desvios = [];
@@ -1212,15 +1409,16 @@ const SEMAFORO_BG = { green:'bg-emerald-500', orange:'bg-amber', red:'bg-rose', 
 /* ======================================================================
    ESTADO GLOBAL
    ====================================================================== */
-const REQUIRED_SHEETS = ['Plan vs Ejec.', 'Plan vs Ejec. PC', 'TON ROTO', 'Drilling', 'DrillingPC', 'Blasting', 'Blasting PC', 'Frag. PortaM', 'Vib & Air Blast.', 'Vib & Air Blast. (2)'];
+const REQUIRED_SHEETS = ['Plan vs Ejec.', 'Plan vs Ejec. PC', 'TON ROTO', 'Drilling', 'DrillingPC', 'Blasting', 'Blasting PC', 'Frag. PortaM', 'Vib & Air Blast.', 'Vib & Air Blast. (2)', 'ACTIVIDADES'];
 // Hojas complementarias/opcionales: su ausencia es una situación normal (por
 // ejemplo, "Vib & Air Blast. (2)" es una segunda campaña de monitoreo que no
 // siempre existe) y no debe mostrarse como una advertencia — el panel ya
 // funciona correctamente sin ellas.
-const OPTIONAL_SHEETS = new Set(['Vib & Air Blast. (2)'].map(s=>s.trim().toLowerCase()));
+const OPTIONAL_SHEETS = new Set(['Vib & Air Blast. (2)', 'ACTIVIDADES'].map(s=>s.trim().toLowerCase()));
 
 const DATA = {
   planEjec: [], planEjecPC: [], tonRoto: [], drilling: [], drillingPC: [], blasting: [], blastingPC: [], frag: [], vib: [],
+  actividades: [], // Detalle de demoras (archivo separado, opcional) — evento por evento
   missingSheets: [],
 };
 
@@ -1232,8 +1430,9 @@ const filters = {
   perforacion:    { dateFrom:null, dateTo:null, equipo:new Set() },
   perforacion_pc: { dateFrom:null, dateTo:null, equipo:new Set() },
   vibraciones:    { dateFrom:null, dateTo:null, proyecto:new Set() },
-  estadistica:    { dateFrom:null, dateTo:null },
+  estadistica:    { dateFrom:null, dateTo:null, equipo:new Set() },
   costos:         { dateFrom:null, dateTo:null },
+  bsm:            { dateFrom:null, dateTo:null },
 };
 
 // Selección persistente para el Comparativo entre Proyectos (Resumen
@@ -1252,8 +1451,9 @@ const FILTER_DIMS = {
   perforacion:    [ {key:'equipo', label:'Equipo', src:()=>DATA.drilling, col:'Perforadora'} ],
   perforacion_pc: [ {key:'equipo', label:'Equipo', src:()=>DATA.drillingPC, col:'Perforadora'} ],
   vibraciones:    [ {key:'proyecto', label:'Proyecto', src:()=>DATA.vib, col:'PROYECTO'} ],
-  estadistica:    [],
+  estadistica:    [ {key:'equipo', label:'Equipo', src:()=>[...DATA.drilling, ...DATA.drillingPC], col:'Perforadora'} ],
   costos:         [],
+  bsm:            [],
 };
 
 const CHART_COLORS = {
@@ -1469,6 +1669,72 @@ function sanitizeImplausibleDates(records, headers){
   return cleared;
 }
 
+// Verificado en el Excel "BD_Actividades_perforadoras_2026": de 117,357
+// filas, solo 1 tiene una duración implausible (35,271 hr) por un typo de
+// año en "Fecha Hora Inicio" (2022 en vez de 2026). El resto de eventos de
+// >24 hr son reales y legítimos (mantenimientos/esperas de varios días con
+// fechas consecutivas plausibles) — por eso el umbral es alto (200 hr, muy
+// por encima del máximo legítimo observado de ~185 hr) para no descartar
+// datos reales por error.
+const ACTIVIDADES_DURACION_MAX_PLAUSIBLE_HR = 200;
+function sanitizeActividadesOutliers(records){
+  let cleared = 0;
+  for (const r of records){
+    const dif = r['Dif. Hr'];
+    if (typeof dif === 'number' && (dif > ACTIVIDADES_DURACION_MAX_PLAUSIBLE_HR || dif < 0)){
+      r['Dif. Hr'] = null;
+      cleared++;
+    }
+  }
+  return cleared;
+}
+
+// Agrupación de equipos para el análisis de Demoras/Confiabilidad — misma
+// separación Producción/Precorte usada en el resto del panel.
+const EQUIPOS_DM45 = ['DM45HP-02','DM45HP-03','DM45HP_05','DM45HP_06','DM45E-04'];
+
+// Confirmado por el usuario: estas actividades están tipeadas como "Demoras
+// No Operativas" en el Excel, pero en realidad SON Operativas — el operador
+// se equivoca de categoría al registrarlas en el sistema. Se reclasifican
+// para todo el análisis de Confiabilidad (Pareto, Cascada, totales) — no
+// solo un gráfico puntual.
+const RECLASIFICAR_A_OPERATIVA = new Set([
+  'Stand By por Acondicionamiento de plataforma',
+  'Stand By por Falta área de perforación / Falta de Plataforma',
+  'Cambio de Turno',
+  'Falta puntos topográficos',
+  'Inspección Preuso / Planeada / IPERC',
+]);
+function tipoActividadEfectivo(r){
+  const actividad = String(r['Actividad']||'').trim();
+  if (r['Tipo Actividad']==='Demoras No Operativas' && RECLASIFICAR_A_OPERATIVA.has(actividad)) return 'Demoras Operativas';
+  return r['Tipo Actividad'];
+}
+const EQUIPOS_LEOPARD = ['DI650i'];
+
+// Detecta qué equipos están REALMENTE en operación ahora mismo — no basta
+// con que un equipo aparezca alguna vez en el histórico (verificado: dos
+// perforadoras DM45HP dejaron de registrar actividad hace varios meses,
+// solo cuentan como "activas" las que sí perforaron en la ventana reciente).
+function equiposActivos(records, dateCol, equipoCol, metrosCol, mesesVentana){
+  mesesVentana = mesesVentana || 3;
+  const validas = records.filter(r=>isDateVal(r[dateCol]));
+  if (!validas.length) return distinctValues(records, equipoCol);
+  const maxDate = new Date(Math.max(...validas.map(r=>r[dateCol].getTime())));
+  const umbral = new Date(maxDate.getFullYear(), maxDate.getMonth()-mesesVentana+1, 1);
+  const metrosPorEquipo = new Map();
+  validas.forEach(r=>{
+    if (r[dateCol] >= umbral){
+      const eq = String(r[equipoCol]||'').trim();
+      if (!eq) return;
+      const m = parseNumber(r[metrosCol]) || 0;
+      metrosPorEquipo.set(eq, (metrosPorEquipo.get(eq)||0)+m);
+    }
+  });
+  const activos = Array.from(metrosPorEquipo.entries()).filter(([,m])=>m>0).map(([eq])=>eq);
+  return activos.length ? activos : distinctValues(records, equipoCol); // respaldo si la ventana reciente no tiene datos
+}
+
 function handleFile(file){
   hideMessage();
   if (!librariesReady()){ showLibraryFailureMessage(); return; }
@@ -1500,6 +1766,8 @@ function handleFile(file){
       const vib1 = found['Vib & Air Blast.'] ? parseSheet(wb, found['Vib & Air Blast.']) : [];
       const vib2 = found['Vib & Air Blast. (2)'] ? parseSheet(wb, found['Vib & Air Blast. (2)']) : [];
       DATA.vib = vib1.concat(vib2);
+      DATA.actividades = found['ACTIVIDADES'] ? parseSheet(wb, found['ACTIVIDADES']) : [];
+      sanitizeActividadesOutliers(DATA.actividades);
       DATA.missingSheets = missing;
 
       // Solo se advierte de hojas REQUERIDAS ausentes — las opcionales (como
@@ -1529,6 +1797,15 @@ function handleFile(file){
       btnExport.classList.remove('hidden');
       btnExport.classList.add('flex');
 
+      // VSM parte enfocado en el año más reciente (2026) por defecto — se
+      // puede ampliar el rango manualmente con el filtro de esta pestaña.
+      const drillDates = DATA.drilling.map(r=>r[DATE_COL.drilling]).filter(isDateVal);
+      if (drillDates.length){
+        const maxYear = new Date(Math.max(...drillDates.map(d=>d.getTime()))).getFullYear();
+        filters.bsm.dateFrom = new Date(maxYear, 0, 1);
+        filters.bsm.dateTo = new Date(maxYear, 11, 31);
+      }
+
       initAllFilters();
       updateAlertsBadge();
       switchTab('control');
@@ -1544,7 +1821,7 @@ function handleFile(file){
 /* ======================================================================
    COLUMNAS DE FECHA POR HOJA Y HELPERS DE FILTRADO
    ====================================================================== */
-const DATE_COL = { planEjec:'FECHA', planEjecPC:'FECHA', tonRoto:'Fecha', drilling:'Fecha', drillingPC:'Fecha', blasting:'FECHA', blastingPC:'FECHA', frag:'FECHA', vib:'FECHA' };
+const DATE_COL = { planEjec:'FECHA', planEjecPC:'FECHA', tonRoto:'Fecha', drilling:'Fecha', drillingPC:'Fecha', blasting:'FECHA', blastingPC:'FECHA', frag:'FECHA', vib:'FECHA', actividades:'Fecha' };
 
 function applyDateFilter(records, dateCol, dateFrom, dateTo){
   if (!dateFrom && !dateTo) return records;
@@ -1839,8 +2116,9 @@ const MiniChart = (function(){
   /* ---------- BAR (vertical, agrupado) ---------- */
   function bar(canvas, { labels, datasets, colors, formatY, formatTooltip, horizontal, referenceLine, barLabels }){
     if (horizontal) return hbar(canvas, arguments[1]);
+    const rotate = labels.length > 8;
     const { ctx, w, h } = setupCanvas(canvas);
-    const padLeft = 46, padRight = 10, padTop = barLabels ? 26 : 12, padBottom = labels.length>8 ? 46 : 26;
+    const padLeft = (rotate ? 58 : 46), padRight = 10, padTop = barLabels ? 26 : 12, padBottom = rotate ? 60 : 26;
     const plotW = w - padLeft - padRight, plotH = h - padTop - padBottom;
 
     let maxV = 0, minV = 0;
@@ -1893,7 +2171,6 @@ const MiniChart = (function(){
 
     // eje X
     ctx.fillStyle = colors.text; ctx.font = '9px Inter, sans-serif';
-    const rotate = n > 8;
     labels.forEach((lab,i)=>{
       const groupX = padLeft + i*groupW + groupW/2;
       ctx.save();
@@ -1901,7 +2178,7 @@ const MiniChart = (function(){
         ctx.translate(groupX, h-padBottom+6);
         ctx.rotate(-Math.PI/4);
         ctx.textAlign = 'right'; ctx.textBaseline = 'top';
-        ctx.fillText(truncateLabel(ctx, String(lab), 70), 0, 0);
+        ctx.fillText(truncateLabel(ctx, String(lab), 88), 0, 0);
       } else {
         ctx.textAlign = 'center'; ctx.textBaseline = 'top';
         ctx.fillText(truncateLabel(ctx, String(lab), groupW), groupX, h-padBottom+6);
@@ -1975,6 +2252,54 @@ const MiniChart = (function(){
     };
     attachClearOnLeave(canvas);
   }
+  /* ---------- HBAR APILADO (composición por categoría) ---------- */
+  function hbarStacked(canvas, { labels, datasets, colors, formatTooltip }){
+    const { ctx, w, h } = setupCanvas(canvas);
+    ctx.font = '10px Inter, sans-serif';
+    let maxLabelW = 0;
+    labels.forEach(l=> maxLabelW = Math.max(maxLabelW, ctx.measureText(String(l)).width));
+    const legendH = 20;
+    const padLeft = Math.min(140, Math.max(50, maxLabelW+10)), padRight = 50, padTop = 8, padBottom = 8 + legendH;
+    const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
+
+    const totals = labels.map((_,i)=> datasets.reduce((s,ds)=> s+(ds.data[i]||0), 0));
+    const maxV = Math.max(1, ...totals);
+    const n = labels.length;
+    const rowH = plotH/Math.max(n,1);
+    const barH = Math.min(24, rowH*0.62);
+
+    const bars = [];
+    labels.forEach((lab,i)=>{
+      const y = padTop + i*rowH + (rowH-barH)/2;
+      let x = padLeft;
+      datasets.forEach((ds,di)=>{
+        const v = ds.data[i]||0;
+        const bw = (v/maxV)*plotW;
+        if (bw>0){
+          ctx.fillStyle = ds.color || colors.palette[di%colors.palette.length];
+          ctx.fillRect(x, y, bw, barH);
+          bars.push({x, y, w:bw, h:barH, v, lab, series: ds.label});
+        }
+        x += bw;
+      });
+      ctx.fillStyle = colors.text; ctx.font='10px Inter, sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText(truncateLabel(ctx, String(lab), padLeft-8), padLeft-8, y+barH/2);
+      ctx.textAlign='left';
+      ctx.fillText(fmtNum(totals[i]), x+6, y+barH/2);
+    });
+
+    drawLegend(ctx, w, h-legendH+6, datasets, colors);
+
+    canvas.onmousemove = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+      const hit = bars.find(b=> mx>=b.x && mx<=b.x+b.w && my>=b.y && my<=b.y+b.h);
+      if (hit) showTooltip(e.clientX, e.clientY, `<b>${escapeHtml(hit.lab)}</b><br>${escapeHtml(hit.series)}: ${formatTooltip?formatTooltip(hit.v):hit.v}`);
+      else hideTooltip();
+    };
+    attachClearOnLeave(canvas);
+  }
+
   function roundRectRight(ctx,x,y,w,h,r){
     if (w<=0) return;
     r = Math.min(r, h/2, w);
@@ -2140,7 +2465,7 @@ const MiniChart = (function(){
   // steps: [{label, value, type:'total'|'delta'}] — 'total' dibuja desde 0;
   // 'delta' dibuja desde el nivel acumulado anterior (verde si sube el costo
   // ejecutado respecto al plan es malo => se colorea con semántica de costo).
-  function waterfall(canvas, { steps, colors, formatTooltip }){
+  function waterfall(canvas, { steps, colors, formatTooltip, referenceLine, referenceLabel }){
     const { ctx, w, h } = setupCanvas(canvas);
     const padLeft = 56, padRight = 12, padTop = 14, padBottom = 40;
     const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
@@ -2152,7 +2477,7 @@ const MiniChart = (function(){
       else { from = level; to = level + s.value; level = to; }
       return { ...s, from, to };
     });
-    const allVals = bars.flatMap(b=>[b.from,b.to]);
+    const allVals = bars.flatMap(b=>[b.from,b.to]).concat(referenceLine!==undefined ? [referenceLine] : []);
     const scale = niceScale(Math.min(0,...allVals), Math.max(0,...allVals), 5);
     const yOf = v => padTop + plotH - ((v-scale.min)/(scale.max-scale.min))*plotH;
 
@@ -2164,6 +2489,19 @@ const MiniChart = (function(){
       ctx.fillText(fmtNum(t), padLeft-6, y);
     });
 
+    // Línea de referencia (ej. el Plan), para no quedar "en el aire" sin con
+    // qué comparar el total ejecutado.
+    if (referenceLine!==undefined){
+      const ry = yOf(referenceLine);
+      ctx.save();
+      ctx.strokeStyle = colors.amber; ctx.setLineDash([5,3]); ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(padLeft, ry); ctx.lineTo(w-padRight, ry); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = colors.amber; ctx.font='9px Inter, sans-serif'; ctx.textAlign='right'; ctx.textBaseline='bottom';
+      ctx.fillText(referenceLabel || `Plan: ${fmtNum(referenceLine,2)}`, w-padRight, ry-2);
+      ctx.restore();
+    }
+
     const n = bars.length;
     const groupW = plotW/n;
     const barW = Math.min(60, groupW*0.55);
@@ -2174,6 +2512,7 @@ const MiniChart = (function(){
       const top = Math.min(yFrom,yTo), bh = Math.abs(yFrom-yTo);
       let color;
       if (b.type==='total') color = colors.text;
+      else if (b.color) color = b.color; // permite forzar el color cuando el signo no refleja "bueno/malo" (ej. cascadas de horas perdidas, siempre negativas pero siempre "malas")
       else color = b.value>=0 ? colors.rose : colors.teal; // más costo ejecutado que el nivel previo = rojo
       ctx.fillStyle = color;
       roundRectTop(ctx, cx-barW/2, top, barW, Math.max(bh,2), 3);
@@ -2249,7 +2588,142 @@ const MiniChart = (function(){
     attachClearOnLeave(canvas);
   }
 
-  return { bar, hbar, line, sparkline, waterfall, scatter, clear };
+  /* ---------- DONUT (composición / participación) ---------- */
+  function donut(canvas, { data, colors, formatTooltip, centerLabel }){
+    const { ctx, w, h } = setupCanvas(canvas);
+    const legendH = 20;
+    const cx = w/2, cy = (h-legendH)/2 + 4;
+    const rOuter = Math.min(cx, cy) * 0.82, rInner = rOuter * 0.6;
+    const total = data.reduce((a,d)=>a+d.value, 0);
+    if (!total){ return; }
+
+    const palette = colors.palette;
+    let angle = -Math.PI/2;
+    const segs = data.map((d,i)=>{
+      const frac = d.value/total;
+      const start = angle, end = angle + frac*Math.PI*2;
+      angle = end;
+      return { ...d, start, end, color: d.color || palette[i % palette.length] };
+    });
+    segs.forEach(s=>{
+      ctx.beginPath();
+      ctx.arc(cx, cy, rOuter, s.start, s.end);
+      ctx.arc(cx, cy, rInner, s.end, s.start, true);
+      ctx.closePath();
+      ctx.fillStyle = s.color;
+      ctx.fill();
+    });
+
+    if (centerLabel){
+      ctx.fillStyle = colors.text; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font = 'bold 13px Inter, sans-serif';
+      ctx.fillText(centerLabel, cx, cy);
+    }
+
+    drawLegend(ctx, w, h-legendH+6, segs.map(s=>({label:s.label, color:s.color})), colors);
+
+    canvas.onmousemove = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+      const dx = mx-cx, dy = my-cy;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if (dist<rInner || dist>rOuter){ hideTooltip(); return; }
+      let a = Math.atan2(dy,dx);
+      if (a < -Math.PI/2) a += Math.PI*2;
+      const seg = segs.find(s=> a>=s.start && a<s.end);
+      if (seg){
+        const pct = (seg.value/total)*100;
+        showTooltip(e.clientX, e.clientY, formatTooltip ? formatTooltip(seg, pct) : `${seg.label}: ${fmtNum(pct,1)}%`);
+      } else hideTooltip();
+    };
+    attachClearOnLeave(canvas);
+  }
+
+  /* ---------- GAUGE (velocímetro semicircular con semáforo) ---------- */
+  function gauge(canvas, { value, plan, unit, colors, decimals, isPercent }){
+    const { ctx, w, h } = setupCanvas(canvas);
+    const cx = w/2, cy = h*0.86;
+    const rOuter = Math.min(w/2-26, h*0.68);
+    const rInner = rOuter*0.62;
+
+    // Escala FIJA cuando es un porcentaje (0–100, siempre igual) — para que
+    // la aguja se mueva de forma clara y comparable al cambiar filtros, en
+    // vez de reajustarse junto con el Plan (lo que hacía que pareciera
+    // "estática" aunque el valor real sí cambiara). Para métricas absolutas
+    // (Metros, Taladros, Velocidad) se usa el mayor entre Plan y Real ×1.3.
+    const scaleMax = isPercent ? 100 : ((plan && plan>0) ? Math.max(plan, value||0)*1.3 : (value||1)*1.3);
+    const frac = v => Math.max(0, Math.min(1, v/scaleMax));
+
+    const angleStart = Math.PI, angleEnd = 0; // semicírculo, izquierda->derecha por arriba
+    const angleOf = f => angleStart + (angleEnd-angleStart)*f;
+
+    // Zonas de semáforo (mismos cortes que semaforoStatus 'higher'): rojo
+    // hasta 85% del plan, ámbar 85-95%, verde 95%+ — expresado en fracción
+    // de la ESCALA total del gauge (no de 0-100%).
+    const cutRed = plan ? (plan*0.85)/scaleMax : 0.65;
+    const cutAmber = plan ? (plan*0.95)/scaleMax : 0.8;
+    const zones = [
+      { from:0, to:cutRed, color: colors.rose },
+      { from:cutRed, to:cutAmber, color: colors.amber },
+      { from:cutAmber, to:1, color: colors.teal },
+    ];
+    zones.forEach(z=>{
+      ctx.beginPath();
+      ctx.arc(cx, cy, rOuter, angleOf(z.from), angleOf(z.to), false);
+      ctx.arc(cx, cy, rInner, angleOf(z.to), angleOf(z.from), true);
+      ctx.closePath();
+      ctx.fillStyle = z.color;
+      ctx.fill();
+    });
+
+    // Marcas numeradas alrededor del arco (estilo velocímetro clásico).
+    const nTicks = 5;
+    ctx.font = '600 9px Inter, sans-serif';
+    ctx.fillStyle = colors.text;
+    for (let i=0;i<=nTicks;i++){
+      const tf = i/nTicks;
+      const a = angleOf(tf);
+      const tickVal = scaleMax*tf;
+      const rTickIn = rOuter+3, rTickOut = rOuter+9;
+      ctx.strokeStyle = colors.grid; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(a)*rTickIn, cy-Math.sin(a)*rTickIn);
+      ctx.lineTo(cx+Math.cos(a)*rTickOut, cy-Math.sin(a)*rTickOut);
+      ctx.stroke();
+      const rLabel = rOuter+16;
+      ctx.textAlign = tf<0.15?'left':tf>0.85?'right':'center';
+      ctx.fillText(fmtNum(tickVal,0), cx+Math.cos(a)*rLabel, cy-Math.sin(a)*rLabel+3);
+    }
+
+    // Marcador de Plan (línea fina) sobre el arco, si existe
+    if (plan && plan>0){
+      const a = angleOf(frac(plan));
+      const x1 = cx + Math.cos(a)*rInner, y1 = cy - Math.sin(a)*rInner;
+      const x2 = cx + Math.cos(a)*(rOuter+4), y2 = cy - Math.sin(a)*(rOuter+4);
+      ctx.strokeStyle = colors.text; ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    // Aguja
+    const aNeedle = angleOf(frac(value||0));
+    const needleLen = rOuter*0.85;
+    ctx.strokeStyle = colors.text; ctx.lineWidth = 3; ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx+Math.cos(aNeedle)*needleLen, cy-Math.sin(aNeedle)*needleLen);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fillStyle=colors.text; ctx.fill();
+
+    // Valor central
+    ctx.fillStyle = colors.text; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.font = 'bold 17px Inter, sans-serif';
+    ctx.fillText(`${fmtNum(value, decimals??1)}${unit||''}`, cx, cy-8);
+  }
+
+  return { bar, hbar, hbarStacked, line, sparkline, waterfall, scatter, donut, gauge, clear };
 })();
 
 
@@ -2257,6 +2731,32 @@ let kpiSparkCounter = 0;
 
 // spec = { title, mode:'planvsejec'|'calc', planLabel, ejecLabel, planVal, ejecVal,
 //          calcVal, decimals, suffix, goodDirection, months, series }
+// Tarjeta KPI con velocímetro (gauge) — usada solo en Perforación/Precorte
+// para diferenciarla visualmente del resto de pestañas, con semáforo de
+// color y una marca del Plan sobre el propio arco.
+function renderGaugeCard(container, { title, planVal, ejecVal, decimals, suffix, goodDirection, note }){
+  const card = document.createElement('div');
+  card.className = 'rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3';
+  const canvasId = 'gauge_' + Math.random().toString(36).slice(2,9);
+  const dev = deviation(planVal, ejecVal);
+  const status = dev===null ? 'gray' : semaforoStatus(dev, goodDirection||'higher');
+  const STATUS_TEXT = { green:'text-emerald-600 dark:text-emerald-400', orange:'text-amber', red:'text-rose', gray:'text-slate-400' };
+  const isPercent = (suffix||'').trim()==='%';
+  card.innerHTML = `
+    <p class="text-[11px] uppercase tracking-wide text-slate-400 font-semibold text-center mb-1">${escapeHtml(title)}</p>
+    <div style="height:128px"><canvas id="${canvasId}"></canvas></div>
+    <div class="flex justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 px-1">
+      <span>Plan: ${planVal!==null&&planVal!==undefined ? fmtNum(planVal,decimals)+(suffix||'') : '—'}</span>
+      <span class="font-semibold ${STATUS_TEXT[status]}">${dev!==null?(dev>=0?'+':'')+fmtNum(dev,1)+'%':''}</span>
+    </div>
+    ${note ? `<p class="text-[9px] text-slate-400 mt-1 text-center">${escapeHtml(note)}</p>` : ''}`;
+  container.appendChild(card);
+  requestAnimationFrame(()=>{
+    const canvas = document.getElementById(canvasId);
+    if (canvas) MiniChart.gauge(canvas, { value: ejecVal||0, plan: planVal, unit: suffix, colors: colors(), decimals, isPercent });
+  });
+}
+
 function renderKpiCard(container, spec){
   const c = colors();
   const decimals = spec.decimals ?? 1;
@@ -2334,33 +2834,33 @@ function renderTargetCard(container, { icon, title, unit, planVal, realVal, deci
     cumplimiento = goodDirection==='higher' ? (realVal/planVal)*100 : (planVal/realVal)*100;
   }
   const STATUS_STYLE = {
-    green:  { border:'border-emerald-400', badgeBg:'bg-emerald-50 dark:bg-emerald-500/10', badgeText:'text-emerald-700 dark:text-emerald-400', dot:'bg-emerald-500', label:'EN OBJETIVO' },
-    orange: { border:'border-amber-400', badgeBg:'bg-amber-50 dark:bg-amber-500/10', badgeText:'text-amber-700 dark:text-amber-400', dot:'bg-amber-500', label:'EN ATENCIÓN' },
-    red:    { border:'border-rose-400', badgeBg:'bg-rose-50 dark:bg-rose-500/10', badgeText:'text-rose-700 dark:text-rose-400', dot:'bg-rose-500', label:'EN ALERTA' },
-    gray:   { border:'border-slate-200 dark:border-panel-border', badgeBg:'bg-slate-50 dark:bg-panel-surface2', badgeText:'text-slate-500', dot:'bg-slate-400', label:'SIN DATO' },
+    green:  { border:'border-emerald-400', badgeBg:'bg-emerald-50 dark:bg-emerald-500/10', badgeText:'text-emerald-700 dark:text-emerald-400', valueText:'text-emerald-600 dark:text-emerald-400', dot:'bg-emerald-500', label:'EN OBJETIVO' },
+    orange: { border:'border-amber-400', badgeBg:'bg-amber-50 dark:bg-amber-500/10', badgeText:'text-amber-700 dark:text-amber-400', valueText:'text-amber-600 dark:text-amber-400', dot:'bg-amber-500', label:'EN ATENCIÓN' },
+    red:    { border:'border-rose-400', badgeBg:'bg-rose-50 dark:bg-rose-500/10', badgeText:'text-rose-700 dark:text-rose-400', valueText:'text-rose-600 dark:text-rose-400', dot:'bg-rose-500', label:'EN ALERTA' },
+    gray:   { border:'border-slate-200 dark:border-panel-border', badgeBg:'bg-slate-50 dark:bg-panel-surface2', badgeText:'text-slate-500', valueText:'text-slate-600 dark:text-slate-300', dot:'bg-slate-400', label:'SIN DATO' },
   };
   const st = STATUS_STYLE[status];
   const fmt = v => v===null||v===undefined ? '—' : fmtNum(v, decimals??2);
 
   const card = document.createElement('div');
-  card.className = `rounded-2xl border-2 ${st.border} bg-white dark:bg-panel-surface p-4 text-center shadow-sm`;
+  card.className = `rounded-2xl border-2 ${st.border} bg-white dark:bg-panel-surface p-3 text-center shadow-sm`;
   card.innerHTML = `
-    <p class="text-2xl mb-0.5">${icon||''}</p>
-    <p class="font-mono-num font-extrabold text-3xl text-indigo-600 dark:text-indigox">${fmt(realVal)}</p>
-    <p class="text-[11px] uppercase tracking-wide text-slate-400 font-semibold -mt-0.5 mb-3">${escapeHtml(title)} ${unit?`(${unit})`:''}</p>
-    <div class="grid grid-cols-2 gap-2">
-      <div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 py-1.5">
-        <p class="font-mono-num font-bold text-sm text-indigo-600 dark:text-indigox">${fmt(planVal)}</p>
-        <p class="text-[9px] text-slate-400 uppercase">Plan ${unit||''}</p>
+    <p class="text-lg mb-0">${icon||''}</p>
+    <p class="font-mono-num font-extrabold text-2xl ${st.valueText}">${fmt(realVal)}</p>
+    <p class="text-[10px] uppercase tracking-wide text-slate-400 font-semibold -mt-0.5 mb-2">${escapeHtml(title)} ${unit?`(${unit})`:''}</p>
+    <div class="grid grid-cols-2 gap-1.5">
+      <div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 py-1">
+        <p class="font-mono-num font-bold text-xs text-slate-600 dark:text-slate-300">${fmt(planVal)}</p>
+        <p class="text-[8px] text-slate-400 uppercase">Plan ${unit||''}</p>
       </div>
-      <div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 py-1.5">
-        <p class="font-mono-num font-bold text-sm text-indigo-600 dark:text-indigox">${cumplimiento===null?'—':fmtNum(cumplimiento,2)+'%'}</p>
-        <p class="text-[9px] text-slate-400 uppercase">Cumpl.</p>
+      <div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 py-1">
+        <p class="font-mono-num font-bold text-xs text-slate-600 dark:text-slate-300">${cumplimiento===null?'—':fmtNum(cumplimiento,1)+'%'}</p>
+        <p class="text-[8px] text-slate-400 uppercase">Cumpl.</p>
       </div>
     </div>
-    <p class="font-mono-num font-semibold text-sm mt-2 ${dev===null?'text-slate-400':'text-indigo-500 dark:text-indigox'}">${dev===null?'—':(dev>=0?'+':'')+fmt(dev)}${dev!==null?' Desv.':''}</p>
-    <div class="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold ${st.badgeBg} ${st.badgeText}">
-      <span class="w-2 h-2 rounded-full ${st.dot}"></span>${st.label}
+    <p class="font-mono-num font-semibold text-xs mt-1.5 ${dev===null?'text-slate-400':st.valueText}">${dev===null?'—':(dev>=0?'+':'')+fmt(dev)}${dev!==null?' Desv.':''}</p>
+    <div class="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${st.badgeBg} ${st.badgeText}">
+      <span class="w-1.5 h-1.5 rounded-full ${st.dot}"></span>${st.label}
     </div>`;
   container.appendChild(card);
   return { title, cumplimiento, status };
@@ -2711,66 +3211,6 @@ function renderTabControl(){
   // ---- Comparativo entre Proyectos ----
   renderComparativoProyectos();
 
-  // ---- P80 mini-bloque ----
-  const kpiP80 = document.getElementById('kpi_control_p80');
-  const p80Canvas = document.getElementById('chart_control_p80');
-  if (!DATA.frag.length){
-    kpiP80.innerHTML = '<div class="col-span-full text-xs text-slate-400 text-center py-3">Hoja "Frag. PortaM" no disponible.</div>';
-    MiniChart.clear(p80Canvas);
-  } else {
-    const fragMineral = mineralOnly(fragRecs);
-    const p80Real = sumCol(fragMineral,'P80 (pulg)').avg, p80Target = sumCol(fragMineral,'Target P80 (Pulg.)').avg;
-    const stats = describeStats(fragMineral, 'P80 (pulg)');
-    const cumplen = fragMineral.length ? (fragMineral.filter(r=>String(r['Alcanzó target?']).trim().toUpperCase()==='SI').length/fragMineral.length)*100 : null;
-    const miniStat = (label,val)=>`<div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 px-2 py-1.5"><p class="text-[9px] uppercase text-slate-400">${label}</p><p class="font-mono-num text-sm font-semibold">${val}</p></div>`;
-    kpiP80.innerHTML =
-      miniStat('P80 actual (Mineral)', fmtNum(p80Real,2)+' pulg') +
-      miniStat('Target', fmtNum(p80Target,2)+' pulg') +
-      miniStat('Cumplimiento', cumplen===null?'—':fmtNum(cumplen,0)+'%') +
-      miniStat('Variabilidad (CV)', stats&&stats.cv!==null?fmtNum(stats.cv,0)+'%':'—');
-    const p80Months = monthlyAvg(fragMineral, DATE_COL.frag, 'P80 (pulg)', months);
-    const targetMonths = monthlyAvg(fragMineral, DATE_COL.frag, 'Target P80 (Pulg.)', months);
-    const fragDesmonte = desmonteOnly(fragRecs);
-    const p80MonthsD = fragDesmonte.length ? monthlyAvg(fragDesmonte, DATE_COL.frag, 'P80 (pulg)', months) : null;
-    MiniChart.line(p80Canvas, {
-      labels: months.map(monthLabel), colors: c,
-      formatTooltip: v=>fmtNum(v,2)+' pulg',
-      datasets: [
-        { label:'P80 (Mineral)', data: p80Months, color: c.teal, fill:true },
-        { label:'Target Mineral', data: targetMonths, color: c.amber },
-        ...(p80MonthsD ? [{ label:'P80 (Desmonte)', data: p80MonthsD, color: c.indigo }] : []),
-      ]
-    });
-  }
-
-  // ---- Vibraciones mini-bloque ----
-  const kpiVib = document.getElementById('kpi_control_vib');
-  const vibWorst = document.getElementById('vib_worst_control');
-  if (!DATA.vib.length){
-    kpiVib.innerHTML = '<div class="col-span-full text-xs text-slate-400 text-center py-3">Hojas "Vib &amp; Air Blast" no disponibles.</div>';
-    vibWorst.innerHTML = '';
-  } else {
-    const ppvAvg = sumCol(vibRecs,'PPV VECTOR SUMA').avg, ppvMax = Math.max(...extractNumericValues(vibRecs,'PPV VECTOR SUMA'), 0);
-    const abAvg = sumCol(vibRecs,'AIR BLAST Db(L)').avg;
-    const abVals = extractNumericValues(vibRecs,'AIR BLAST Db(L)');
-    const abMax = abVals.length ? Math.max(...abVals) : null;
-    const miniStat = (label,val)=>`<div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 px-2 py-1.5"><p class="text-[9px] uppercase text-slate-400">${label}</p><p class="font-mono-num text-sm font-semibold">${val}</p></div>`;
-    kpiVib.innerHTML =
-      miniStat('PPV promedio', fmtNum(ppvAvg,2)+' mm/s') +
-      miniStat('PPV máximo', ppvMax?fmtNum(ppvMax,2)+' mm/s':'—') +
-      miniStat('Air Blast prom.', fmtNum(abAvg,1)+' dB') +
-      miniStat('Air Blast máx.', abMax!==null?fmtNum(abMax,1)+' dB':'—');
-    // Proyecto/zona con mayor PPV
-    let worst = null;
-    for (const r of vibRecs){
-      const v = parseNumber(r['PPV VECTOR SUMA']);
-      if (v!==null && (!worst || v>worst.v)) worst = { v, r };
-    }
-    vibWorst.innerHTML = worst
-      ? `Mayor PPV en <b>${escapeHtml(String(worst.r['PROYECTO']||'—'))}</b> (${escapeHtml(String(worst.r['PUNTO MONITOREO #1']||'—'))}): <span class="font-mono-num text-rose">${fmtNum(worst.v,2)} mm/s</span> el ${isDateVal(worst.r[DATE_COL.vib])?fmtDate(worst.r[DATE_COL.vib]):'—'}.`
-      : '';
-  }
-
   // ---- Principales Desvíos (auto-ranking de |desviación%| across todo el panel) ----
   const desvios = collectDesviaciones(peRecs, fragRecs, pePcRecs);
   const top = desvios.slice(0,8);
@@ -2803,19 +3243,21 @@ function renderTabControl(){
 
   if (DATA.drilling.length){
     const equipos = distinctValues(drillRecs, 'Perforadora');
-    const oees = equipos.map(eq=> avgNonZero(drillRecs.filter(r=>String(r['Perforadora']||'').trim()===eq),'OEE')).filter(v=>v!==null);
-    if (oees.length){
-      const fleetAvg = oees.reduce((a,v)=>a+v,0)/oees.length;
-      const ranked = equipos.map(eq=>{
-        const oee = avgNonZero(drillRecs.filter(r=>String(r['Perforadora']||'').trim()===eq),'OEE');
-        return { eq, oee, dev: oee!==null ? ((oee-fleetAvg)/fleetAvg)*100 : null };
-      }).filter(x=>x.dev!==null).sort((a,b)=>a.dev-b.dev);
+    // Calificación compuesta (Utilización + Disp. Mecánica + Usage), no solo OEE.
+    const scores = equipos.map(eq=>{
+      const recs = drillRecs.filter(r=>String(r['Perforadora']||'').trim()===eq);
+      const parts = [avgNonZero(recs,'Utilización'), avgNonZero(recs,'Disp. Mecánica'), avgNonZero(recs,'USA')].filter(v=>v!==null);
+      return parts.length ? { eq, score: parts.reduce((a,v)=>a+v,0)/parts.length } : null;
+    }).filter(x=>x!==null);
+    if (scores.length){
+      const fleetAvg = scores.reduce((a,x)=>a+x.score,0)/scores.length;
+      const ranked = scores.map(x=>({ ...x, dev:((x.score-fleetAvg)/fleetAvg)*100 })).sort((a,b)=>a.dev-b.dev);
       if (ranked.length){
         const w = ranked[0];
         cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
           <p class="text-xs font-semibold mb-1">🔧 Equipo con menor productividad</p>
           <p class="text-sm font-display font-700">${escapeHtml(w.eq)}</p>
-          <p class="text-xs text-slate-400 mt-0.5">OEE ${fmtPct(w.oee)} · ${nf1.format(w.dev)}% vs promedio de flota.</p>
+          <p class="text-xs text-slate-400 mt-0.5">Calificación compuesta ${nf1.format(w.dev)}% vs promedio de flota (Utilización, Disp. Mecánica, Usage).</p>
         </div>`);
       }
     }
@@ -2861,56 +3303,22 @@ function renderTabControl(){
 
   oportunidades.innerHTML = cards.length ? cards.join('') : '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Aún no hay suficientes datos para identificar oportunidades.</div>';
 
-  // ---- Relaciones Costo–Performance ----
-  // Costo Perforación US$/TM ↔ Utilización
-  const relCostoPerfCanvas = document.getElementById('chart_rel_costoperf_util');
-  if (DATA.planEjec.length && DATA.drilling.length && months.length){
-    const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
-    const costoPerfSeries = months.map((m,i)=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; return tonMinadoM[i]? g/tonMinadoM[i] : null; });
-    const utilSeries = monthlyAvg(peRecs, DATE_COL.planEjec, 'UTILIZACION EJEC (%)', months, true);
-    MiniChart.line(relCostoPerfCanvas, {
-      labels: months.map(monthLabel), colors: c,
-      formatY: v=>fmtNum(v,3), formatY2: v=>fmtNum(v)+'%',
-      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,1)+'%' : fmtNum(v,3)+' US$/t',
-      datasets: [
-        { label:'US$/TM', data:costoPerfSeries, color:c.rose },
-        { label:'Utilización %', data:utilSeries, color:c.indigo, yAxisID:'y2' },
-      ]
-    });
-  } else MiniChart.clear(relCostoPerfCanvas);
-
-  // Costo Voladura US$/TM ↔ Kg Explosivo/TM
-  const relCostoVolCanvas = document.getElementById('chart_rel_costovol_kg');
-  if (DATA.planEjec.length && DATA.blasting.length && months.length){
-    const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
-    const costoVolSeries = months.map((m,i)=>{ const g=monthlySum(blastRecs,DATE_COL.blasting,'GASTO DE EXPLOSIVO (US$)',[m])[0]; return tonMinadoM[i]? g/tonMinadoM[i] : null; });
-    const kgPorTSeries = months.map((m,i)=>{ const k=monthlySum(blastRecs,DATE_COL.blasting,'TOTAL EXPLOSIVO (Kg)',[m])[0]; return tonMinadoM[i]? k/tonMinadoM[i] : null; });
-    MiniChart.line(relCostoVolCanvas, {
-      labels: months.map(monthLabel), colors: c,
-      formatY: v=>fmtNum(v,3), formatY2: v=>fmtNum(v,3),
-      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,3)+' kg/t' : fmtNum(v,3)+' US$/t',
-      datasets: [
-        { label:'US$/TM', data:costoVolSeries, color:c.rose },
-        { label:'Kg/TM', data:kgPorTSeries, color:c.indigo, yAxisID:'y2' },
-      ]
-    });
-  } else MiniChart.clear(relCostoVolCanvas);
-
-  // P80 ↔ Factor de Potencia
-  const relP80FpCanvas = document.getElementById('chart_rel_p80_fp');
-  if (DATA.frag.length && DATA.blasting.length && months.length){
-    const p80Series = monthlyAvg(mineralOnly(fragRecs), DATE_COL.frag, 'P80 (pulg)', months);
-    const fpSeries = monthlyAvg(blastRecs, DATE_COL.blasting, 'F.P. (TEORICA)', months, true);
-    MiniChart.line(relP80FpCanvas, {
-      labels: months.map(monthLabel), colors: c,
-      formatY: v=>fmtNum(v,2), formatY2: v=>fmtNum(v,2),
-      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,2)+' F.P.' : fmtNum(v,2)+' pulg',
-      datasets: [
-        { label:'P80 (pulg)', data:p80Series, color:c.teal },
-        { label:'Factor de Potencia', data:fpSeries, color:c.amber, yAxisID:'y2' },
-      ]
-    });
-  } else MiniChart.clear(relP80FpCanvas);
+  // ---- Distribución del Costo Ejecutado (Perforación vs Voladura) ----
+  const costoDonutCanvas = document.getElementById('chart_control_costo_donut');
+  if (DATA.drilling.length || DATA.blasting.length){
+    const gastoPerfTotal = sumCol(drillRecs,'GASTO TOTAL PERFORACION (US$)').sum;
+    const gastoVolTotal = sumCol(blastRecs,'GASTO DE EXPLOSIVO (US$)').sum;
+    if (gastoPerfTotal>0 || gastoVolTotal>0){
+      MiniChart.donut(costoDonutCanvas, {
+        colors: c,
+        formatTooltip: (seg,pct)=> `${seg.label}: ${fmtNum(seg.value,0)} US$ (${fmtNum(pct,1)}%)`,
+        data: [
+          { label:'Perforación', value: gastoPerfTotal, color: c.indigo },
+          { label:'Voladura', value: gastoVolTotal, color: c.amber },
+        ]
+      });
+    } else MiniChart.clear(costoDonutCanvas);
+  } else MiniChart.clear(costoDonutCanvas);
 }
 
 // Comparativo entre Proyectos — solo con indicadores que el Excel realmente
@@ -3026,20 +3434,43 @@ function renderTabVoladura(){
       months, series: months.map(m=>{ const g=monthlySum(blastRecs,DATE_COL.blasting,'GASTO DE EXPLOSIVO (US$)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? g/t : null; }) });
   }
 
-  const AGENTES_VOLADURA = [
-    { label:'Nitrato', plan:'PLAN DE NITRATO (kg)', ejec:'CONSUMO NITRATO (kg)', unit:'kg' },
-    { label:'Diésel', plan:'PLAN DE DIESEL (kg)', ejec:'CONSUMO DIESEL (kg)', unit:'kg' },
-    { label:'Emulsión', plan:'PLAN DE EMULSION (kg)', ejec:'CONSUMO EMULSION (kg)', unit:'kg' },
-    { label:'Solución Gasificante L11', plan:'PLAN DE SOLUCION GASIF. L11 (kg)', ejec:'CONSUMO SOLUCION GASIF. L11 (kg)', unit:'kg' },
-    { label:'Booster', plan:'PLAN BOOSTER (kg)', ejec:'CONSUMO BOOSTER (kg)', unit:'kg' },
-    { label:'Detonador Electrónico', plan:'PLAN DETONADOR ELECT. (und)', ejec:'CONSUMO DETONADOR ELECT. (und)', unit:'und' },
-    { label:'Cable de Conexión', plan:'PLAN CABLE DE CONEXIÓN (m)', ejec:'CONSUMO CABLE DE CONEXIÓN (m)', unit:'m' },
-    { label:'Taponex', plan:'PLAN TAPONEX (und)', ejec:'CONSUMO TAPONEX (und)', unit:'und' },
-    { label:'Cartuflex', plan:'PLAN CARTUFLEX (und)', ejec:'CONSUMO CARTUFLEX (und)', unit:'und' },
-    { label:'Emulsión Encartuchada', plan:'PLAN EMULS. ENCART (kg)', ejec:'CONSUMO EMULS. ENCART (kg)', unit:'kg' },
-  ];
-  renderConsumablesModule(peRecs, AGENTES_VOLADURA, months, 'table_consumibles_voladura', 'chart_pareto_voladura', 'chart_voladura_acum', c, !DATA.planEjec.length);
+  renderConsumablesModule(peRecs, AGENTES_VOLADURA, months, 'table_consumibles_voladura', null, 'chart_voladura_acum', c, !DATA.planEjec.length);
+  renderOportunidadesVoladura('oportunidades_voladura', peRecs, AGENTES_VOLADURA, blastRecs);
   renderCostoTaladroVoladura(peRecs, AGENTES_VOLADURA, sumCol(blastRecs,'TALADROS PRODUCCION').sum, 'table_costo_taladro_voladura', 'chart_costo_taladro_voladura', 'tfoot_costo_taladro_voladura', c, !DATA.planEjec.length);
+
+  // ---- Relaciones Costo–Performance (movidas aquí desde Resumen Gerencial) ----
+  const drillRecsVol = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
+  const relCostoPerfCanvas = document.getElementById('chart_rel_costoperf_util');
+  if (DATA.planEjec.length && DATA.drilling.length && months.length){
+    const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
+    const costoPerfSeries = months.map((m,i)=>{ const g=monthlySum(drillRecsVol,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; return tonMinadoM[i]? g/tonMinadoM[i] : null; });
+    const utilSeries = monthlyAvg(peRecs, DATE_COL.planEjec, 'UTILIZACION EJEC (%)', months, true);
+    MiniChart.line(relCostoPerfCanvas, {
+      labels: months.map(monthLabel), colors: c,
+      formatY: v=>fmtNum(v,3), formatY2: v=>fmtNum(v)+'%',
+      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,1)+'%' : fmtNum(v,3)+' US$/t',
+      datasets: [
+        { label:'US$/TM', data:costoPerfSeries, color:c.rose },
+        { label:'Utilización %', data:utilSeries, color:c.indigo, yAxisID:'y2' },
+      ]
+    });
+  } else MiniChart.clear(relCostoPerfCanvas);
+
+  const relCostoVolCanvas = document.getElementById('chart_rel_costovol_kg');
+  if (DATA.planEjec.length && DATA.blasting.length && months.length){
+    const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
+    const costoVolSeries = months.map((m,i)=>{ const g=monthlySum(blastRecs,DATE_COL.blasting,'GASTO DE EXPLOSIVO (US$)',[m])[0]; return tonMinadoM[i]? g/tonMinadoM[i] : null; });
+    const kgPorTSeries = months.map((m,i)=>{ const k=monthlySum(blastRecs,DATE_COL.blasting,'TOTAL EXPLOSIVO (Kg)',[m])[0]; return tonMinadoM[i]? k/tonMinadoM[i] : null; });
+    MiniChart.line(relCostoVolCanvas, {
+      labels: months.map(monthLabel), colors: c,
+      formatY: v=>fmtNum(v,3), formatY2: v=>fmtNum(v,3),
+      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,3)+' kg/t' : fmtNum(v,3)+' US$/t',
+      datasets: [
+        { label:'US$/TM', data:costoVolSeries, color:c.rose },
+        { label:'Kg/TM', data:kgPorTSeries, color:c.indigo, yAxisID:'y2' },
+      ]
+    });
+  } else MiniChart.clear(relCostoVolCanvas);
 
   // Guía de costos unitarios
   const guide = document.getElementById('guide_voladura');
@@ -3064,7 +3495,7 @@ function renderTabVoladura(){
 // Costo Real por Taladro Cargado, usando precios unitarios reales (PRECIOS_VOLADURA)
 // aplicados al CONSUMO real (no al plan) — solo incluye agentes con precio
 // definido, para no inventar costos de los que no se tiene tarifa.
-function renderCostoTaladroVoladura(peRecs, agents, taladrosTotal, tableBodyId, chartId, tfootId, c, noData){
+function renderCostoTaladroVoladura(peRecs, agents, taladrosTotal, tableBodyId, chartId, tfootId, c, noData, extraAgents){
   const tbody = document.getElementById(tableBodyId);
   const tfoot = document.getElementById(tfootId);
   const chartCanvas = document.getElementById(chartId);
@@ -3081,7 +3512,20 @@ function renderCostoTaladroVoladura(peRecs, agents, taladrosTotal, tableBodyId, 
     if (consumo===0) return null;
     const costo = consumo * priceInfo.price;
     return { label:a.label, consumo, costo, note:priceInfo.note };
-  }).filter(Boolean).sort((a,b)=> b.costo-a.costo);
+  }).filter(Boolean);
+
+  // Agentes cuyo consumo real vive en una hoja distinta a la del resto (ej.
+  // Cordón Detonante, registrado en "Blasting PC" y no en "Plan vs Ejec. PC")
+  // — verificado en el Excel, no es un olvido, es que esa hoja no lo trae.
+  if (extraAgents){
+    extraAgents.forEach(a=>{
+      const priceInfo = PRECIOS_VOLADURA[a.ejec];
+      if (!priceInfo) return;
+      const consumo = sumCol(a.records, a.ejec).sum;
+      if (consumo>0) rows.push({ label:a.label, consumo, costo:consumo*priceInfo.price, note:priceInfo.note });
+    });
+  }
+  rows.sort((a,b)=> b.costo-a.costo);
 
   const totalCosto = rows.reduce((s,r)=>s+r.costo,0);
 
@@ -3115,14 +3559,58 @@ function renderCostoTaladroVoladura(peRecs, agents, taladrosTotal, tableBodyId, 
   }
 }
 
+// "¿Dónde debemos actuar?" para Voladura/Voladura PC — usa la misma lista de
+// agentes ya definida en cada pestaña, sin duplicar cálculos.
+function renderOportunidadesVoladura(containerId, peRecs, agents, proyectoRecs){
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const cards = [];
+
+  const rows = agents.map(a=>{
+    const plan = sumCol(peRecs, a.plan).sum, real = sumCol(peRecs, a.ejec).sum;
+    if (plan===0 && real===0) return null;
+    const dev = deviation(plan, real);
+    return dev===null ? null : { ...a, plan, real, dev };
+  }).filter(Boolean).sort((a,b)=> Math.abs(b.dev)-Math.abs(a.dev));
+
+  if (rows.length){
+    const worst = rows[0];
+    const status = semaforoStatus(worst.dev, 'lower');
+    cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
+      <p class="text-xs font-semibold mb-1">📌 Mayor desviación de consumible</p>
+      <p class="text-sm font-display font-700">${escapeHtml(worst.label)}</p>
+      <p class="text-xs text-slate-400 mt-0.5">Desviación de <span class="font-mono-num ${worst.dev<=0?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${worst.dev>=0?'+':''}${nf1.format(worst.dev)}%</span> respecto al plan (Real: ${fmtNum(worst.real,1)} vs Plan: ${fmtNum(worst.plan,1)}).</p>
+    </div>`);
+  }
+
+  if (proyectoRecs && proyectoRecs.length){
+    const proyectos = distinctValues(proyectoRecs, 'PROYECTO');
+    const porProyecto = proyectos.map(p=>{
+      const recs = proyectoRecs.filter(r=>String(r['PROYECTO']||'').trim()===p);
+      const kg = sumCol(recs,'TOTAL EXPLOSIVO (Kg)').sum, gasto = sumCol(recs,'GASTO DE EXPLOSIVO (US$)').sum;
+      return kg>0 ? { p, costoPorKg: gasto/kg, gasto } : null;
+    }).filter(Boolean).sort((a,b)=>b.gasto-a.gasto);
+    if (porProyecto.length){
+      const top = porProyecto[0];
+      cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
+        <p class="text-xs font-semibold mb-1">💰 Proyecto con mayor gasto en explosivo</p>
+        <p class="text-sm font-display font-700">${escapeHtml(top.p)}</p>
+        <p class="text-xs text-slate-400 mt-0.5">Gasto total: <span class="font-mono-num">${fmtNum(top.gasto,0)} US$</span> · ${fmtNum(top.costoPorKg,2)} US$/kg</p>
+      </div>`);
+    }
+  }
+
+  container.innerHTML = cards.length ? cards.join('') : '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Aún no hay suficientes datos para identificar oportunidades.</div>';
+}
+
 function renderConsumablesModule(peRecs, agents, months, tableBodyId, paretoCanvasId, accumCanvasId, c, noData){
   const tbody = document.getElementById(tableBodyId);
-  const paretoCanvas = document.getElementById(paretoCanvasId);
+  const paretoCanvas = paretoCanvasId ? document.getElementById(paretoCanvasId) : null;
   const accumCanvas = accumCanvasId ? document.getElementById(accumCanvasId) : null;
 
   if (noData){
     tbody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-6">Hoja de plan no disponible.</td></tr>`;
-    MiniChart.clear(paretoCanvas);
+    if (paretoCanvas) MiniChart.clear(paretoCanvas);
     if (accumCanvas) MiniChart.clear(accumCanvas);
     return;
   }
@@ -3147,13 +3635,15 @@ function renderConsumablesModule(peRecs, agents, months, tableBodyId, paretoCanv
   }).join('') : `<tr><td colspan="5" class="text-center text-slate-400 py-6">Sin consumibles con datos en el período filtrado.</td></tr>`;
 
   const withDev = rows.filter(r=>r.dev!==null);
-  if (withDev.length){
-    MiniChart.hbar(paretoCanvas, {
-      labels: withDev.map(r=>r.label), colors: c,
-      formatTooltip: v=>nf1.format(v)+'%',
-      datasets: [{ data: withDev.map(r=>Math.abs(r.dev)), color: c.rose }]
-    });
-  } else MiniChart.clear(paretoCanvas);
+  if (paretoCanvas){
+    if (withDev.length){
+      MiniChart.hbar(paretoCanvas, {
+        labels: withDev.map(r=>r.label), colors: c,
+        formatTooltip: v=>nf1.format(v)+'%',
+        datasets: [{ data: withDev.map(r=>Math.abs(r.dev)), color: c.rose }]
+      });
+    } else MiniChart.clear(paretoCanvas);
+  }
 
   if (accumCanvas){
     const kgAgents = agents.filter(a=>a.unit==='kg');
@@ -3206,14 +3696,10 @@ function renderTabVoladuraPC(){
       months, series: monthlySum(blastPcRecs, DATE_COL.blastingPC, 'GASTO DE EXPLOSIVO (US$)', months) });
   }
 
-  const AGENTES_VOLADURA_PC = [
-    { label:'Enaline', plan:'PLAN DE ENALINE (kg)', ejec:'CONSUMO DE ENALINE (kg)', unit:'kg' },
-    { label:'Booster', plan:'PLAN BOOSTER (kg)', ejec:'CONSUMO BOOSTER (kg)', unit:'kg' },
-    { label:'Detonador Electrónico', plan:'PLAN DETONADOR ELECT. (und)', ejec:'CONSUMO DETONADOR ELECT. (und)', unit:'und' },
-    { label:'Taponex', plan:'PLAN TAPONEX (und)', ejec:'CONSUMO TAPONEX (und)', unit:'und' },
-  ];
-  renderConsumablesModule(pePcRecs, AGENTES_VOLADURA_PC, months, 'table_consumibles_voladura_pc', 'chart_pareto_voladura_pc', 'chart_voladura_pc_acum', c, !DATA.planEjecPC.length);
-  renderCostoTaladroVoladura(pePcRecs, AGENTES_VOLADURA_PC, sumCol(blastPcRecs,'TALADROS PRECORTE').sum, 'table_costo_taladro_voladura_pc', 'chart_costo_taladro_voladura_pc', 'tfoot_costo_taladro_voladura_pc', c, !DATA.planEjecPC.length);
+  renderConsumablesModule(pePcRecs, AGENTES_VOLADURA_PC, months, 'table_consumibles_voladura_pc', null, 'chart_voladura_pc_acum', c, !DATA.planEjecPC.length);
+  renderOportunidadesVoladura('oportunidades_voladura_pc', pePcRecs, AGENTES_VOLADURA_PC, blastPcRecs);
+  renderCostoTaladroVoladura(pePcRecs, AGENTES_VOLADURA_PC, sumCol(blastPcRecs,'TALADROS PRECORTE').sum, 'table_costo_taladro_voladura_pc', 'chart_costo_taladro_voladura_pc', 'tfoot_costo_taladro_voladura_pc', c, !DATA.planEjecPC.length,
+    [{ label:'Cordón Detonante', records:blastPcRecs, ejec:'CORDON DETONANTE (mts)' }]);
 
   const guide = document.getElementById('guide_voladura_pc');
   if (DATA.blastingPC.length){
@@ -3387,35 +3873,28 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
     kpiTop.innerHTML = `<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hoja de plan no disponible.</div>`;
   } else {
     const metPlan = sumCol(peRecs,'METROS (PLAN)').sum, metEjec = sumCol(peRecs,'METROS (EJECUTADO)').sum;
-    renderKpiCard(kpiTop, { title:'Metros', planVal:metPlan, ejecVal:metEjec, decimals:0, suffix:' m', goodDirection:'higher',
-      months, series: monthlySum(peRecs, DATE_COL.planEjec, 'METROS (EJECUTADO)', months) });
+    renderGaugeCard(kpiTop, { title:'Metros', planVal:metPlan, ejecVal:metEjec, decimals:0, suffix:' m', goodDirection:'higher' });
 
     const talPlan = sumCol(peRecs,'TALADROS DIA (PLAN)').sum, talEjec = sumCol(peRecs,'TALADROS (EJECUTADO)').sum;
-    renderKpiCard(kpiTop, { title:'Taladros', planVal:talPlan, ejecVal:talEjec, decimals:0, suffix:'', goodDirection:'higher',
-      months, series: monthlySum(peRecs, DATE_COL.planEjec, 'TALADROS (EJECUTADO)', months) });
+    renderGaugeCard(kpiTop, { title:'Taladros', planVal:talPlan, ejecVal:talEjec, decimals:0, suffix:'', goodDirection:'higher' });
 
     const utilPlan = avgNonZero(peRecs,'UTILIZACION PLAN (%)'), utilEjec = avgNonZero(peRecs,'UTILIZACION EJEC (%)');
-    renderKpiCard(kpiTop, { title:'Utilización', planVal:utilPlan, ejecVal:utilEjec, decimals:1, suffix:'%', goodDirection:'higher',
-      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'UTILIZACION EJEC (%)', months, true) });
+    renderGaugeCard(kpiTop, { title:'Utilización', planVal:utilPlan, ejecVal:utilEjec, decimals:1, suffix:'%', goodDirection:'higher' });
 
     const dmPlan = avgNonZero(peRecs,'D.M. PLAN (%)'), dmEjec = avgNonZero(peRecs,'D.M. EJEC (%)');
-    renderKpiCard(kpiTop, { title:'Disponibilidad', planVal:dmPlan, ejecVal:dmEjec, decimals:1, suffix:'%', goodDirection:'higher',
-      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'D.M. EJEC (%)', months, true) });
+    renderGaugeCard(kpiTop, { title:'Disponibilidad', planVal:dmPlan, ejecVal:dmEjec, decimals:1, suffix:'%', goodDirection:'higher' });
 
     const velPlan = avgNonZero(peRecs,'VELOC. PLAN (m/Hra)'), velEjec = avgNonZero(peRecs,'VELOC. EJEC (m/Hr)');
-    renderKpiCard(kpiTop, { title:'Velocidad', planVal:velPlan, ejecVal:velEjec, decimals:1, suffix:' m/hr', goodDirection:'higher',
-      months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'VELOC. EJEC (m/Hr)', months, true) });
+    renderGaugeCard(kpiTop, { title:'Velocidad', planVal:velPlan, ejecVal:velEjec, decimals:1, suffix:' m/hr', goodDirection:'higher' });
 
     const usagePlan = avgNonZero(peRecs,'USAGE PLAN (%)'), usageEjec = avgNonZero(peRecs,'USAGE EJEC (%)');
     if (usagePlan!==null){
-      renderKpiCard(kpiTop, { title:'Usage', planVal:usagePlan, ejecVal:usageEjec, decimals:1, suffix:'%', goodDirection:'higher',
-        months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'USAGE EJEC (%)', months, true) });
+      renderGaugeCard(kpiTop, { title:'Usage', planVal:usagePlan, ejecVal:usageEjec, decimals:1, suffix:'%', goodDirection:'higher' });
     } else if (usageEjec!==null){
       // Sin Plan de Usage disponible en esta hoja (ocurre en Pre-Corte) — se
       // muestra solo el real, sin comparación inventada.
-      renderKpiCard(kpiTop, { title:'Usage', mode:'calc', calcVal:usageEjec, decimals:1, suffix:'%',
-        note:'Sin Plan de Usage disponible en el Excel para este módulo — se muestra solo el valor ejecutado.',
-        months, series: monthlyAvg(peRecs, DATE_COL.planEjec, 'USAGE EJEC (%)', months, true) });
+      renderGaugeCard(kpiTop, { title:'Usage', planVal:null, ejecVal:usageEjec, decimals:1, suffix:'%', goodDirection:'higher',
+        note:'Sin Plan disponible en el Excel — solo valor ejecutado.' });
     }
   }
 
@@ -3459,6 +3938,8 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
       dm: avgNonZero(recs,'Disp. Mecánica'),
       oee: avgNonZero(recs,'OEE'),
       vel: avgNonZero(recs,'Velocidad'),
+      usa: avgNonZero(recs,'USA'),
+      metros: sumCol(recs,'Metros Perforados').sum,
     };
   });
   const cellColor = v => v===null ? 'text-slate-400' : v>=80 ? 'text-emerald-600 dark:text-emerald-400' : v>=60 ? 'text-amber' : 'text-rose';
@@ -3471,19 +3952,31 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
       <td class="py-1.5 text-right font-mono-num">${fmtNum(m.vel,1)}</td>
     </tr>`).join('') || `<tr><td colspan="5" class="text-center text-slate-400 py-6">Sin datos</td></tr>`;
 
-  const withOee = matriz.filter(m=>m.oee!==null);
-  if (withOee.length){
-    const fleetAvg = withOee.reduce((a,m)=>a+m.oee,0)/withOee.length;
-    const ranked = withOee.map(m=>({...m, dev:((m.oee-fleetAvg)/fleetAvg)*100})).sort((a,b)=>a.dev-b.dev);
+  // Calificación compuesta: promedio de Utilización + Disp. Mecánica + Usage
+  // (no solo OEE) — Metros Perforados se muestra como contexto adicional.
+  const composite = matriz
+    .map(m=>{
+      const parts = [m.util, m.dm, m.usa].filter(v=>v!==null);
+      if (!parts.length) return null;
+      return { ...m, score: parts.reduce((a,v)=>a+v,0)/parts.length };
+    })
+    .filter(m=>m!==null);
+  if (composite.length){
+    const fleetAvg = composite.reduce((a,m)=>a+m.score,0)/composite.length;
+    const ranked = composite.map(m=>({...m, dev:((m.score-fleetAvg)/fleetAvg)*100})).sort((a,b)=>a.dev-b.dev);
     const peor = ranked[0];
-    const oportunidad = ranked.length>1 ? ranked[1] : null;
     const mejor = ranked[ranked.length-1];
+    // Solo se muestra "Principal oportunidad" si hay un 3er equipo distinto —
+    // con solo 2 equipos no hay un tercer lugar real que mostrar (evita
+    // duplicar el mismo equipo entre "oportunidad" y "mejor desempeño").
+    const oportunidad = ranked.length>2 ? ranked[1] : null;
 
     const card = (icon, title, item, colorClass) => `
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <p class="text-xs font-semibold mb-1">${icon} ${title}</p>
         <p class="font-display font-700 text-lg">${escapeHtml(item.p)}</p>
-        <p class="text-xs text-slate-400 mt-1">OEE: <span class="font-mono-num ${colorClass}">${fmtPct(item.oee)}</span> · Desv. vs flota: <span class="font-mono-num ${colorClass}">${item.dev>=0?'+':''}${nf1.format(item.dev)}%</span></p>
+        <p class="text-xs text-slate-400 mt-1">Util: ${fmtPct(item.util)} · D.M.: ${fmtPct(item.dm)} · Usage: ${fmtPct(item.usa)} · Metros: ${fmtNum(item.metros,0)}</p>
+        <p class="text-xs text-slate-400 mt-0.5">Calificación compuesta: <span class="font-mono-num ${colorClass}">${item.dev>=0?'+':''}${nf1.format(item.dev)}%</span> vs flota</p>
       </div>`;
     highlights.innerHTML =
       card('🔴','Equipo con mayor desviación', peor, 'text-rose') +
@@ -3575,13 +4068,24 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
 
       if (acerosPareto){
         const withDev = rowsData.filter(r=>r.dev!==null);
+        const acerosParetoCard = document.getElementById('card_pareto_aceros_perforacion_pc');
+        const acerosTableCard = document.getElementById('card_aceros_perforacion_pc_table');
         if (withDev.length){
           MiniChart.hbar(acerosPareto, {
             labels: withDev.map(r=>r.label), colors: c,
             formatTooltip: v=>nf1.format(v)+'%',
             datasets: [{ data: withDev.map(r=>Math.abs(r.dev)), color: c.amber }]
           });
-        } else MiniChart.clear(acerosPareto);
+          if (acerosParetoCard) acerosParetoCard.classList.remove('hidden');
+          if (acerosTableCard) acerosTableCard.classList.replace('lg:col-span-12','lg:col-span-7');
+        } else {
+          MiniChart.clear(acerosPareto);
+          // Sin ninguna desviación confiable que graficar (Plan no disponible
+          // en este módulo) — se oculta la tarjeta completa en vez de dejarla
+          // en blanco, y la tabla ocupa el ancho completo.
+          if (acerosParetoCard) acerosParetoCard.classList.add('hidden');
+          if (acerosTableCard) acerosTableCard.classList.replace('lg:col-span-7','lg:col-span-12');
+        }
       }
     }
   }
@@ -3606,7 +4110,24 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
       if (cisternaTotal>0) steps.push({ label:'Cisterna', value: cisternaTotal/taladrosTotal, type:'delta' });
       if (limpiezaTotal>0) steps.push({ label:'Limpieza', value: limpiezaTotal/taladrosTotal, type:'delta' });
       steps.push({ label:'Total/Taladro', value:(combustibleTotal+acerosTotal+cisternaTotal+limpiezaTotal)/taladrosTotal, type:'total' });
-      MiniChart.waterfall(costoTaladroCanvas, { colors:c, formatTooltip: v=>fmtNum(v,2)+' US$/tal', steps });
+
+      // Plan de referencia: solo existe en Producción ("Gasto en perforacion"
+      // Plan no está disponible para Pre-Corte, verificado) — se calcula en la
+      // misma ventana donde el Excel realmente tiene ese Plan cargado, para
+      // que la comparación sea justa (no todo el período contra un plan parcial).
+      let planRef, planLabel;
+      if (idPrefix==='perf'){
+        const planRecsAvail = peData.filter(r=> r['Gasto en perforacion']!==null);
+        const {min:pmin, max:pmax} = dateMinMax(planRecsAvail.map(r=>r[DATE_COL.planEjec]).filter(isDateVal));
+        if (pmin && pmax){
+          const peOv = applyDateFilter(peData, DATE_COL.planEjec, pmin, pmax);
+          const drillOv = applyDateFilter(drillData, DATE_COL.drilling, pmin, pmax);
+          const gastoPlanOv = sumCol(peOv,'Gasto en perforacion').sum;
+          const taladrosPlanOv = sumCol(peOv,'TALADROS DIA (PLAN)').sum;
+          if (taladrosPlanOv) { planRef = gastoPlanOv/taladrosPlanOv; planLabel = `Plan: ${fmtNum(planRef,2)} US$/tal`; }
+        }
+      }
+      MiniChart.waterfall(costoTaladroCanvas, { colors:c, formatTooltip: v=>fmtNum(v,2)+' US$/tal', steps, referenceLine:planRef, referenceLabel:planLabel });
     } else {
       MiniChart.clear(costoTaladroCanvas);
     }
@@ -3654,6 +4175,7 @@ function renderTabVibraciones(){
 
   if (!DATA.vib.length){
     events.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hojas "Vib & Air Blast." no disponibles.</div>';
+    document.getElementById('kpi_vib_promedios').innerHTML = '';
     MiniChart.clear(trendCanvas);
     MiniChart.clear(scatterCanvas);
     return;
@@ -3664,6 +4186,7 @@ function renderTabVibraciones(){
 
   if (!recs.length){
     events.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Sin datos para los filtros actuales.</div>';
+    document.getElementById('kpi_vib_promedios').innerHTML = '';
     MiniChart.clear(trendCanvas);
     MiniChart.clear(scatterCanvas);
     return;
@@ -3679,6 +4202,22 @@ function renderTabVibraciones(){
     const air = parseNumber(r['AIR BLAST Db(L)']);
     if (air!==null && (maxAir===null || air>maxAir.val)) maxAir = { val:air, r };
   }
+
+  // Tarjeta de promedios — vista rápida sin tener que abrir cada evento.
+  const kpiProm = document.getElementById('kpi_vib_promedios');
+  const ppvAvg = sumCol(recs,'PPV VECTOR SUMA').avg;
+  const airAvg = sumCol(recs,'AIR BLAST Db(L)').avg;
+  const miniProm = (icon,label,val,unit)=>`
+    <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3 text-center">
+      <p class="text-[11px] uppercase tracking-wide text-slate-400 font-semibold mb-1">${icon} ${label}</p>
+      <p class="font-mono-num font-extrabold text-xl">${val===null?'—':fmtNum(val,2)}</p>
+      <p class="text-[11px] text-slate-400">${unit}</p>
+    </div>`;
+  kpiProm.innerHTML =
+    miniProm('📡','PPV Promedio', ppvAvg, 'mm/s') +
+    miniProm('📡','PPV Máximo', maxPpv?maxPpv.val:null, 'mm/s') +
+    miniProm('🔊','Air Blast Promedio', airAvg, 'dB') +
+    miniProm('🔊','Air Blast Máximo', maxAir?maxAir.val:null, 'dB');
 
   function eventCard(icon, title, ev, unit, valCol, targetCol){
     if (!ev) return `<div class="rounded-2xl border border-dashed border-slate-300 dark:border-panel-border p-4 flex items-center justify-center text-xs text-slate-400">${escapeHtml(title)}: sin datos</div>`;
@@ -3756,31 +4295,77 @@ function renderTabVibraciones(){
 /* ======================================================================
    TAB 07 · ESTADÍSTICA & DEMORAS
    ====================================================================== */
+// Calcula MTBF, MTTR, Confiabilidad y el desglose de Demoras Operativas para
+// un grupo de equipos, a partir del detalle evento-por-evento de ACTIVIDADES.
+// Cada fila de "Demoras Mecanica" se cuenta como 1 falla discreta (no se
+// agrupan fallas consecutivas de distinta categoría porque el Excel no trae
+// un identificador de evento de falla que permita hacerlo sin inventar).
+function calcularConfiabilidad(records, equiposGrupo){
+  const recs = records.filter(r => equiposGrupo.includes(String(r['Equipo']||'').trim()));
+  if (!recs.length) return null;
+
+  const sumDifHr = (pred) => recs.reduce((a,r)=> pred(r) && typeof r['Dif. Hr']==='number' ? a+r['Dif. Hr'] : a, 0);
+
+  const horasTotal = sumDifHr(()=>true);
+  const horasMecanica = sumDifHr(r=>tipoActividadEfectivo(r)==='Demoras Mecanica');
+  const horasNoOperativas = sumDifHr(r=>tipoActividadEfectivo(r)==='Demoras No Operativas');
+  const horasOperativas = sumDifHr(r=>tipoActividadEfectivo(r)==='Demoras Operativas');
+  const horasPerforacion = sumDifHr(r=>tipoActividadEfectivo(r)==='Perforación');
+
+  const numFallas = recs.filter(r=>tipoActividadEfectivo(r)==='Demoras Mecanica').length;
+  const horasUptime = horasTotal - horasMecanica;
+  const mtbf = numFallas ? horasUptime/numFallas : null;
+  const mttr = numFallas ? horasMecanica/numFallas : null;
+  const confiabilidad = (mtbf!==null && mttr!==null && (mtbf+mttr)>0) ? (mtbf/(mtbf+mttr))*100 : null;
+
+  const causasMap = new Map();
+  recs.forEach(r=>{
+    if (tipoActividadEfectivo(r)!=='Demoras Operativas') return;
+    const dif = r['Dif. Hr'];
+    if (typeof dif!=='number') return;
+    const causa = String(r['Actividad']||'(Sin dato)').trim();
+    causasMap.set(causa, (causasMap.get(causa)||0)+dif);
+  });
+  const causasOperativas = Array.from(causasMap.entries()).map(([label,horas])=>({label,horas})).sort((a,b)=>b.horas-a.horas);
+
+  const {min, max} = dateMinMax(recs.map(r=>r['Fecha']).filter(isDateVal));
+  const dias = (min && max) ? Math.round((max-min)/86400000)+1 : null;
+  const equiposConDatos = distinctValues(recs, 'Equipo').length;
+  const horasCalendario = dias ? dias*24*equiposConDatos : null;
+
+  return { horasTotal, horasMecanica, horasNoOperativas, horasOperativas, horasPerforacion,
+    numFallas, mtbf, mttr, confiabilidad, causasOperativas, horasCalendario, dias, equiposConDatos };
+}
+
 function renderTabEstadistica(){
   const f = filters.estadistica;
 
-  const peRecs = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
-  const drillRecs = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
-  const drillPcRecs = applyDateFilter(DATA.drillingPC, DATE_COL.drillingPC, f.dateFrom, f.dateTo);
+  let peRecs = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+  let drillRecs = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
+  drillRecs = applyCategoryFilter(drillRecs, 'Perforadora', f.equipo);
+  let drillPcRecs = applyDateFilter(DATA.drillingPC, DATE_COL.drillingPC, f.dateFrom, f.dateTo);
+  drillPcRecs = applyCategoryFilter(drillPcRecs, 'Perforadora', f.equipo);
   const fragRecs = applyDateFilter(DATA.frag, DATE_COL.frag, f.dateFrom, f.dateTo);
   const vibRecs = applyDateFilter(DATA.vib, DATE_COL.vib, f.dateFrom, f.dateTo);
   const blastRecs = applyDateFilter(DATA.blasting, DATE_COL.blasting, f.dateFrom, f.dateTo);
+  const blastPcRecs = applyDateFilter(DATA.blastingPC, DATE_COL.blastingPC, f.dateFrom, f.dateTo);
 
-  // ---- Tabla de estadística descriptiva sobre indicadores clave ----
-  const statTargets = [
-    { label:'Utilización Perforación (%)', records:drillRecs, col:'Utilización' },
-    { label:'Disp. Mecánica Perforación (%)', records:drillRecs, col:'Disp. Mecánica' },
-    { label:'OEE Perforación (%)', records:drillRecs, col:'OEE' },
-    { label:'Velocidad Perforación (m/hr)', records:drillRecs, col:'Velocidad' },
+  // ---- Estadística descriptiva — Producción ----
+  const statTargetsProd = [
+    { label:'Utilización (%)', records:drillRecs, col:'Utilización' },
+    { label:'Disp. Mecánica (%)', records:drillRecs, col:'Disp. Mecánica' },
+    { label:'OEE (%)', records:drillRecs, col:'OEE' },
+    { label:'Usage (%)', records:drillRecs, col:'USA' },
+    { label:'Velocidad (m/hr)', records:drillRecs, col:'Velocidad' },
     { label:'Metros Perforados (día)', records:drillRecs, col:'Metros Perforados' },
     { label:'Tonelaje Roto Ejecutado (día)', records:peRecs, col:'TONELAJE ROTO POR DISPARO (EJECUTADO)' },
-    { label:'P80 Fragmentación (pulg)', records:fragRecs, col:'P80 (pulg)' },
+    { label:'P80 Fragmentación (pulg)', records:mineralOnly(fragRecs), col:'P80 (pulg)' },
     { label:'PPV Vector Suma (mm/s)', records:vibRecs, col:'PPV VECTOR SUMA' },
     { label:'Air Blast (dB)', records:vibRecs, col:'AIR BLAST Db(L)' },
     { label:'Kg Explosivo/Taladro', records:blastRecs, col:'KILOS POR TALADRO' },
   ];
   const tbody = document.getElementById('table_stats');
-  const rows = statTargets.map(t=>({ t, s: describeStats(t.records, t.col) })).filter(x=>x.s);
+  const rows = statTargetsProd.map(t=>({ t, s: describeStats(t.records, t.col) })).filter(x=>x.s);
   tbody.innerHTML = rows.length ? rows.map(({t,s})=>`
     <tr>
       <td class="py-1.5 pr-2 font-medium">${escapeHtml(t.label)}</td>
@@ -3793,9 +4378,35 @@ function renderTabEstadistica(){
       <td class="py-1.5 text-right font-mono-num ${s.outliers>0?'text-amber':''}">${s.n} datos${s.outliers>0?` · ${s.outliers} atíp.`:''}</td>
     </tr>`).join('') : `<tr><td colspan="8" class="text-center text-slate-400 py-6">Sin datos suficientes para estos indicadores en el período/filtros actuales</td></tr>`;
 
-  // ---- Análisis de demoras (Producción + Pre-Corte) ----
+  // ---- Estadística descriptiva — Pre-Corte ----
+  const statTargetsPC = [
+    { label:'Utilización (%)', records:drillPcRecs, col:'Utilización' },
+    { label:'Disp. Mecánica (%)', records:drillPcRecs, col:'Disp. Mecánica' },
+    { label:'OEE (%)', records:drillPcRecs, col:'OEE' },
+    { label:'Usage (%)', records:drillPcRecs, col:'USA' },
+    { label:'Velocidad (m/hr)', records:drillPcRecs, col:'Velocidad' },
+    { label:'Metros Perforados (día)', records:drillPcRecs, col:'Metros Perforados' },
+    { label:'Kg Explosivo/Taladro', records:blastPcRecs, col:'KILOS POR TALADRO' },
+  ];
+  const tbodyPc = document.getElementById('table_stats_pc');
+  const rowsPc = statTargetsPC.map(t=>({ t, s: describeStats(t.records, t.col) })).filter(x=>x.s);
+  tbodyPc.innerHTML = rowsPc.length ? rowsPc.map(({t,s})=>`
+    <tr>
+      <td class="py-1.5 pr-2 font-medium">${escapeHtml(t.label)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.mean,2)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.median,2)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.sd,2)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${s.cv===null?'—':fmtNum(s.cv,1)+'%'}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.p10,2)}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(s.p90,2)}</td>
+      <td class="py-1.5 text-right font-mono-num ${s.outliers>0?'text-amber':''}">${s.n} datos${s.outliers>0?` · ${s.outliers} atíp.`:''}</td>
+    </tr>`).join('') : `<tr><td colspan="8" class="text-center text-slate-400 py-6">Sin datos suficientes para estos indicadores en el período/filtros actuales</td></tr>`;
+
+  // ---- Análisis de demoras — separado por módulo ----
   const kpiDemoras = document.getElementById('kpi_demoras');
+  const kpiDemorasPc = document.getElementById('kpi_demoras_pc');
   kpiDemoras.innerHTML = '';
+  kpiDemorasPc.innerHTML = '';
   const allDrill = drillRecs.map(r=>({...r, __modulo:'Producción'})).concat(drillPcRecs.map(r=>({...r, __modulo:'Pre-Corte'})));
 
   if (!DATA.drilling.length && !DATA.drillingPC.length){
@@ -3805,32 +4416,33 @@ function renderTabEstadistica(){
     return;
   }
 
-  const totalOper = sumCol(allDrill, 'Demoras Oper.').sum;
-  const totalNoOper = sumCol(allDrill, 'Demoras No Oper.').sum;
-  const totalFalla = sumCol(allDrill, 'Hr. Falla Mec.').sum;
-  const totalDemoras = totalOper + totalNoOper + totalFalla;
-  const totalHrOper = sumCol(allDrill, 'Hr. Oper.').sum;
+  function demorasCard(container, title, val, suffix, months, series){
+    renderKpiCard(container, { title, mode:'calc', calcVal:val, decimals:0, suffix, months, series });
+  }
 
   const {min:dmin, max:dmax} = dateMinMax(allDrill.map(r=>r[DATE_COL.drilling]).filter(isDateVal));
   const dMonths = continuousMonths(dmin, dmax);
 
-  function demorasCard(container, title, val, suffix, series){
-    renderKpiCard(container, { title, mode:'calc', calcVal:val, decimals:0, suffix, months:dMonths, series });
+  function renderDemorasModulo(container, recs){
+    const tOper = sumCol(recs,'Demoras Oper.').sum, tNoOper = sumCol(recs,'Demoras No Oper.').sum, tFalla = sumCol(recs,'Hr. Falla Mec.').sum;
+    demorasCard(container, 'Total Horas de Demora', tOper+tNoOper+tFalla, ' hr', dMonths, dMonths.map(m=>{
+      const mrecs = recs.filter(r=>isDateVal(r[DATE_COL.drilling]) && monthKey(r[DATE_COL.drilling])===m);
+      return sumCol(mrecs,'Demoras Oper.').sum + sumCol(mrecs,'Demoras No Oper.').sum + sumCol(mrecs,'Hr. Falla Mec.').sum;
+    }));
+    demorasCard(container, 'Demora Operativa', tOper, ' hr', dMonths, monthlySum(recs, DATE_COL.drilling, 'Demoras Oper.', dMonths));
+    demorasCard(container, 'Demora No Operativa', tNoOper, ' hr', dMonths, monthlySum(recs, DATE_COL.drilling, 'Demoras No Oper.', dMonths));
+    demorasCard(container, 'Falla Mecánica', tFalla, ' hr', dMonths, monthlySum(recs, DATE_COL.drilling, 'Hr. Falla Mec.', dMonths));
+    return { tOper, tNoOper, tFalla };
   }
-  demorasCard(kpiDemoras, 'Total Horas de Demora', totalDemoras, ' hr', dMonths.map(m=>{
-    const recs = allDrill.filter(r=>isDateVal(r[DATE_COL.drilling]) && monthKey(r[DATE_COL.drilling])===m);
-    return sumCol(recs,'Demoras Oper.').sum + sumCol(recs,'Demoras No Oper.').sum + sumCol(recs,'Hr. Falla Mec.').sum;
-  }));
-  demorasCard(kpiDemoras, 'Demora Operativa', totalOper, ' hr', monthlySum(allDrill, DATE_COL.drilling, 'Demoras Oper.', dMonths));
-  demorasCard(kpiDemoras, 'Demora No Operativa', totalNoOper, ' hr', monthlySum(allDrill, DATE_COL.drilling, 'Demoras No Oper.', dMonths));
-  demorasCard(kpiDemoras, 'Falla Mecánica', totalFalla, ' hr', monthlySum(allDrill, DATE_COL.drilling, 'Hr. Falla Mec.', dMonths));
+  const demProd = renderDemorasModulo(kpiDemoras, drillRecs);
+  const demPc = renderDemorasModulo(kpiDemorasPc, drillPcRecs);
 
-  // Pareto por categoría
+  // Pareto por categoría (Producción + Pre-Corte combinado, para ver el total del área)
   const paretoCanvas = document.getElementById('chart_demoras_pareto');
   const categorias = [
-    {k:'Demora Operativa', v: totalOper},
-    {k:'Demora No Operativa', v: totalNoOper},
-    {k:'Falla Mecánica', v: totalFalla},
+    {k:'Demora Operativa', v: demProd.tOper+demPc.tOper},
+    {k:'Demora No Operativa', v: demProd.tNoOper+demPc.tNoOper},
+    {k:'Falla Mecánica', v: demProd.tFalla+demPc.tFalla},
   ].sort((a,b)=>b.v-a.v);
   const c = colors();
   MiniChart.bar(paretoCanvas, {
@@ -3839,18 +4451,132 @@ function renderTabEstadistica(){
     datasets: [{ data: categorias.map(x=>x.v), color: c.amber }]
   });
 
-  // Equipo con mayor demora total (Producción + Pre-Corte combinados)
+  // Composición de demora por equipo — apilado (qué tipo de demora domina en
+  // cada equipo, Producción + Pre-Corte juntos ya que comparten la unidad hr).
   const equipoCanvas = document.getElementById('chart_demoras_equipo');
   const equipos = distinctValues(allDrill, 'Perforadora');
-  const demoraPorEquipo = equipos.map(eq=>{
+  const porEquipo = equipos.map(eq=>{
     const recs = allDrill.filter(r=>String(r['Perforadora']||'').trim()===eq);
-    return { eq, v: sumCol(recs,'Demoras Oper.').sum + sumCol(recs,'Demoras No Oper.').sum + sumCol(recs,'Hr. Falla Mec.').sum };
-  }).sort((a,b)=>b.v-a.v);
-  MiniChart.hbar(equipoCanvas, {
-    labels: demoraPorEquipo.map(x=>x.eq), colors:c,
-    formatTooltip: v=>fmtNum(v)+' hr',
-    datasets: [{ data: demoraPorEquipo.map(x=>x.v), color: c.rose }]
-  });
+    return {
+      eq,
+      oper: sumCol(recs,'Demoras Oper.').sum,
+      noOper: sumCol(recs,'Demoras No Oper.').sum,
+      falla: sumCol(recs,'Hr. Falla Mec.').sum,
+    };
+  }).sort((a,b)=> (b.oper+b.noOper+b.falla) - (a.oper+a.noOper+a.falla));
+  if (porEquipo.length){
+    MiniChart.hbarStacked(equipoCanvas, {
+      labels: porEquipo.map(x=>x.eq), colors:c,
+      formatTooltip: v=>fmtNum(v,1)+' hr',
+      datasets: [
+        { label:'Operativa', data: porEquipo.map(x=>x.oper), color: c.amber },
+        { label:'No Operativa', data: porEquipo.map(x=>x.noOper), color: c.rose },
+        { label:'Falla Mecánica', data: porEquipo.map(x=>x.falla), color: c.indigo },
+      ]
+    });
+  } else MiniChart.clear(equipoCanvas);
+
+  // ---- Confiabilidad de Equipos (MTBF/MTTR) — a partir de ACTIVIDADES ----
+  const confiabWrap = document.getElementById('confiabilidad_wrap');
+  if (!DATA.actividades.length){
+    confiabWrap.classList.add('hidden');
+  } else {
+    confiabWrap.classList.remove('hidden');
+    renderConfiabilidadGrupo('dm45', DATA.actividades, EQUIPOS_DM45, c, DATA.drilling);
+    renderConfiabilidadGrupo('leopard', DATA.actividades, EQUIPOS_LEOPARD, c, DATA.drillingPC);
+
+    // Ranking por equipo individual — respeta el filtro "Equipo" de la
+    // pestaña para responder directamente "cuál es más confiable".
+    const todosEquipos = [...EQUIPOS_DM45.map(eq=>({eq, grupo:'DM45'})), ...EQUIPOS_LEOPARD.map(eq=>({eq, grupo:'Leopard'}))];
+    const equiposFiltrados = f.equipo && f.equipo.size ? todosEquipos.filter(x=>f.equipo.has(x.eq)) : todosEquipos;
+    const ranking = equiposFiltrados.map(({eq,grupo})=>{
+      const r = calcularConfiabilidad(DATA.actividades, [eq]);
+      return r ? { eq, grupo, ...r } : null;
+    }).filter(Boolean).sort((a,b)=> (b.confiabilidad??-1)-(a.confiabilidad??-1));
+
+    const tbodyRanking = document.getElementById('table_confiabilidad_ranking');
+    tbodyRanking.innerHTML = ranking.length ? ranking.map(r=>{
+      const color = r.confiabilidad>=90?'text-emerald-600 dark:text-emerald-400':r.confiabilidad>=80?'text-amber':'text-rose';
+      return `<tr>
+        <td class="py-1.5 pr-2 font-medium">${escapeHtml(r.eq)}</td>
+        <td class="py-1.5 pr-2 text-slate-400">${r.grupo}</td>
+        <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.mtbf,1)}</td>
+        <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.mttr,2)}</td>
+        <td class="py-1.5 pr-2 text-right font-mono-num font-bold ${color}">${fmtNum(r.confiabilidad,1)}%</td>
+        <td class="py-1.5 text-right font-mono-num">${r.numFallas}</td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="6" class="text-center text-slate-400 py-4">Sin fallas registradas para este equipo en el período.</td></tr>`;
+  }
+}
+
+function renderConfiabilidadGrupo(sufijo, actividades, equiposGrupo, c, drillSourceRecs){
+  const kpiDiv = document.getElementById(`confiab_kpi_${sufijo}`);
+  const paretoCanvas = document.getElementById(`chart_pareto_op_${sufijo}`);
+  const cascadaCanvas = document.getElementById(`chart_cascada_${sufijo}`);
+  const r = calcularConfiabilidad(actividades, equiposGrupo);
+
+  if (!r){
+    kpiDiv.innerHTML = '<div class="col-span-full text-xs text-slate-400 text-center py-3">Sin datos para este grupo en ACTIVIDADES.</div>';
+    MiniChart.clear(paretoCanvas);
+    MiniChart.clear(cascadaCanvas);
+    return;
+  }
+
+  const miniStat = (label,val,colorClass)=>`<div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 px-2 py-1.5 text-center"><p class="text-[9px] uppercase text-slate-400">${label}</p><p class="font-mono-num text-sm font-semibold ${colorClass||''}">${val}</p></div>`;
+  kpiDiv.innerHTML =
+    miniStat('MTBF', fmtNum(r.mtbf,1)+' hr') +
+    miniStat('MTTR', fmtNum(r.mttr,2)+' hr') +
+    miniStat('Confiabilidad', fmtNum(r.confiabilidad,1)+'%', r.confiabilidad>=90?'text-emerald-600 dark:text-emerald-400':r.confiabilidad>=80?'text-amber':'text-rose') +
+    miniStat('N° Fallas', fmtNum(r.numFallas,0));
+
+  // Pareto de Demoras Operativas — top 8 causas específicas
+  const topCausas = r.causasOperativas.filter(x=>x.horas>0).slice(0,8);
+  if (topCausas.length){
+    MiniChart.hbar(paretoCanvas, {
+      labels: topCausas.map(x=>x.label), colors:c,
+      formatTooltip: v=>fmtNum(v,1)+' hr',
+      datasets: [{ data: topCausas.map(x=>x.horas), color: c.rose }]
+    });
+  } else MiniChart.clear(paretoCanvas);
+
+  // Cascada corregida según la lógica exacta indicada por el usuario:
+  //   Horas Disponibles = TOTAL DE HORAS DEL 2026 (no un día de 24h — eso
+  //   era solo una simulación) × Disponibilidad Mecánica real.
+  //   Horas Operativas Reales = Horas Disponibles × Utilización real.
+  //   Brecha = Disponibles − Reales, explicada con la SUMA REAL (no
+  //   escalada/proporcional) de cada causa de Demoras Operativas de todo el
+  //   2026 — verificado: los 6 tipos reales de "Demoras Operativas" en el
+  //   Excel (Traslado de Frente, Abastecimiento de agua, Cambio de
+  //   Accesorios, Falta de agua, Falta de accesorios, Espera de
+  //   habilitación) NO incluyen ninguna de las actividades que corresponden
+  //   a "No Operativas" (Almuerzo, Descanso Nocturno, Stand By por Falta de
+  //   Operador, etc.) — esas ya están excluidas de raíz, no hace falta
+  //   quitarlas aparte.
+  // DM/Utilización vienen de Drilling/DrillingPC (promedio real 2026, sin
+  // ceros) — se filtra a solo 2026 para que coincida con el período real de
+  // ACTIVIDADES (verificado: todo 2025-2026 da Utilización 62.4% para DM45,
+  // pero solo-2026 da 56.5% — sí importa la diferencia).
+  const drill2026 = drillSourceRecs.filter(r => isDateVal(r['Fecha']) && r['Fecha'].getFullYear()===2026);
+  const dmAvg = avgNonZero(drill2026, 'Disp. Mecánica');
+  const utilAvg = avgNonZero(drill2026, 'Utilización');
+  const horasDisponibles = dmAvg!==null ? r.horasTotal * (dmAvg/100) : null;
+  const horasReales = (horasDisponibles!==null && utilAvg!==null) ? horasDisponibles * (utilAvg/100) : null;
+  const brecha = (horasDisponibles!==null && horasReales!==null) ? horasDisponibles - horasReales : null;
+
+  if (brecha!==null && brecha>0){
+    // causasOperativas ya incluye las actividades reclasificadas (el
+    // operador las tipeaba como "No Operativas" por error, pero son
+    // Operativas reales) — coincide con el Excel de referencia del usuario.
+    const causasCascada = r.causasOperativas.filter(x=>x.horas>0);
+    const steps = [
+      { label:'Horas Disponibles (2026)', value: horasDisponibles, type:'total' },
+      ...causasCascada.map(cs=>({ label: cs.label.length>18 ? cs.label.slice(0,16)+'…' : cs.label, value:-cs.horas, type:'delta', color:c.amber })),
+      { label:'Horas Operativas Reales', value: horasReales, type:'total' },
+    ];
+    MiniChart.waterfall(cascadaCanvas, { colors:c, formatTooltip: v=>fmtNum(Math.abs(v),2)+' hr', steps });
+  } else {
+    MiniChart.clear(cascadaCanvas);
+  }
 }
 
 /* ======================================================================
@@ -3865,6 +4591,7 @@ function renderTabCostos(){
   const blastRecs = applyDateFilter(DATA.blasting, DATE_COL.blasting, f.dateFrom, f.dateTo);
   const blastPcRecs = applyDateFilter(DATA.blastingPC, DATE_COL.blastingPC, f.dateFrom, f.dateTo);
   const peRecs = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+  const pePcRecs = applyDateFilter(DATA.planEjecPC, DATE_COL.planEjecPC, f.dateFrom, f.dateTo);
 
   const kpiTop = document.getElementById('kpi_costos_top');
   kpiTop.innerHTML = '';
@@ -3978,10 +4705,100 @@ function renderTabCostos(){
   } else {
     MiniChart.clear(wfCanvas);
   }
+
+  // ---- Dónde se concentra el costo: 3 tortas + cascadas ----
+  // Todo el costo disponible en el período filtrado (Producción + Pre-Corte
+  // combinados), usando exactamente los mismos precios/columnas ya
+  // validados en las pestañas de Voladura/Voladura PC/Perforación — nada
+  // nuevo se inventa, solo se reagrupa para ver proporciones.
+  const gastoPerfTotal = gastoPerfProd + gastoPerfPC;
+  const gastoVolTotalOficial = gastoVolProd + gastoVolPC; // columna "GASTO DE EXPLOSIVO (US$)" del Excel — misma cifra que "Componentes del costo ejecutado", para no mostrar dos totales distintos de Voladura en la misma pestaña.
+
+  function costoAgentes(recs, agentsList){
+    return agentsList.map(a=>{
+      const priceInfo = PRECIOS_VOLADURA[a.ejec];
+      if (!priceInfo) return null;
+      const consumo = sumCol(recs, a.ejec).sum;
+      return consumo>0 ? { label:a.label, costo: consumo*priceInfo.price } : null;
+    }).filter(Boolean);
+  }
+  const agentesProd = costoAgentes(peRecs, AGENTES_VOLADURA);
+  const agentesPC = costoAgentes(pePcRecs, AGENTES_VOLADURA_PC);
+  const agentesCombinados = new Map();
+  [...agentesProd, ...agentesPC].forEach(a=> agentesCombinados.set(a.label, (agentesCombinados.get(a.label)||0)+a.costo));
+  const agentesList = Array.from(agentesCombinados.entries()).map(([label,costo])=>({label,costo})).sort((a,b)=>b.costo-a.costo);
+  const gastoVolAgentesTotal = agentesList.reduce((s,a)=>s+a.costo,0); // suma por agente (referencial) — puede diferir del oficial si algún agente no tiene precio (ej. Enaline)
+
+  function costoAceros(recs){
+    const ACEROS_ITEMS = [
+      { label:'Barras', ejec:'CONSUMO BARRAS (und)' },
+      { label:'Brocas', ejec:'CONSUMO BROCAS (und)' },
+      { label:'Martillos', ejec:'CONSUMO MARTILLOS (und)' },
+      { label:'Chuck', ejec:'CONSUMO CHUCK (Und)' },
+      { label:'Centralizador', ejec:'CONSUMO CENTRALIZADOR (und)' },
+      { label:'Bit Sub 5" Pin/Box', ejec:'CONSUMO BIT SUB 5" PIN/BOX (und)' },
+      { label:'Bit Sub 5" Pin/Pin', ejec:'CONSUMO BIT SUB 5" PIN/PIN (und)' },
+    ];
+    return ACEROS_ITEMS.map(a=>{
+      const priceInfo = PRECIOS_ACEROS[a.ejec];
+      if (!priceInfo) return null;
+      const consumo = sumCol(recs, a.ejec).sum;
+      return consumo>0 ? { label:a.label, costo: consumo*priceInfo.price } : null;
+    }).filter(Boolean);
+  }
+  const acerosProd = costoAceros(peRecs);
+  const acerosPC = costoAceros(pePcRecs);
+  const acerosCombinados = new Map();
+  [...acerosProd, ...acerosPC].forEach(a=> acerosCombinados.set(a.label, (acerosCombinados.get(a.label)||0)+a.costo));
+  const acerosList = Array.from(acerosCombinados.entries()).map(([label,costo])=>({label,costo})).sort((a,b)=>b.costo-a.costo);
+  const gastoAcerosTotal = acerosList.reduce((s,a)=>s+a.costo,0);
+
+  // Torta 1: Sub-Área
+  const pieSubareaCanvas = document.getElementById('chart_pie_subarea');
+  if (gastoPerfTotal>0 || gastoVolTotalOficial>0){
+    MiniChart.donut(pieSubareaCanvas, { colors:c, formatTooltip:(seg,pct)=>`${seg.label}: ${fmtNum(seg.value,0)} US$ (${fmtNum(pct,1)}%)`,
+      data: [ {label:'Perforación', value:gastoPerfTotal, color:c.indigo}, {label:'Voladura', value:gastoVolTotalOficial, color:c.amber} ] });
+  } else MiniChart.clear(pieSubareaCanvas);
+
+  // Torta 2: Agentes de Voladura
+  const pieAgentesCanvas = document.getElementById('chart_pie_agentes');
+  if (agentesList.length){
+    MiniChart.donut(pieAgentesCanvas, { colors:c, formatTooltip:(seg,pct)=>`${seg.label}: ${fmtNum(seg.value,0)} US$ (${fmtNum(pct,1)}%)`,
+      data: agentesList.map((a,i)=>({ label:a.label, value:a.costo, color:c.palette[i%c.palette.length] })) });
+  } else MiniChart.clear(pieAgentesCanvas);
+
+  // Torta 3: Aceros
+  const pieAcerosCanvas = document.getElementById('chart_pie_aceros');
+  if (acerosList.length){
+    MiniChart.donut(pieAcerosCanvas, { colors:c, formatTooltip:(seg,pct)=>`${seg.label}: ${fmtNum(seg.value,0)} US$ (${fmtNum(pct,1)}%)`,
+      data: acerosList.map((a,i)=>({ label:a.label, value:a.costo, color:c.palette[i%c.palette.length] })) });
+  } else MiniChart.clear(pieAcerosCanvas);
+
+  // Cascadas: cada una construye el total sumando sus componentes principales
+  function cascadaDeComponentes(canvasId, items, totalLabel){
+    const canvas = document.getElementById(canvasId);
+    if (!items.length){ MiniChart.clear(canvas); return; }
+    const topN = 4;
+    const principales = items.slice(0, topN);
+    const resto = items.slice(topN).reduce((s,x)=>s+x.costo,0);
+    const total = items.reduce((s,x)=>s+x.costo,0);
+    const steps = [
+      ...principales.map((x,i)=>({ label: x.label.length>14?x.label.slice(0,12)+'…':x.label, value:x.costo, type: i===0?'total':'delta', color:c.indigo })),
+      ...(resto>0.01 ? [{ label:'Otros', value:resto, type:'delta', color:c.indigo }] : []),
+      { label: totalLabel, value: total, type:'total' },
+    ];
+    MiniChart.waterfall(canvas, { colors:c, formatTooltip: v=>fmtNum(v,0)+' US$', steps });
+  }
+  cascadaDeComponentes('chart_cascada_subarea', [
+    { label:'Perforación', costo:gastoPerfTotal },
+    { label:'Voladura', costo:gastoVolTotalOficial },
+  ], 'Total');
+  cascadaDeComponentes('chart_cascada_agentes', agentesList, 'Total Agentes');
+  cascadaDeComponentes('chart_cascada_aceros', acerosList, 'Total Aceros');
 }
 
 /* ======================================================================
-   TAB 09 · BSM (Business System Management)
+   TAB 09 · VSM (Value Stream Mapping)
    ====================================================================== */
 // Calcula escenarios Promedio/P75/P90 anualizados a partir de los TOTALES
 // MENSUALES reales del Excel — se excluye siempre el último mes calendario
@@ -4009,15 +4826,32 @@ function calcularEscenarioAnual(records, dateCol, valueCol){
     return vals[lo] + (vals[hi]-vals[lo])*(idx-lo);
   };
   const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
-  return { avgAnual: avg*12, p75Anual: pct(75)*12, p90Anual: pct(90)*12, mesesUsados: vals.length,
+  return { avgAnual: avg*12, p75Anual: pct(75)*12, p90Anual: pct(90)*12,
+    avgMensual: avg, p75Mensual: pct(75), p90Mensual: pct(90), mesesUsados: vals.length,
     ultimoMesExcluido: lastMonth, periodoDesde: usedKeys[0], periodoHasta: usedKeys[usedKeys.length-1] };
 }
 
 function renderTabBSM(){
   const c = colors();
+  const f = filters.bsm;
+  // Capacidad de diseño validada del Camión Fábrica PEQ-22 (300 taladros/día
+  // máx.) — mismo dato ya usado en el resto de esta pestaña, para que todo
+  // sea consistente entre secciones.
+  const VOLADURA_CAPACIDAD_MENSUAL_T = 5.04e6;
 
+  // Los escenarios Promedio/P75/P90 usan SIEMPRE el histórico completo (no
+  // el filtro de esta pestaña) — necesitan varios meses para que el cálculo
+  // de percentiles tenga sentido. El filtro de fecha sí aplica más abajo, a
+  // "¿Cómo estamos?" y "Capacidad Real Alcanzada".
   const escProd = DATA.planEjec.length ? calcularEscenarioAnual(DATA.planEjec, DATE_COL.planEjec, 'TONELAJE ROTO POR DISPARO (EJECUTADO)') : null;
   const escPC = DATA.planEjecPC.length ? calcularEscenarioAnual(DATA.planEjecPC, DATE_COL.planEjecPC, 'METROS (EJECUTADO)') : null;
+
+  // Registros filtrados por el rango de fecha de esta pestaña — de aquí en
+  // adelante, todo lo que sea "estado actual real" respeta el filtro.
+  const drillRecs = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
+  const drillPcRecs = applyDateFilter(DATA.drillingPC, DATE_COL.drillingPC, f.dateFrom, f.dateTo);
+  const peRecsBsm = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+  const blastRecsBsm = applyDateFilter(DATA.blasting, DATE_COL.blasting, f.dateFrom, f.dateTo);
 
   const metodologia = document.getElementById('bsm_metodologia');
   metodologia.textContent = escProd
@@ -4064,6 +4898,144 @@ function renderTabBSM(){
     const gastoExplTotal = sumCol(DATA.blasting,'GASTO DE EXPLOSIVO (US$)').sum;
     const tonMinadoTotal = tonMinadoEjecSum(DATA.planEjec);
     kpiActual.innerHTML += miniCard('💰','Voladura', tonMinadoTotal? fmtNum(gastoExplTotal/tonMinadoTotal,3):'—', 'US$/t minada (todo el período)', 'Sin límite de flota conocido — el Camión Fábrica no es cuello de botella según el análisis de capacidad.', c.amber);
+  }
+
+  // ---- Capacidad Teórica de Diseño (estilo VSM) vs Capacidad Real Alcanzada ----
+  // Cálculo de abajo hacia arriba: equipos × velocidad real × disponibilidad
+  // real × utilización real, usando 9 m/taladro (altura promedio ya
+  // establecida) y el ratio real Tonelaje Roto/Taladro verificado en el
+  // Excel (634 t/tal, muy cercano al 600 t/tal de referencia). Para Voladura
+  // se usa la especificación real y ya validada del Camión Fábrica PEQ-22
+  // (300 taladros/día máx.) en vez de un ratio recalculado que no cuadraba
+  // con el de Perforación al verificarlo — se prefiere no inventar cuál de
+  // los dos es el correcto y usar el dato ya validado anteriormente.
+  const vsmPerfDiv = document.getElementById('bsm_vsm_perforacion');
+  const vsmPrecorteDiv = document.getElementById('bsm_vsm_precorte');
+  const vsmVolDiv = document.getElementById('bsm_vsm_voladura');
+  const vsmBrechaDiv = document.getElementById('bsm_vsm_brecha');
+  let capTeoricaPerf = null, capRealP90Mensual = null;
+  if (drillRecs.length){
+    // Solo equipos con actividad reciente (último mes del rango filtrado) —
+    // verificado: 2 de las 5 perforadoras que aparecen en el histórico
+    // llevan meses sin operar, no deben contarse como flota activa.
+    const equiposReales = equiposActivos(drillRecs, DATE_COL.drilling, 'Perforadora', 'Metros Perforados', 1);
+    const drillActivos = drillRecs.filter(r=>equiposReales.includes(String(r['Perforadora']||'').trim()));
+    // Calificación compuesta por EQUIPO INDIVIDUAL, no por tasa promedio de
+    // flota — así el equipo que rinde menos (ej. el de respaldo) aporta
+    // automáticamente menos capacidad, sin forzar ningún factor a mano.
+    const ratioReal = (()=>{
+      const talTotal = sumCol(peRecsBsm,'TALADROS (EJECUTADO)').sum;
+      const tonTotal = sumCol(peRecsBsm,'TONELAJE ROTO POR DISPARO (EJECUTADO)').sum;
+      return talTotal ? tonTotal/talTotal : 600;
+    })();
+    const porEquipoCalc = equiposReales.map(eq=>{
+      const recsEq = drillActivos.filter(r=>String(r['Perforadora']||'').trim()===eq);
+      const vel = avgNonZero(recsEq,'Velocidad'), dm = avgNonZero(recsEq,'Disp. Mecánica'), ut = avgNonZero(recsEq,'Utilización');
+      const metrosEq = sumCol(recsEq,'Metros Perforados').sum;
+      const mesesEq = new Set(recsEq.filter(r=>isDateVal(r[DATE_COL.drilling])).map(r=>monthKey(r[DATE_COL.drilling]))).size || 1;
+      const avance = metrosEq/mesesEq;
+      const capEq = (vel && dm && ut) ? (vel*24*(dm/100)*(ut/100)/9)*ratioReal : null;
+      return { eq, vel, dm, ut, avance, capEq };
+    });
+    const conDatos = porEquipoCalc.filter(x=>x.capEq!==null);
+    capTeoricaPerf = conDatos.reduce((s,x)=>s+x.capEq, 0) || null;
+    const dmReal = avgNonZero(drillActivos, 'Disp. Mecánica'); // promedio de flota, usado también en el escenario ideal
+    const utilReal = avgNonZero(drillActivos, 'Utilización');
+    const velRealFlota = avgNonZero(drillActivos, 'Velocidad');
+    const avanceMensual = porEquipoCalc.reduce((s,x)=>s+x.avance, 0);
+    // Escenario IDEAL — no es "lo que tenemos", es una comparación: si en vez
+    // de la mezcla real de equipos (uno de ellos rindiendo menos) tuviéramos
+    // el equivalente a 3.5 equipos trabajando a la tasa promedio de flota.
+    const EQUIPOS_IDEAL = 3.5;
+    const capIdeal = (velRealFlota && dmReal && utilReal)
+      ? (velRealFlota*24*(dmReal/100)*(utilReal/100)/9) * EQUIPOS_IDEAL * ratioReal
+      : null;
+    if (capTeoricaPerf){
+      vsmPerfDiv.innerHTML = `
+        <div class="flex justify-between"><span class="text-slate-400">Equipos activos (último mes)</span><span class="font-mono-num font-semibold">${equiposReales.length}</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Avance total (${equiposReales.length} equipos)</span><span class="font-mono-num">${fmtNum(avanceMensual,0)} m/mes</span></div>
+        <div class="pl-2 text-[10px] text-slate-400 space-y-0.5 mb-1">
+          ${porEquipoCalc.map(a=>`<div class="flex justify-between"><span>· ${escapeHtml(a.eq)} (D.M.${a.dm!==null?fmtNum(a.dm,0):'—'}% · Ut.${a.ut!==null?fmtNum(a.ut,0):'—'}%)</span><span class="font-mono-num">${fmtNum(a.avance,0)} m/mes${a.capEq!==null?' · '+fmtNum(a.capEq,0)+' tn/d':''}</span></div>`).join('')}
+        </div>
+        <div class="flex justify-between"><span class="text-slate-400">Disp. Mecánica prom. flota</span><span class="font-mono-num">${fmtNum(dmReal,1)}%</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Utilización prom. flota</span><span class="font-mono-num">${fmtNum(utilReal,1)}%</span></div>
+        <div class="flex justify-between"><span class="text-slate-400">Ratio (real, t roto/taladro)</span><span class="font-mono-num">${fmtNum(ratioReal,0)}</span></div>
+        <div class="flex justify-between pt-1 mt-1 border-t border-slate-200 dark:border-panel-border"><span class="font-semibold">Capacidad ACTUAL (con los equipos como están)</span><span class="font-mono-num font-bold text-indigo-600 dark:text-indigox">${fmtNum(capTeoricaPerf,0)} tn/día</span></div>
+        ${capIdeal ? `<div class="flex justify-between pt-1 mt-1 border-t border-dashed border-amber/50"><span class="font-semibold text-amber">Escenario IDEAL (3.5 equipos a tasa de flota)</span><span class="font-mono-num font-bold text-amber">${fmtNum(capIdeal,0)} tn/día</span></div>
+        <p class="text-[10px] text-slate-400 mt-1">Comparación, no lo que tenemos hoy — asume 3.5 equipos trabajando a la tasa promedio de flota, en vez de la mezcla real (un equipo rinde menos que los otros).</p>` : ''}`;
+    } else {
+      vsmPerfDiv.innerHTML = '<p class="text-slate-400">Datos insuficientes para el cálculo.</p>';
+    }
+  }
+  if (drillPcRecs.length){
+    const equiposPcActivos = equiposActivos(drillPcRecs, DATE_COL.drillingPC, 'Perforadora', 'Metros Perforados', 1);
+    const drillPcActivosRecs = drillPcRecs.filter(r=>equiposPcActivos.includes(String(r['Perforadora']||'').trim()));
+    const dmPC = avgNonZero(drillPcActivosRecs, 'Disp. Mecánica');
+    const utilPC = avgNonZero(drillPcActivosRecs, 'Utilización');
+    const metrosTotalPC = sumCol(drillPcActivosRecs, 'Metros Perforados').sum;
+    const mesesConDatosPC = new Set(drillPcActivosRecs.filter(r=>isDateVal(r[DATE_COL.drillingPC])).map(r=>monthKey(r[DATE_COL.drillingPC]))).size || 1;
+    const avanceMensualPC = metrosTotalPC/mesesConDatosPC;
+    vsmPrecorteDiv.innerHTML = `
+      <div class="flex justify-between"><span class="text-slate-400">Equipo activo</span><span class="font-mono-num font-semibold">${equiposPcActivos.map(escapeHtml).join(', ')||'—'}</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Avance (real)</span><span class="font-mono-num">${fmtNum(avanceMensualPC,0)} m/mes</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Disp. Mecánica (real)</span><span class="font-mono-num">${dmPC!==null?fmtNum(dmPC,1)+'%':'—'}</span></div>
+      <div class="flex justify-between pt-1 mt-1 border-t border-slate-200 dark:border-panel-border"><span class="font-semibold">Utilización (real)</span><span class="font-mono-num font-bold text-indigo-600 dark:text-indigox">${utilPC!==null?fmtNum(utilPC,1)+'%':'—'}</span></div>`;
+  } else {
+    vsmPrecorteDiv.innerHTML = '<p class="text-slate-400">Hoja "DrillingPC" no disponible.</p>';
+  }
+  if (DATA.blasting.length){
+    const CAP_VOLADURA_DIA = VOLADURA_CAPACIDAD_MENSUAL_T / 30;
+    vsmVolDiv.innerHTML = `
+      <div class="flex justify-between"><span class="text-slate-400">Equipo</span><span class="font-mono-num font-semibold">PEQ-22 (Enaex)</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Taladros/día máx. (spec.)</span><span class="font-mono-num">300</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Fuente</span><span class="text-[10px] text-slate-400">Especificación validada del equipo</span></div>
+      <div class="flex justify-between pt-1 mt-1 border-t border-slate-200 dark:border-panel-border"><span class="font-semibold">Capacidad de diseño</span><span class="font-mono-num font-bold text-amber">${fmtNum(CAP_VOLADURA_DIA,0)} tn/día</span></div>`;
+  }
+  if (capTeoricaPerf && escProd){
+    capRealP90Mensual = escProd.p90Mensual / 30;
+    const brecha = ((capTeoricaPerf - capRealP90Mensual)/capTeoricaPerf)*100;
+    const nEquiposActivosTxt = equiposActivos(drillRecs, DATE_COL.drilling, 'Perforadora', 'Metros Perforados', 1).length;
+    vsmBrechaDiv.innerHTML = `<b>Brecha entre lo teórico y lo real alcanzado:</b> la capacidad calculada de Perforación (${fmtNum(capTeoricaPerf,0)} tn/día, con los ${nEquiposActivosTxt} equipos activos operando a sus tasas reales) es ${fmtNum(brecha,0)}% mayor que lo máximo realmente alcanzado (P90: ${fmtNum(capRealP90Mensual,0)} tn/día). Esto sugiere que el techo real no lo pone el equipo en sí, sino otras restricciones (personal disponible, programación de frentes, mantenimiento coordinado, etc.) — no capturadas en este cálculo puramente de tasas.`;
+  } else {
+    vsmBrechaDiv.innerHTML = '';
+  }
+
+  // ---- ¿Hasta dónde podemos llegar? — Techo de Capacidad del Sistema ----
+  // La restricción real del sistema es la que primero se queda corta al subir
+  // la meta. Voladura (Camión Fábrica PEQ-22) tiene una capacidad validada de
+  // 5.04 M t/mes (300 taladros/día × 8,400/mes) — muy por encima de cualquier
+  // escenario de Perforación (incluso P90), así que Perforación de Producción
+  // es la restricción real del sistema, no Voladura.
+  const restriccionDiv = document.getElementById('bsm_restriccion');
+  const tablaTecho = document.getElementById('bsm_tabla_techo');
+  if (escProd){
+    const p90MayorQueVoladura = escProd.p90Mensual > VOLADURA_CAPACIDAD_MENSUAL_T;
+    restriccionDiv.innerHTML = `<div class="rounded-xl ${p90MayorQueVoladura?'bg-rose/10 border border-rose/30':'bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-300 dark:border-emerald-500/30'} px-4 py-3">
+      <p class="text-sm font-semibold ${p90MayorQueVoladura?'text-rose':'text-emerald-700 dark:text-emerald-400'}">
+        ${p90MayorQueVoladura ? '⚠️ En el escenario más exigente (P90), Voladura empezaría a limitar.' : '✅ La restricción real del sistema es Perforación de Producción, no Voladura.'}
+      </p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Voladura (Camión Fábrica PEQ-22) tiene capacidad validada de ${fmtNum(VOLADURA_CAPACIDAD_MENSUAL_T/1e6,2)} M t/mes — muy por encima del techo real de Perforación (${fmtNum(escProd.p90Mensual/1e6,2)} M t/mes en el escenario P90).</p>
+    </div>`;
+
+    const filas = [
+      { meta: escProd.avgMensual, label:`Hasta ${fmtNum(escProd.avgMensual/1e6,2)} M t/mes`, config:'2 perforadoras + backup ocasional', cumple:true },
+      { meta: escProd.p75Mensual, label:`Hasta ${fmtNum(escProd.p75Mensual/1e6,2)} M t/mes (P75)`, config:'3 perforadoras activas de forma constante', cumple:true },
+      { meta: escProd.p90Mensual, label:`Hasta ${fmtNum(escProd.p90Mensual/1e6,2)} M t/mes (P90)`, config:'3 perforadoras + 1 backup permanente (DM45E-04)', cumple:true },
+      { meta: Infinity, label:`Más de ${fmtNum(escProd.p90Mensual/1e6,2)} M t/mes`, config:'Requiere evaluar una 4ta perforadora — no alcanzable con la flota actual', cumple:false },
+    ];
+    tablaTecho.innerHTML = filas.map(fila=>{
+      const volLimita = fila.meta!==Infinity && fila.meta > VOLADURA_CAPACIDAD_MENSUAL_T;
+      const usoVoladura = fila.meta!==Infinity ? Math.min(100,(fila.meta/VOLADURA_CAPACIDAD_MENSUAL_T)*100) : null;
+      return `<tr>
+        <td class="py-1.5 pr-2 font-medium">${fila.label}</td>
+        <td class="py-1.5 pr-2">${fila.cumple ? '<span class="text-emerald-600 dark:text-emerald-400 font-semibold">✅ Sí</span>' : '<span class="text-rose font-semibold">❌ No, con la flota actual</span>'}</td>
+        <td class="py-1.5 pr-2 text-slate-500 dark:text-slate-400">${escapeHtml(fila.config)}</td>
+        <td class="py-1.5 text-slate-500 dark:text-slate-400">${volLimita ? '⚠️ Empieza a limitar' : usoVoladura!==null ? `No limita (usa ${fmtNum(usoVoladura,0)}% de su capacidad)` : 'No limita'}</td>
+      </tr>`;
+    }).join('');
+  } else {
+    restriccionDiv.innerHTML = '';
+    tablaTecho.innerHTML = `<tr><td colspan="4" class="text-center text-slate-400 py-4">Sin datos suficientes para calcular el techo de capacidad.</td></tr>`;
   }
 
   // ---- Brechas del Sistema ----
@@ -4165,6 +5137,7 @@ document.getElementById('btnExport').addEventListener('click', ()=>{
 
   setTimeout(()=> window.print(), 50); // deja que el navegador aplique el modo claro antes de abrir el diálogo
 });
+
 /* ======================================================================
    REDIBUJADO AL CAMBIAR TAMAÑO (MiniChart mide el contenedor en cada render)
    ====================================================================== */
