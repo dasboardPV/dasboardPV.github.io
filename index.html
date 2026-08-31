@@ -335,7 +335,7 @@
         </div>
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Composición del costo por taladro</h4>
-          <div style="height:280px"><canvas id="chart_costo_taladro_voladura"></canvas></div>
+          <div style="height:380px"><canvas id="chart_costo_taladro_voladura"></canvas></div>
         </div>
       </div>
 
@@ -420,7 +420,7 @@
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Composición del costo por taladro</h4>
           <p class="text-[11px] text-slate-400 mb-2">Incluye Enaline y Cordón Detonante (consumo real desde "Blasting PC").</p>
-          <div style="height:240px"><canvas id="chart_costo_taladro_voladura_pc"></canvas></div>
+          <div style="height:360px"><canvas id="chart_costo_taladro_voladura_pc"></canvas></div>
         </div>
       </div>
 
@@ -551,7 +551,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costo por Taladro Perforado</h4>
-                    <div style="height:240px"><canvas id="chart_costo_taladro_perforacion"></canvas></div>
+                    <div style="height:360px"><canvas id="chart_costo_taladro_perforacion"></canvas></div>
         </div>
         <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
@@ -628,7 +628,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costo por Taladro Perforado</h4>
-          <div style="height:220px"><canvas id="chart_costo_taladro_perforacion_pc"></canvas></div>
+          <div style="height:360px"><canvas id="chart_costo_taladro_perforacion_pc"></canvas></div>
         </div>
         <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
@@ -784,7 +784,7 @@
             </div>
             <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
               <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada de Demoras</h6>
-              <div style="height:260px"><canvas id="chart_cascada_dm45"></canvas></div>
+              <div style="height:460px"><canvas id="chart_cascada_dm45"></canvas></div>
             </div>
           </div>
           <div class="min-w-0">
@@ -796,7 +796,7 @@
             </div>
             <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
               <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada de Demoras</h6>
-              <div style="height:260px"><canvas id="chart_cascada_leopard"></canvas></div>
+              <div style="height:460px"><canvas id="chart_cascada_leopard"></canvas></div>
             </div>
           </div>
         </div>
@@ -831,7 +831,7 @@
         <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Puente Plan → Ejecutado</h4>
           <p class="text-[11px] text-slate-400 mb-2">Solo período con Plan de costo disponible.</p>
-          <div style="height:240px"><canvas id="chart_costos_waterfall"></canvas></div>
+          <div style="height:360px"><canvas id="chart_costos_waterfall"></canvas></div>
         </div>
       </div>
 
@@ -861,15 +861,15 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Sub-Área</h6>
-          <div style="height:200px"><canvas id="chart_cascada_subarea"></canvas></div>
+          <div style="height:340px"><canvas id="chart_cascada_subarea"></canvas></div>
         </div>
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Agentes de Voladura</h6>
-          <div style="height:200px"><canvas id="chart_cascada_agentes"></canvas></div>
+          <div style="height:340px"><canvas id="chart_cascada_agentes"></canvas></div>
         </div>
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Aceros</h6>
-          <div style="height:200px"><canvas id="chart_cascada_aceros"></canvas></div>
+          <div style="height:340px"><canvas id="chart_cascada_aceros"></canvas></div>
         </div>
       </div>
     </section>
@@ -2225,7 +2225,7 @@ const MiniChart = (function(){
     ctx.font = '10px Inter, sans-serif';
     let maxLabelW = 0;
     labels.forEach(l=> maxLabelW = Math.max(maxLabelW, ctx.measureText(String(l)).width));
-    const padLeft = Math.min(140, Math.max(50, maxLabelW+10)), padRight = 44, padTop = 8, padBottom = 8;
+    const padLeft = Math.min(230, Math.max(50, maxLabelW+10)), padRight = 44, padTop = 8, padBottom = 8;
     const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
 
     const maxV = Math.max(1, ...ds.data.map(v=>v||0));
@@ -2471,7 +2471,7 @@ const MiniChart = (function(){
   // ejecutado respecto al plan es malo => se colorea con semántica de costo).
   function waterfall(canvas, { steps, colors, formatTooltip, referenceLine, referenceLabel }){
     const { ctx, w, h } = setupCanvas(canvas);
-    const padLeft = 56, padRight = 12, padTop = 14, padBottom = 40;
+    const padLeft = 62, padRight = 12, padTop = 14, padBottom = 155;
     const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
 
     let level = 0;
@@ -2528,8 +2528,15 @@ const MiniChart = (function(){
       }
       ctx.fillStyle = colors.text; ctx.font='10px Inter, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='bottom';
       ctx.fillText(fmtNum(b.value), cx, top-4);
-      ctx.textBaseline='top';
-      ctx.fillText(truncateLabel(ctx,b.label,groupW), cx, h-padBottom+8);
+      // Etiqueta rotada con el nombre COMPLETO (sin truncar) — para que se
+      // pueda leer exactamente qué demora/causa es cada barra.
+      ctx.save();
+      ctx.translate(cx, h-padBottom+8);
+      ctx.rotate(-Math.PI/4);
+      ctx.font = '9px Inter, sans-serif';
+      ctx.textAlign='right'; ctx.textBaseline='top';
+      ctx.fillText(String(b.label), 0, 0);
+      ctx.restore();
       hitAreas.push({x:cx-barW/2, y:top, w:barW, h:Math.max(bh,2), label:b.label, value:b.value});
     });
 
@@ -4555,7 +4562,7 @@ function renderConfiabilidadGrupo(sufijo, actividades, equiposGrupo, c, drillSou
     const causasCascada = r.causasOperativas.filter(x=>x.horas>0);
     const steps = [
       { label:'Horas Disponibles (2026)', value: horasDisponibles, type:'total' },
-      ...causasCascada.map(cs=>({ label: cs.label.length>18 ? cs.label.slice(0,16)+'…' : cs.label, value:-cs.horas, type:'delta', color:c.amber })),
+      ...causasCascada.map(cs=>({ label: cs.label, value:-cs.horas, type:'delta', color:c.amber })),
       { label:'Horas Operativas Reales', value: horasReales, type:'total' },
     ];
     MiniChart.waterfall(cascadaCanvas, { colors:c, formatTooltip: v=>fmtNum(Math.abs(v),2)+' hr', steps });
@@ -4768,7 +4775,7 @@ function renderTabCostos(){
     const resto = items.slice(topN).reduce((s,x)=>s+x.costo,0);
     const total = items.reduce((s,x)=>s+x.costo,0);
     const steps = [
-      ...principales.map((x,i)=>({ label: x.label.length>14?x.label.slice(0,12)+'…':x.label, value:x.costo, type: i===0?'total':'delta', color:c.indigo })),
+      ...principales.map((x,i)=>({ label: x.label, value:x.costo, type: i===0?'total':'delta', color:c.indigo })),
       ...(resto>0.01 ? [{ label:'Otros', value:resto, type:'delta', color:c.indigo }] : []),
       { label: totalLabel, value: total, type:'total' },
     ];
