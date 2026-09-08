@@ -116,7 +116,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Revisión automática del Excel cargado — para que sepas de entrada si algo amerita revisarse antes de confiar en los números.</p>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Revisión automática del Excel cargado.</p>
     <div id="healthModalBody"></div>
     <div class="mt-3 pt-3 border-t border-slate-200 dark:border-panel-border">
       <p class="text-xs font-bold uppercase text-slate-400 mb-1">Valores atípicos excluidos</p>
@@ -131,11 +131,11 @@
 <div id="urlModalOverlay" class="hidden fixed inset-0 bg-black/40 z-50 items-center justify-center p-4">
   <div class="bg-white dark:bg-panel-surface rounded-2xl shadow-xl max-w-lg w-full p-5">
     <h3 class="font-display font-700 text-base mb-1">Cargar desde enlace</h3>
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Pega el enlace de "Descargar" de SharePoint u OneDrive (no el enlace normal de "Compartir" — busca la opción de descarga directa). Útil sobre todo en el celular.</p>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Pega el enlace de "Descargar" de SharePoint u OneDrive (no el de "Compartir").</p>
     <input id="urlModalInput" type="url" placeholder="https://tuempresa.sharepoint.com/.../archivo.xlsx?download=1"
       class="w-full text-sm rounded-lg border border-slate-300 dark:border-panel-border dark:bg-panel-surface2 px-3 py-2 mb-2">
     <p id="urlModalError" class="hidden text-xs text-rose mb-2"></p>
-    <p class="text-[11px] text-slate-400 mb-4">Nota: esto solo funciona si SharePoint permite acceso directo desde el navegador (depende de la configuración de tu organización). Si falla, seguimos con "Cargar archivo" como respaldo — no cambia nada de lo que ya tienes.</p>
+    <p class="text-[11px] text-slate-400 mb-4">Requiere que SharePoint permita acceso directo desde el navegador. Si falla, usa "Cargar archivo".</p>
     <div class="flex justify-end gap-2">
       <button id="urlModalCancel" class="text-sm font-medium rounded-lg border border-slate-300 dark:border-panel-border px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-panel-surface2">Cancelar</button>
       <button id="urlModalLoad" class="text-sm font-semibold rounded-lg bg-slate-900 dark:bg-teal text-white dark:text-panel-bg px-3 py-1.5 hover:opacity-90">Cargar</button>
@@ -314,7 +314,7 @@
            con cada alerta de un mes a otro. -->
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-5">
         <h4 class="font-display font-700 text-base mb-1">📝 Bitácora de Seguimiento</h4>
-        <p class="text-xs text-slate-400 mb-3">Anota qué se hizo con cada alerta o desviación — se guarda en este navegador, no en la nube, así que solo la ves tú en este equipo.</p>
+        <p class="text-xs text-slate-400 mb-3">Se guarda en este navegador, no en la nube.</p>
         <div class="flex gap-2 mb-4">
           <input id="bitacora_input" type="text" placeholder="Ej: Se habló con Lozano Cholan sobre su % de reperforación…"
             class="flex-1 text-sm rounded-lg border border-slate-300 dark:border-panel-border dark:bg-panel-surface2 px-3 py-2">
@@ -459,17 +459,9 @@
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-1">📈 Relaciones Costo–Performance</h4>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div>
-            <h5 class="font-display font-600 text-sm mb-2">Costo Perforación US$/TM ↔ Utilización</h5>
-            <div style="height:200px"><canvas id="chart_rel_costoperf_util"></canvas></div>
-          </div>
-          <div>
-            <h5 class="font-display font-600 text-sm mb-2">Costo Voladura US$/TM ↔ Kg Explosivo/TM</h5>
-            <div style="height:200px"><canvas id="chart_rel_costovol_kg"></canvas></div>
-          </div>
-        </div>
+        <h4 class="font-display font-700 text-base mb-1">📈 Relación Costo–Performance</h4>
+        <h5 class="font-display font-600 text-sm mb-2">Costo Voladura US$/TM ↔ Kg Explosivo/TM</h5>
+        <div style="height:220px"><canvas id="chart_rel_costovol_kg"></canvas></div>
       </div>
 
       <div class="rounded-2xl border border-amber/30 bg-white dark:bg-panel-surface p-4">
@@ -539,7 +531,7 @@
         </div>
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Composición del costo por taladro</h4>
-          <p class="text-[11px] text-slate-400 mb-2">Incluye Enaline y Cordón Detonante (consumo real desde "Blasting PC").</p>
+          <p class="text-[11px] text-slate-400 mb-2">Incluye Enaline y Cordón Detonante.</p>
           <div style="height:360px"><canvas id="chart_costo_taladro_voladura_pc"></canvas></div>
         </div>
       </div>
@@ -623,6 +615,12 @@
       </div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
+        <h4 class="font-display font-700 text-base mb-1">📈 Relación Costo–Performance</h4>
+        <h5 class="font-display font-600 text-sm mb-2">Costo Perforación US$/TM ↔ Utilización</h5>
+        <div style="height:220px"><canvas id="chart_rel_costoperf_util"></canvas></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-3">Tendencia mensual — Metros perforados</h4>
         <div style="height:280px"><canvas id="chart_perf_trend"></canvas></div>
       </div>
@@ -668,7 +666,7 @@
         </div>
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Pareto de sobreconsumo de Aceros</h4>
-          <p class="text-[11px] text-slate-400 mb-2">|Desviación %| de cada ítem vs. su Plan — no es cuánto se gastó, sino cuánto se alejó de lo planificado.</p>
+          <p class="text-[11px] text-slate-400 mb-2">|Desviación %| vs. Plan de cada ítem.</p>
           <div style="height:220px"><canvas id="chart_pareto_aceros_perforacion"></canvas></div>
         </div>
       </div>
@@ -794,7 +792,7 @@
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">PPV ↔ Tamaño del disparo</h4>
-        <p class="text-xs text-slate-400 mb-3">Cada punto es un disparo real: a más taladros (voladuras más grandes), se esperaría más vibración — el Excel no registra tonelaje por disparo, por eso se usa el N° de taladros como proxy del tamaño.</p>
+        <p class="text-xs text-slate-400 mb-3">N° de taladros como proxy del tamaño del disparo (el Excel no registra tonelaje por disparo).</p>
         <div style="height:280px"><canvas id="chart_vib_ppv_taladros"></canvas></div>
       </div>
     </section>
@@ -872,7 +870,7 @@
         </div>
         <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h5 class="font-display font-600 text-sm mb-1">Composición de demora por equipo</h5>
-          <p class="text-[11px] text-slate-400 mb-3">Qué tipo de demora domina en cada equipo — Operativa, No Operativa o Falla Mecánica.</p>
+          <p class="text-[11px] text-slate-400 mb-3">Tipo de demora dominante por equipo.</p>
           <div style="height:260px"><canvas id="chart_demoras_equipo"></canvas></div>
         </div>
       </div>
@@ -886,7 +884,7 @@
 
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4 mb-4">
           <h5 class="font-display font-700 text-sm mb-1">Ranking por Equipo — ¿cuál es más confiable?</h5>
-          <p class="text-[11px] text-slate-400 mb-2">Ordenado de mayor a menor Confiabilidad. Usa el filtro "Equipo" de arriba para ver solo uno.</p>
+          <p class="text-[11px] text-slate-400 mb-2">Ordenado de mayor a menor Confiabilidad.</p>
           <div class="overflow-auto">
             <table class="w-full text-xs min-w-[500px]">
               <thead class="text-slate-400 uppercase text-[10px]">
@@ -906,14 +904,14 @@
 
         <div class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/30 dark:bg-panel-surface p-4 mt-4">
           <h5 class="font-display font-700 text-sm mb-1">🔮 Alertas Predictivas de Mantenimiento</h5>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Horas transcurridas desde la última falla registrada de cada equipo, comparadas contra su propio MTBF histórico — no es una fecha exacta de próxima falla, es una señal de cuánto se está acercando a su ventana esperada.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Horas desde la última falla vs. su propio MTBF — señal de cercanía a la ventana esperada, no una fecha exacta.</p>
           <div id="alertas_predictivas" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
         </div>
 
         <div class="rounded-2xl border-2 border-indigo-300 dark:border-indigo-500/40 bg-white dark:bg-panel-surface p-4 mt-4">
           <h5 class="font-display font-700 text-sm mb-1">👷 Desempeño por Operador</h5>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Ordenado por Utilización real (tiempo perforando ÷ tiempo total del turno) — el indicador más justo para comparar operadores, porque no depende de cuántas horas trabajó cada uno.</p>
-          <p class="text-xs font-semibold text-amber mb-3">⚠️ Verificado: casi todos los operadores rinden mejor de noche que de día (hasta 13 puntos de diferencia) — compara solo entre operadores del mismo turno predominante, no entre columnas distintas. Toca una fila para ver sus principales causas de demora.</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Ordenado por Utilización real (tiempo perforando ÷ tiempo total).</p>
+          <p class="text-xs font-semibold text-amber mb-3">⚠️ Casi todos rinden mejor de noche (hasta 13 puntos) — compara solo dentro del mismo turno. Toca una fila para ver sus causas de demora.</p>
           <div class="overflow-x-auto mb-3">
             <table class="w-full text-xs min-w-[750px]">
               <thead class="text-slate-400 uppercase text-[10px]">
@@ -932,7 +930,7 @@
             </table>
           </div>
           <div id="operadores_destacados" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-          <p class="text-[10px] text-slate-400 mt-2">Las fallas mecánicas no se incluyen aquí como indicador de desempeño — suelen depender más del estado del equipo que del operador que lo maneja en el momento.</p>
+          <p class="text-[10px] text-slate-400 mt-2">No se incluyen fallas mecánicas: dependen más del equipo que del operador.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -998,7 +996,7 @@
 
       <div class="rounded-2xl border-2 border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/40 dark:bg-panel-surface p-4">
         <h4 class="font-display font-700 text-base mb-1">💠 Dónde se concentra el costo — Perforación &amp; Voladura (Producción + Pre-Corte)</h4>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Todo el período con datos, sin repetir los ratios US$/t y US$/m ya vistos en cada pestaña — aquí es composición y proporción.</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Composición y proporción — todo el período con datos.</p>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1009,7 +1007,7 @@
         </div>
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h5 class="font-display font-600 text-sm mb-1">Agentes de Voladura</h5>
-          <p class="text-[11px] text-slate-400 mb-2">Producción + Pre-Corte combinados, con precios de referencia propios — el total puede no coincidir exactamente con la torta "Por Sub-Área" (esa usa el gasto ya calculado en el Excel).</p>
+          <p class="text-[11px] text-slate-400 mb-2">Producción + Pre-Corte, con precios de referencia propios (puede variar levemente vs. "Por Sub-Área").</p>
           <div style="height:200px"><canvas id="chart_pie_agentes"></canvas></div>
         </div>
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
@@ -1046,7 +1044,7 @@
           </button>
         </div>
         <div id="filters_bsm" class="flex flex-wrap items-center gap-2"></div>
-        <p class="text-[11px] text-slate-400 mt-2">Filtra el período que se usa en la comparación "Cómo Estamos vs. Escenario Proyectado" y en el diagrama de capacidad.</p>
+        <p class="text-[11px] text-slate-400 mt-2">Filtra el período de esta comparación.</p>
       </div>
 
       <div class="rounded-2xl border border-indigo-200 dark:border-panel-border bg-indigo-50/60 dark:bg-panel-surface p-4">
@@ -1057,7 +1055,7 @@
       <!-- ============ CÓMO ESTAMOS vs. ESCENARIO PROYECTADO ============ -->
       <div class="rounded-2xl border-2 border-indigo-300 dark:border-indigo-500/40 bg-white dark:bg-panel-surface p-5">
         <h4 class="font-display font-700 text-lg mb-1">📊 Cómo Estamos vs. Escenario Proyectado</h4>
-        <p class="text-xs text-slate-400 mb-4">Actual: 3 DM45 + 1 Leopard. Proyectado: 3 DM45 + 1 DM45 de respaldo (50%) + 1 Leopard + 1 perforadora Pre-Corte adicional (50%), con Utilización subiendo de ~57% a 67% en Producción.</p>
+        <p class="text-xs text-slate-400 mb-4">Actual: 3 DM45 + 1 Leopard. Proyectado: +1 equipo de respaldo (50%) en cada uno, Utilización 57%→67%.</p>
         <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 items-center">
           <div class="rounded-xl border-2 border-slate-300 dark:border-panel-border p-4">
             <p class="text-xs font-bold uppercase text-slate-500 mb-2">🔵 Cómo Estamos (hoy)</p>
@@ -1084,7 +1082,7 @@
           <h4 class="font-display font-700 text-lg">Value Stream Mapping — Perforación → Voladura</h4>
           <p id="vsm_periodo_label" class="text-xs text-slate-400"></p>
         </div>
-        <p class="text-xs text-slate-400 mb-4">Capacidades en tn/día (Producción) — mueve los controles de abajo para simular otros escenarios.</p>
+        <p class="text-xs text-slate-400 mb-4">Capacidades en tn/día (Producción).</p>
 
         <div class="flex items-stretch gap-1 sm:gap-2 overflow-x-auto pb-3">
           <div class="flex flex-col items-center justify-center shrink-0 w-16 sm:w-20">
@@ -1122,7 +1120,7 @@
             Restablecer a valores reales
           </button>
         </div>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Flota base: 3 perforadoras DM45. Mueve los controles para explorar otros valores — no cambia tus datos reales, solo simula.</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Flota base: 3 perforadoras DM45. Solo simula, no cambia tus datos.</p>
 
         <label class="flex items-center gap-2 mb-4 cursor-pointer w-fit">
           <input type="checkbox" id="vsm_sim_4ta" class="w-4 h-4 accent-indigo-600">
@@ -4197,24 +4195,7 @@ function renderTabVoladura(){
   renderOportunidadesVoladura('oportunidades_voladura', peRecs, AGENTES_VOLADURA, blastRecs);
   renderCostoTaladroVoladura(peRecs, AGENTES_VOLADURA, sumCol(blastRecs,'TALADROS PRODUCCION').sum, 'table_costo_taladro_voladura', 'chart_costo_taladro_voladura', 'tfoot_costo_taladro_voladura', c, !DATA.planEjec.length);
 
-  // ---- Relaciones Costo–Performance (movidas aquí desde Resumen Gerencial) ----
-  const drillRecsVol = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
-  const relCostoPerfCanvas = document.getElementById('chart_rel_costoperf_util');
-  if (DATA.planEjec.length && DATA.drilling.length && months.length){
-    const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
-    const costoPerfSeries = months.map((m,i)=>{ const g=monthlySum(drillRecsVol,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; return tonMinadoM[i]? g/tonMinadoM[i] : null; });
-    const utilSeries = monthlyAvg(peRecs, DATE_COL.planEjec, 'UTILIZACION EJEC (%)', months, true);
-    MiniChart.line(relCostoPerfCanvas, {
-      labels: months.map(monthLabel), colors: c,
-      formatY: v=>fmtNum(v,3), formatY2: v=>fmtNum(v)+'%',
-      formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,1)+'%' : fmtNum(v,3)+' US$/t',
-      datasets: [
-        { label:'US$/TM', data:costoPerfSeries, color:c.rose },
-        { label:'Utilización %', data:utilSeries, color:c.indigo, yAxisID:'y2' },
-      ]
-    });
-  } else MiniChart.clear(relCostoPerfCanvas);
-
+  // ---- Relación Costo–Performance (Voladura) ----
   const relCostoVolCanvas = document.getElementById('chart_rel_costovol_kg');
   if (DATA.planEjec.length && DATA.blasting.length && months.length){
     const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
@@ -4340,20 +4321,32 @@ function renderOportunidadesVoladura(containerId, peRecs, agents, proyectoRecs){
   if (!container) return;
   const cards = [];
 
+  // Se ordena por IMPACTO REAL en US$ (usando el precio unitario real de
+  // cada insumo), no por % de desviación — verificado: un insumo pequeño
+  // (ej. Cartuflex) puede caer a 0 consumo y dar -100% (el máximo posible
+  // matemáticamente) sin que eso sea relevante en dólares. El % se muestra
+  // igual, pero ya no decide solo el orden.
   const rows = agents.map(a=>{
     const plan = sumCol(peRecs, a.plan).sum, real = sumCol(peRecs, a.ejec).sum;
     if (plan===0 && real===0) return null;
     const dev = deviation(plan, real);
-    return dev===null ? null : { ...a, plan, real, dev };
-  }).filter(Boolean).sort((a,b)=> Math.abs(b.dev)-Math.abs(a.dev));
+    if (dev===null) return null;
+    const priceInfo = PRECIOS_VOLADURA[a.ejec];
+    const impactoUsd = priceInfo ? Math.abs(real-plan)*priceInfo.price : null;
+    return { ...a, plan, real, dev, impactoUsd };
+  }).filter(Boolean);
 
-  if (rows.length){
-    const worst = rows[0];
-    const status = semaforoStatus(worst.dev, 'lower');
+  const conImpacto = rows.filter(r=>r.impactoUsd!==null && r.impactoUsd>0).sort((a,b)=>b.impactoUsd-a.impactoUsd);
+  const sinImpacto = rows.filter(r=>r.impactoUsd===null).sort((a,b)=>Math.abs(b.dev)-Math.abs(a.dev));
+  const ordenados = [...conImpacto, ...sinImpacto];
+
+  if (ordenados.length){
+    const worst = ordenados[0];
+    const impactoTxt = worst.impactoUsd ? `≈ ${fmtNum(worst.impactoUsd,0)} US$ de impacto` : `${worst.dev>=0?'+':''}${nf1.format(worst.dev)}% vs. plan`;
     cards.push(`<div class="rounded-xl border border-slate-200 dark:border-panel-border p-3">
-      <p class="text-xs font-semibold mb-1">📌 Mayor desviación de consumible</p>
+      <p class="text-xs font-semibold mb-1">📌 Mayor desviación de consumible (por impacto en US$)</p>
       <p class="text-sm font-display font-700">${escapeHtml(worst.label)}</p>
-      <p class="text-xs text-slate-400 mt-0.5">Desviación de <span class="font-mono-num ${worst.dev<=0?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${worst.dev>=0?'+':''}${nf1.format(worst.dev)}%</span> respecto al plan (Real: ${fmtNum(worst.real,1)} vs Plan: ${fmtNum(worst.plan,1)}).</p>
+      <p class="text-xs text-slate-400 mt-0.5">Desviación de <span class="font-mono-num ${worst.dev<=0?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${worst.dev>=0?'+':''}${nf1.format(worst.dev)}%</span> respecto al plan (Real: ${fmtNum(worst.real,1)} vs Plan: ${fmtNum(worst.plan,1)}) · <span class="font-semibold text-rose">${impactoTxt}</span></p>
     </div>`);
   }
 
@@ -4624,6 +4617,31 @@ function renderTabPerforacion(){
     f: filters.perforacion, peData: DATA.planEjec, drillData: DATA.drilling, drillSheetName: 'Drilling',
     idPrefix: 'perf', kpiTopId: 'kpi_perforacion_top', kpiCalidadId: 'kpi_perforacion_calidad', equipoLabel: 'Perforadora',
   });
+
+  // Relación Costo–Performance — pertenece aquí (Perforación), no en Voladura,
+  // porque el costo de perforación es un dato de esta pestaña.
+  const f = filters.perforacion, c = colors();
+  const peRecs = applyDateFilter(DATA.planEjec, DATE_COL.planEjec, f.dateFrom, f.dateTo);
+  const drillRecs = applyDateFilter(DATA.drilling, DATE_COL.drilling, f.dateFrom, f.dateTo);
+  const relCostoPerfCanvas = document.getElementById('chart_rel_costoperf_util');
+  if (relCostoPerfCanvas){
+    if (DATA.planEjec.length && DATA.drilling.length && peRecs.length){
+      const { min, max } = dateMinMax(peRecs.map(r=>r[DATE_COL.planEjec]).filter(isDateVal));
+      const months = min && max ? continuousMonths(min, max) : [];
+      const tonMinadoM = tonMinadoEjecMonthly(peRecs, months);
+      const costoPerfSeries = months.map((m,i)=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; return tonMinadoM[i]? g/tonMinadoM[i] : null; });
+      const utilSeries = monthlyAvg(peRecs, DATE_COL.planEjec, 'UTILIZACION EJEC (%)', months, true);
+      MiniChart.line(relCostoPerfCanvas, {
+        labels: months.map(monthLabel), colors: c,
+        formatY: v=>fmtNum(v,3), formatY2: v=>fmtNum(v)+'%',
+        formatTooltip: (v,ds)=> ds.yAxisID==='y2' ? fmtNum(v,1)+'%' : fmtNum(v,3)+' US$/t',
+        datasets: [
+          { label:'US$/TM', data:costoPerfSeries, color:c.rose },
+          { label:'Utilización %', data:utilSeries, color:c.indigo, yAxisID:'y2' },
+        ]
+      });
+    } else MiniChart.clear(relCostoPerfCanvas);
+  }
 }
 
 // Módulo genérico de Perforación: Producción y Pre-Corte comparten exactamente
