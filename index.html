@@ -454,7 +454,7 @@
         </div>
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Composición del costo por taladro</h4>
-          <div style="height:380px"><canvas id="chart_costo_taladro_voladura"></canvas></div>
+          <div style="height:550px"><canvas id="chart_costo_taladro_voladura"></canvas></div>
         </div>
       </div>
 
@@ -532,7 +532,7 @@
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Composición del costo por taladro</h4>
           <p class="text-[11px] text-slate-400 mb-2">Incluye Enaline y Cordón Detonante.</p>
-          <div style="height:360px"><canvas id="chart_costo_taladro_voladura_pc"></canvas></div>
+          <div style="height:550px"><canvas id="chart_costo_taladro_voladura_pc"></canvas></div>
         </div>
       </div>
 
@@ -654,11 +654,11 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Consumo de Aceros — Real vs Plan</h4>
-          <p class="text-xs text-slate-400 mb-2">Incluye intensidad por 1000 m.</p>
+          <p class="text-xs text-slate-400 mb-2">Vida útil calculada con todo el histórico disponible (no con el filtro de fecha) — ventanas cortas distorsionan el dato, ya que los aceros se reemplazan en lotes, no de forma pareja.</p>
           <div class="overflow-auto">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px]">
-                <tr><th class="text-left py-1.5 pr-2">Ítem</th><th class="text-right py-1.5 pr-2">Plan</th><th class="text-right py-1.5 pr-2">Real</th><th class="text-right py-1.5 pr-2">/1000m</th><th class="text-right py-1.5 pr-2">Desv.</th><th class="text-right py-1.5 pr-2">Costo (US$)</th><th class="text-right py-1.5">Vida útil (m/und)</th></tr>
+                <tr><th class="text-left py-1.5 pr-2">Ítem</th><th class="text-right py-1.5 pr-2">Plan</th><th class="text-right py-1.5 pr-2">Real</th><th class="text-right py-1.5 pr-2">Desv.</th><th class="text-right py-1.5 pr-2">Costo (US$)</th><th class="text-right py-1.5">Vida útil (m/und)</th></tr>
               </thead>
               <tbody id="table_aceros_perforacion" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
             </table>
@@ -674,7 +674,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costo por Taladro Perforado</h4>
-                    <div style="height:360px"><canvas id="chart_costo_taladro_perforacion"></canvas></div>
+                    <div style="height:550px"><canvas id="chart_costo_taladro_perforacion"></canvas></div>
         </div>
         <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Costos unitarios — guía de referencia</h4>
@@ -738,10 +738,11 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4" id="card_aceros_perforacion_pc_table">
           <h4 class="font-display font-700 text-base mb-1">Consumo de Aceros — Real vs Plan</h4>
+          <p class="text-xs text-slate-400 mb-2">Vida útil calculada con todo el histórico disponible (no con el filtro de fecha) — ventanas cortas distorsionan el dato, ya que los aceros se reemplazan en lotes, no de forma pareja.</p>
           <div class="overflow-auto">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px]">
-                <tr><th class="text-left py-1.5 pr-2">Ítem</th><th class="text-right py-1.5 pr-2">Plan</th><th class="text-right py-1.5 pr-2">Real</th><th class="text-right py-1.5 pr-2">/1000m</th><th class="text-right py-1.5 pr-2">Desv.</th><th class="text-right py-1.5 pr-2">Costo (US$)</th><th class="text-right py-1.5">Vida útil (m/und)</th></tr>
+                <tr><th class="text-left py-1.5 pr-2">Ítem</th><th class="text-right py-1.5 pr-2">Plan</th><th class="text-right py-1.5 pr-2">Real</th><th class="text-right py-1.5 pr-2">Desv.</th><th class="text-right py-1.5 pr-2">Costo (US$)</th><th class="text-right py-1.5">Vida útil (m/und)</th></tr>
               </thead>
               <tbody id="table_aceros_perforacion_pc" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
             </table>
@@ -942,8 +943,9 @@
               <div style="height:200px"><canvas id="chart_pareto_op_dm45"></canvas></div>
             </div>
             <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-              <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada de Demoras</h6>
-              <div style="height:460px"><canvas id="chart_cascada_dm45"></canvas></div>
+              <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-1">Cascada de Demoras</h6>
+              <p id="cascada_comparativo_dm45" class="text-xs text-slate-500 dark:text-slate-400 mb-2"></p>
+              <div style="height:650px"><canvas id="chart_cascada_dm45"></canvas></div>
             </div>
           </div>
           <div class="min-w-0">
@@ -954,8 +956,9 @@
               <div style="height:200px"><canvas id="chart_pareto_op_leopard"></canvas></div>
             </div>
             <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-              <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada de Demoras</h6>
-              <div style="height:460px"><canvas id="chart_cascada_leopard"></canvas></div>
+              <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-1">Cascada de Demoras</h6>
+              <p id="cascada_comparativo_leopard" class="text-xs text-slate-500 dark:text-slate-400 mb-2"></p>
+              <div style="height:650px"><canvas id="chart_cascada_leopard"></canvas></div>
             </div>
           </div>
         </div>
@@ -990,7 +993,7 @@
         <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h4 class="font-display font-700 text-base mb-1">Puente Plan → Ejecutado</h4>
           <p class="text-[11px] text-slate-400 mb-2">Solo período con Plan de costo disponible.</p>
-          <div style="height:360px"><canvas id="chart_costos_waterfall"></canvas></div>
+          <div style="height:550px"><canvas id="chart_costos_waterfall"></canvas></div>
         </div>
       </div>
 
@@ -1020,15 +1023,15 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Sub-Área</h6>
-          <div style="height:340px"><canvas id="chart_cascada_subarea"></canvas></div>
+          <div style="height:550px"><canvas id="chart_cascada_subarea"></canvas></div>
         </div>
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Agentes de Voladura</h6>
-          <div style="height:340px"><canvas id="chart_cascada_agentes"></canvas></div>
+          <div style="height:550px"><canvas id="chart_cascada_agentes"></canvas></div>
         </div>
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
           <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Cascada — Aceros</h6>
-          <div style="height:340px"><canvas id="chart_cascada_aceros"></canvas></div>
+          <div style="height:550px"><canvas id="chart_cascada_aceros"></canvas></div>
         </div>
       </div>
     </section>
@@ -2962,9 +2965,11 @@ const MiniChart = (function(){
           ctx.fillStyle = (ds.color||colors.teal)+'26'; ctx.fill(); }
       }
       ctx.beginPath(); ctx.lineWidth = 2; ctx.strokeStyle = ds.color || colors.teal;
+      if (ds.dashed) ctx.setLineDash([5,4]);
       let started=false;
       pts.forEach(p=>{ if(!p){ started=false; return; } if(!started){ ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y); });
       ctx.stroke();
+      ctx.setLineDash([]);
       ctx.fillStyle = ds.color || colors.teal;
       pts.forEach(p=>{ if(!p) return; ctx.beginPath(); ctx.arc(p.x,p.y,2.2,0,Math.PI*2); ctx.fill(); });
       return pts;
@@ -3047,7 +3052,7 @@ const MiniChart = (function(){
   // ejecutado respecto al plan es malo => se colorea con semántica de costo).
   function waterfall(canvas, { steps, colors, formatTooltip, referenceLine, referenceLabel }){
     const { ctx, w, h } = setupCanvas(canvas);
-    const padLeft = 62, padRight = 12, padTop = 14, padBottom = 155;
+    const padLeft = 90, padRight = 60, padTop = 14, padBottom = 300;
     const plotW = w-padLeft-padRight, plotH = h-padTop-padBottom;
 
     let level = 0;
@@ -3108,7 +3113,7 @@ const MiniChart = (function(){
       // pueda leer exactamente qué demora/causa es cada barra.
       ctx.save();
       ctx.translate(cx, h-padBottom+8);
-      ctx.rotate(-Math.PI/4);
+      ctx.rotate(-70*Math.PI/180); // más vertical que -45° para reducir el desplazamiento horizontal — evita que las barras cercanas al eje se corten por la izquierda
       ctx.font = '9px Inter, sans-serif';
       ctx.textAlign='right'; ctx.textBaseline='top';
       ctx.fillText(String(b.label), 0, 0);
@@ -4695,10 +4700,14 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
     MiniChart.clear(trendCanvas);
   } else {
     const metrosSeries = monthlySum(drillRecs, DATE_COL.drilling, 'Metros Perforados', drillMonths);
+    const metrosPlanSeries = monthlySum(peRecs, DATE_COL.planEjec, 'METROS (PLAN)', drillMonths);
     MiniChart.line(trendCanvas, {
       labels: drillMonths.map(monthLabel), colors: c,
       formatTooltip: v=>fmtNum(v)+' m',
-      datasets: [{ label:'Metros Perforados', data:metrosSeries, color:c.teal, fill:true }]
+      datasets: [
+        { label:'Plan', data:metrosPlanSeries, color:c.indigo, dashed:true },
+        { label:'Metros Perforados', data:metrosSeries, color:c.teal, fill:true },
+      ]
     });
   }
 
@@ -4781,7 +4790,13 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
   const acerosParetoId = idPrefix==='perf' ? 'chart_pareto_aceros_perforacion' : 'chart_pareto_aceros_perforacion_pc';
   const acerosBody = document.getElementById(acerosTableId);
   const acerosPareto = document.getElementById(acerosParetoId);
-  const metrosEjecTotal = sumCol(peRecs,'METROS (EJECUTADO)').sum;
+  // Vida útil SIEMPRE con todo el histórico disponible (no con el filtro de
+  // fecha activo) — verificado con datos reales: los aceros se reemplazan en
+  // lotes, no de forma pareja día a día, así que una ventana corta puede
+  // "atrapar" metros perforados sin capturar el reemplazo correspondiente,
+  // disparando el número de forma engañosa (todo el histórico da 797 m/und
+  // para Brocas; filtrando a un solo año da más de 7,800 — un dato falso).
+  const metrosEjecTotalHistorico = sumCol(peData,'METROS (EJECUTADO)').sum;
   if (acerosBody){
     if (!peData.length){
       acerosBody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-4">Hoja de plan no disponible.</td></tr>`;
@@ -4811,15 +4826,16 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
         const distinctPlan = new Set(planVals.map(v=>Math.round(v*1e6))).size;
         const coverage = peRecs.length ? planVals.length/peRecs.length : 0;
         const planReliable = distinctPlan > 5 && coverage > 0.3;
-        const per1000m = metrosEjecTotal ? (real/metrosEjecTotal)*1000 : null;
         const dev = planReliable ? deviation(plan, real) : null;
         const priceInfo = PRECIOS_ACEROS[a.ejec];
         const costoUsd = priceInfo ? real * priceInfo.price : null;
-        // Vida útil real = metros perforados totales / unidades consumidas de
-        // este acero (cuánto dura, en metros, cada unidad en la práctica).
-        const vidaUtilReal = real>0 ? metrosEjecTotal/real : null;
+        // Vida útil real = metros perforados TOTALES (todo el histórico) /
+        // unidades consumidas TOTALES (todo el histórico) — ver nota arriba
+        // sobre por qué no se usa el filtro de fecha para este cálculo.
+        const realHistorico = sumCol(peData, a.ejec).sum;
+        const vidaUtilReal = realHistorico>0 ? metrosEjecTotalHistorico/realHistorico : null;
         const vidaUtilTarget = priceInfo ? priceInfo.vidaUtilTarget : null;
-        return { label:a.label, plan: planReliable?plan:null, real, per1000m, dev, planReliable, costoUsd, vidaUtilReal, vidaUtilTarget };
+        return { label:a.label, plan: planReliable?plan:null, real, dev, planReliable, costoUsd, vidaUtilReal, vidaUtilTarget };
       }).filter(Boolean).sort((a,b)=> Math.abs(b.dev??-1) - Math.abs(a.dev??-1));
 
       acerosBody.innerHTML = rowsData.length ? rowsData.map(r=>{
@@ -4838,7 +4854,6 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
             <td class="py-1.5 pr-2 font-medium">${escapeHtml(r.label)}</td>
             <td class="py-1.5 pr-2 text-right font-mono-num text-slate-400" title="Plan no disponible de forma confiable para este ítem (datos insuficientes o constantes)">—</td>
             <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.real,1)}</td>
-            <td class="py-1.5 pr-2 text-right font-mono-num">${r.per1000m===null?'—':fmtNum(r.per1000m,2)}</td>
             <td class="py-1.5 pr-2 text-right text-slate-400">—</td>
             ${costoCell}
             ${vidaUtilCell}
@@ -4849,14 +4864,13 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
           <td class="py-1.5 pr-2 font-medium">${escapeHtml(r.label)}</td>
           <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.plan,1)}</td>
           <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.real,1)}</td>
-          <td class="py-1.5 pr-2 text-right font-mono-num">${r.per1000m===null?'—':fmtNum(r.per1000m,2)}</td>
           <td class="py-1.5 pr-2 text-right font-mono-num ${r.dev===null?'text-slate-400':r.dev<=0?'text-emerald-600 dark:text-emerald-400':'text-rose'}">
             <span class="semaforo-dot ${SEMAFORO_BG[status]}"></span> ${r.dev===null?'—':(r.dev>=0?'+':'')+nf1.format(r.dev)+'%'}
           </td>
           ${costoCell}
           ${vidaUtilCell}
         </tr>`;
-      }).join('') : `<tr><td colspan="7" class="text-center text-slate-400 py-4">Sin datos para el período filtrado.</td></tr>`;
+      }).join('') : `<tr><td colspan="6" class="text-center text-slate-400 py-4">Sin datos para el período filtrado.</td></tr>`;
 
       if (acerosPareto){
         const withDev = rowsData.filter(r=>r.dev!==null);
@@ -5307,8 +5321,14 @@ function renderTabEstadistica(){
     confiabWrap.classList.add('hidden');
   } else {
     confiabWrap.classList.remove('hidden');
-    renderConfiabilidadGrupo('dm45', DATA.actividades, EQUIPOS_DM45, c, DATA.drilling);
-    renderConfiabilidadGrupo('leopard', DATA.actividades, EQUIPOS_LEOPARD, c, DATA.drillingPC);
+    // Utilización Plan (2026) — el "con qué nos medimos" de la Cascada de
+    // Demoras: Producción y Pre-Corte tienen columnas de Plan distintas.
+    const peRecs2026 = DATA.planEjec.filter(r=>isDateVal(r[DATE_COL.planEjec]) && r[DATE_COL.planEjec].getFullYear()===2026);
+    const pePcRecs2026 = DATA.planEjecPC.filter(r=>isDateVal(r[DATE_COL.planEjecPC]) && r[DATE_COL.planEjecPC].getFullYear()===2026);
+    const utilPlanDM45 = avgNonZero(peRecs2026, 'UTILIZACION PLAN (%)');
+    const utilPlanLeopard = avgNonZero(pePcRecs2026, 'UTILIZACION PLAN (%)');
+    renderConfiabilidadGrupo('dm45', DATA.actividades, EQUIPOS_DM45, c, DATA.drilling, utilPlanDM45);
+    renderConfiabilidadGrupo('leopard', DATA.actividades, EQUIPOS_LEOPARD, c, DATA.drillingPC, utilPlanLeopard);
 
     // Ranking por equipo individual — respeta el filtro "Equipo" de la
     // pestaña para responder directamente "cuál es más confiable".
@@ -5538,16 +5558,18 @@ function renderDesempenoOperadores(actividades){
     (peorCalidad && peorCalidad.op!==mejorCalidad?.op ? destacadoCard('Más Reperforación', peorCalidad, 'border-rose-300 bg-rose-50/40 dark:bg-rose-500/5', '🔧') : '');
 }
 
-function renderConfiabilidadGrupo(sufijo, actividades, equiposGrupo, c, drillSourceRecs){
+function renderConfiabilidadGrupo(sufijo, actividades, equiposGrupo, c, drillSourceRecs, utilPlan){
   const kpiDiv = document.getElementById(`confiab_kpi_${sufijo}`);
   const paretoCanvas = document.getElementById(`chart_pareto_op_${sufijo}`);
   const cascadaCanvas = document.getElementById(`chart_cascada_${sufijo}`);
+  const comparativoP = document.getElementById(`cascada_comparativo_${sufijo}`);
   const r = calcularConfiabilidad(actividades, equiposGrupo);
 
   if (!r){
     kpiDiv.innerHTML = '<div class="col-span-full text-xs text-slate-400 text-center py-3">Sin datos para este grupo en ACTIVIDADES.</div>';
     MiniChart.clear(paretoCanvas);
     MiniChart.clear(cascadaCanvas);
+    if (comparativoP) comparativoP.textContent = '';
     return;
   }
 
@@ -5591,6 +5613,19 @@ function renderConfiabilidadGrupo(sufijo, actividades, equiposGrupo, c, drillSou
   const horasDisponibles = dmAvg!==null ? r.horasTotal * (dmAvg/100) : null;
   const horasReales = (horasDisponibles!==null && utilAvg!==null) ? horasDisponibles * (utilAvg/100) : null;
   const brecha = (horasDisponibles!==null && horasReales!==null) ? horasDisponibles - horasReales : null;
+
+  // "Con qué nos medimos": Utilización Real (resultado de esta cascada)
+  // contra la Utilización Plan del mismo período (2026) — el dato de
+  // referencia que faltaba para saber si el resultado final es bueno o malo.
+  if (comparativoP){
+    if (utilAvg!==null && utilPlan!==null && utilPlan>0){
+      const devUtil = ((utilAvg-utilPlan)/utilPlan)*100;
+      const colorDev = devUtil>=0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose';
+      comparativoP.innerHTML = `Utilización Real: <b>${fmtNum(utilAvg,1)}%</b> vs. Plan: <b>${fmtNum(utilPlan,1)}%</b> — <span class="font-bold ${colorDev}">${devUtil>=0?'+':''}${fmtNum(devUtil,1)}%</span>`;
+    } else {
+      comparativoP.textContent = utilAvg!==null ? `Utilización Real: ${fmtNum(utilAvg,1)}% (Plan no disponible para comparar).` : '';
+    }
+  }
 
   if (brecha!==null && brecha>0){
     // causasOperativas ya incluye las actividades reclasificadas (el
@@ -5690,10 +5725,16 @@ function renderTabCostos(){
       monthlySum(drillPcRecs, DATE_COL.drillingPC, 'GASTO TOTAL PERFORACION (US$)', [m])[0] +
       monthlySum(blastRecs, DATE_COL.blasting, 'GASTO DE EXPLOSIVO (US$)', [m])[0] +
       monthlySum(blastPcRecs, DATE_COL.blastingPC, 'GASTO DE EXPLOSIVO (US$)', [m])[0]);
+    const seriePlan = months.map(m=>
+      monthlySum(peRecs, DATE_COL.planEjec, 'Gasto en perforacion', [m])[0] +
+      monthlySum(peRecs, DATE_COL.planEjec, 'Gasto en Voladura', [m])[0]);
     MiniChart.line(trendCanvas, {
       labels: months.map(monthLabel), colors:c,
       formatTooltip: v=>fmtNum(v)+' US$',
-      datasets: [{ label:'Costo Total Ejecutado', data:serieTotal, color:c.teal, fill:true }]
+      datasets: [
+        { label:'Plan', data:seriePlan, color:c.indigo, dashed:true },
+        { label:'Costo Total Ejecutado', data:serieTotal, color:c.teal, fill:true },
+      ]
     });
   } else MiniChart.clear(trendCanvas);
 
