@@ -393,12 +393,6 @@
         <h4 class="font-display font-700 text-base mb-1">¿Dónde debemos actuar?</h4>
         <div id="oportunidades_control" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
       </div>
-
-      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-1">💵 Distribución del Costo Ejecutado</h4>
-        <p class="text-xs text-slate-400 mb-3">Perforación vs. Voladura — dónde se concentra el gasto.</p>
-        <div style="height:240px"><canvas id="chart_control_costo_donut"></canvas></div>
-      </div>
     </section>
 
     <!-- ===================== TAB: 02 VOLADURA ===================== -->
@@ -981,8 +975,9 @@
       <div id="kpi_costos_top" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"></div>
 
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-4">
-        <h4 class="font-display font-700 text-base mb-3">Evolución mensual del costo — Perforación + Voladura</h4>
-        <div style="height:300px"><canvas id="chart_costos_trend"></canvas></div>
+        <h4 class="font-display font-700 text-base mb-1">Evolución mensual del costo — por componente</h4>
+        <p class="text-xs text-slate-400 mb-3">Voladura y Perforación, Producción y Pre-Corte por separado — para ver desvíos específicos, no solo el total agregado.</p>
+        <div style="height:320px"><canvas id="chart_costos_trend"></canvas></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -2783,6 +2778,77 @@ const MiniChart = (function(){
     attachClearOnLeave(canvas);
   }
 
+  function barStacked(canvas, { labels, datasets, colors, formatY, formatTooltip }){
+    const rotate = labels.length > 8;
+    const { ctx, w, h } = setupCanvas(canvas);
+    const padLeft = 58, padRight = 10, padTop = 24, padBottom = rotate ? 60 : 26;
+    const plotW = w - padLeft - padRight, plotH = h - padTop - padBottom;
+
+    const n = labels.length;
+    // Total apilado por mes, para la escala del eje Y (0 hasta el total más alto)
+    const totales = Array.from({length:n}, (_,i)=> datasets.reduce((s,ds)=> s + (ds.data[i]||0), 0));
+    const maxV = Math.max(0, ...totales);
+    const scale = niceScale(0, maxV, 5);
+    const yToPx = v => padTop + plotH - ((v-scale.min)/(scale.max-scale.min))*plotH;
+
+    ctx.strokeStyle = colors.grid; ctx.lineWidth = 1; ctx.font = '10px Inter, sans-serif'; ctx.fillStyle = colors.text;
+    scale.ticks.forEach(t=>{
+      const y = yToPx(t);
+      ctx.beginPath(); ctx.moveTo(padLeft, y); ctx.lineTo(w-padRight, y); ctx.stroke();
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(formatY?formatY(t):String(t), padLeft-6, y);
+    });
+
+    const groupW = plotW / Math.max(n,1);
+    const barW = Math.min(34, groupW*0.62);
+    const zeroY = yToPx(0);
+
+    const segments = []; // para detectar sobre qué segmento está el mouse
+    for (let i=0; i<n; i++){
+      let acumulado = 0;
+      const x = padLeft + i*groupW + groupW/2 - barW/2;
+      datasets.forEach((ds, di)=>{
+        const v = ds.data[i];
+        if (v===null || v===undefined || v===0) return;
+        const yBase = yToPx(acumulado), yTop = yToPx(acumulado+v);
+        ctx.fillStyle = ds.color || colors.palette[di % colors.palette.length];
+        ctx.fillRect(x, yTop, barW, yBase-yTop);
+        segments.push({ x, y:yTop, w:barW, h:yBase-yTop, i, di, v });
+        acumulado += v;
+      });
+    }
+
+    ctx.fillStyle = colors.text; ctx.font = '9px Inter, sans-serif';
+    labels.forEach((lab,i)=>{
+      const groupX = padLeft + i*groupW + groupW/2;
+      ctx.save();
+      if (rotate){
+        ctx.translate(groupX, h-padBottom+6);
+        ctx.rotate(-Math.PI/4);
+        ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+        ctx.fillText(truncateLabel(ctx, String(lab), 88), 0, 0);
+      } else {
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(truncateLabel(ctx, String(lab), groupW), groupX, h-padBottom+6);
+      }
+      ctx.restore();
+    });
+
+    drawLegend(ctx, w, padTop-16, datasets, colors);
+
+    canvas.onmousemove = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+      const hit = segments.find(s=> mx>=s.x && mx<=s.x+s.w && my>=s.y && my<=s.y+s.h);
+      if (hit){
+        const ds = datasets[hit.di];
+        // Muestra SOLO el segmento tocado — no los demás componentes de ese mes.
+        showTooltip(e.clientX, e.clientY, `<b>${escapeHtml(String(labels[hit.i]))}</b><br>${escapeHtml(ds.label||'')}: ${formatTooltip?formatTooltip(hit.v):hit.v}`);
+      } else hideTooltip();
+    };
+    attachClearOnLeave(canvas);
+  }
+
   function roundRectTop(ctx, x, y, w, h, r){
     if (h<=0){ return; }
     r = Math.min(r, w/2, h);
@@ -2898,7 +2964,7 @@ const MiniChart = (function(){
   }
 
   /* ---------- LINE (una o dos series, eje dual opcional) ---------- */
-  function line(canvas, { labels, datasets, colors, formatY, formatY2, formatTooltip }){
+  function line(canvas, { labels, datasets, colors, formatY, formatY2, formatTooltip, tooltipMode }){
     const { ctx, w, h } = setupCanvas(canvas);
     const hasY2 = datasets.some(d=>d.yAxisID==='y2');
     const padLeft = 46, padRight = hasY2 ? 46 : 12, padTop = 12, padBottom = labels.length>8 ? 46 : 26;
@@ -2985,9 +3051,26 @@ const MiniChart = (function(){
 
     canvas.onmousemove = (e)=>{
       const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX-rect.left;
+      const mx = e.clientX-rect.left, my = e.clientY-rect.top;
       let idx = Math.round((mx-padLeft)/xStep);
       idx = Math.max(0, Math.min(n-1, idx));
+      if (tooltipMode==='nearest'){
+        // Solo la línea más cercana al cursor (por distancia vertical) — para
+        // gráficos con varias series de magnitudes muy distintas, donde
+        // mostrar todas juntas satura el tooltip sin ayudar a leer una en
+        // particular.
+        let best = null, bestDist = Infinity;
+        allPts.forEach(({ds,pts})=>{
+          const p = pts[idx];
+          if (!p) return;
+          const dist = Math.abs(p.y - my);
+          if (dist < bestDist){ bestDist = dist; best = {ds, p}; }
+        });
+        if (best && bestDist < 40){
+          showTooltip(e.clientX, e.clientY, `<b>${escapeHtml(String(labels[idx]))}</b><br>${escapeHtml(best.ds.label||'')}: ${formatTooltip?formatTooltip(best.p.v, best.ds):fmtNum(best.p.v)}`);
+        } else hideTooltip();
+        return;
+      }
       const lines = allPts.map(({ds,pts})=>{
         const p = pts[idx];
         if (!p) return null;
@@ -3315,7 +3398,7 @@ const MiniChart = (function(){
     ctx.fillText(`${fmtNum(value, decimals??1)}${unit||''}`, cx, cy-8);
   }
 
-  return { bar, hbar, hbarStacked, line, sparkline, waterfall, scatter, donut, gauge, clear };
+  return { bar, hbar, hbarStacked, barStacked, line, sparkline, waterfall, scatter, donut, gauge, clear };
 })();
 
 
@@ -4066,21 +4149,9 @@ function renderTabControl(){
   oportunidades.innerHTML = cards.length ? cards.join('') : '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Aún no hay suficientes datos para identificar oportunidades.</div>';
 
   // ---- Distribución del Costo Ejecutado (Perforación vs Voladura) ----
-  const costoDonutCanvas = document.getElementById('chart_control_costo_donut');
-  if (DATA.drilling.length || DATA.blasting.length){
-    const gastoPerfTotal = sumCol(drillRecs,'GASTO TOTAL PERFORACION (US$)').sum;
-    const gastoVolTotal = sumCol(blastRecs,'GASTO DE EXPLOSIVO (US$)').sum;
-    if (gastoPerfTotal>0 || gastoVolTotal>0){
-      MiniChart.donut(costoDonutCanvas, {
-        colors: c,
-        formatTooltip: (seg,pct)=> `${seg.label}: ${fmtNum(seg.value,0)} US$ (${fmtNum(pct,1)}%)`,
-        data: [
-          { label:'Perforación', value: gastoPerfTotal, color: c.indigo },
-          { label:'Voladura', value: gastoVolTotal, color: c.amber },
-        ]
-      });
-    } else MiniChart.clear(costoDonutCanvas);
-  } else MiniChart.clear(costoDonutCanvas);
+  // Se quitó de aquí — este mismo dato ya vive en la pestaña Costos, y ahí
+  // se calcula completo (Producción + Pre-Corte). Aquí solo sumaba
+  // Producción, dando una proporción distinta y confusa al compararlas.
 }
 
 // Comparativo entre Proyectos — solo con indicadores que el Excel realmente
@@ -5717,23 +5788,32 @@ function renderTabCostos(){
     }
   }
 
-  // Tendencia mensual del costo ejecutado
+  // Tendencia mensual del costo ejecutado — desglosado por componente (antes
+  // era una sola línea agregada, que no permitía ver desvíos por área).
+  // Barras agrupadas en un solo eje (no líneas con eje dual): un eje dual
+  // resultaba engañoso, porque Pre-Corte podía verse "por encima" de
+  // Producción solo por tener su propia escala, no porque el monto real
+  // fuera mayor. El tooltip muestra solo la barra tocada, no las 4 a la vez.
   const trendCanvas = document.getElementById('chart_costos_trend');
   if (months.length){
-    const serieTotal = months.map(m=>
-      monthlySum(drillRecs, DATE_COL.drilling, 'GASTO TOTAL PERFORACION (US$)', [m])[0] +
-      monthlySum(drillPcRecs, DATE_COL.drillingPC, 'GASTO TOTAL PERFORACION (US$)', [m])[0] +
-      monthlySum(blastRecs, DATE_COL.blasting, 'GASTO DE EXPLOSIVO (US$)', [m])[0] +
-      monthlySum(blastPcRecs, DATE_COL.blastingPC, 'GASTO DE EXPLOSIVO (US$)', [m])[0]);
-    const seriePlan = months.map(m=>
-      monthlySum(peRecs, DATE_COL.planEjec, 'Gasto en perforacion', [m])[0] +
-      monthlySum(peRecs, DATE_COL.planEjec, 'Gasto en Voladura', [m])[0]);
-    MiniChart.line(trendCanvas, {
+    const serieVolProd = months.map(m=>monthlySum(blastRecs, DATE_COL.blasting, 'GASTO DE EXPLOSIVO (US$)', [m])[0]);
+    const seriePerfProd = months.map(m=>monthlySum(drillRecs, DATE_COL.drilling, 'GASTO TOTAL PERFORACION (US$)', [m])[0]);
+    const serieVolPC = months.map(m=>monthlySum(blastPcRecs, DATE_COL.blastingPC, 'GASTO DE EXPLOSIVO (US$)', [m])[0]);
+    const seriePerfPC = months.map(m=>monthlySum(drillPcRecs, DATE_COL.drillingPC, 'GASTO TOTAL PERFORACION (US$)', [m])[0]);
+    // Barras agrupadas en UN SOLO eje — un eje dual (dos escalas distintas)
+    // era engañoso: Pre-Corte podía verse "por encima" de Producción en el
+    // dibujo aunque en dólares reales sea mucho menor, solo porque cada uno
+    // tenía su propia escala independiente. Con un solo eje honesto, la
+    // altura de cada barra sí representa el monto real, sin ilusión óptica.
+    MiniChart.bar(trendCanvas, {
       labels: months.map(monthLabel), colors:c,
+      formatY: v=>fmtNum(v),
       formatTooltip: v=>fmtNum(v)+' US$',
       datasets: [
-        { label:'Plan', data:seriePlan, color:c.indigo, dashed:true },
-        { label:'Costo Total Ejecutado', data:serieTotal, color:c.teal, fill:true },
+        { label:'Voladura Producción', data:serieVolProd, color:c.amber },
+        { label:'Perforación Producción', data:seriePerfProd, color:c.indigo },
+        { label:'Voladura Pre-Corte', data:serieVolPC, color:c.rose },
+        { label:'Perforación Pre-Corte', data:seriePerfPC, color:c.teal },
       ]
     });
   } else MiniChart.clear(trendCanvas);
