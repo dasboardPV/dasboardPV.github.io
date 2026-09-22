@@ -459,9 +459,6 @@
       </div>
     </nav>
 
-    <div class="app-sidebar-footer">
-      <p class="text-[10px] text-slate-500">Panel Gerencial · Todo el procesamiento ocurre en tu navegador.</p>
-    </div>
   </aside>
 
   <div class="app-main flex-1 min-w-0">
@@ -566,7 +563,7 @@
         <h4 class="font-display font-700 text-base mb-1">🧭 Resumen Ejecutivo — Generado automáticamente</h4>
         <p id="resumen_ejecutivo_narrativa" class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed mb-2"></p>
         <p class="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-2">¿Dónde priorizar? — ordenado por impacto, no solo por desviación</p>
-        <div id="resumen_ejecutivo_prioridades" class="space-y-2"></div>
+        <div id="resumen_ejecutivo_prioridades" class="grid grid-cols-1 lg:grid-cols-2 gap-2"></div>
       </div>
 
       <!-- Cumplimiento por Indicador: lo primero que se ve, compacto (2 filas) -->
@@ -581,22 +578,17 @@
           <table class="w-full text-xs min-w-[620px]">
             <thead class="text-slate-400 uppercase text-[10px]">
               <tr>
-                <th class="text-left py-1.5 pr-2">Indicador</th>
-                <th class="text-right py-1.5 pr-2">Plan</th>
-                <th class="text-right py-1.5 pr-2">Ejecutado</th>
-                <th class="text-right py-1.5 pr-2">Desv.</th>
-                <th class="text-left py-1.5 pr-2">Criticidad</th>
-                <th class="text-left py-1.5">Impacto</th>
+                <th class="text-left py-1 pr-2">Indicador</th>
+                <th class="text-right py-1 pr-2">Plan</th>
+                <th class="text-right py-1 pr-2">Ejecutado</th>
+                <th class="text-right py-1 pr-2">Desv.</th>
+                <th class="text-left py-1 pr-2">Criticidad</th>
+                <th class="text-left py-1">Impacto</th>
               </tr>
             </thead>
             <tbody id="table_desvios" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
           </table>
         </div>
-      </div>
-
-      <div class="rounded-2xl border border-amber/30 bg-white dark:bg-panel-surface p-3">
-        <h4 class="font-display font-700 text-base mb-1">¿Dónde debemos actuar?</h4>
-        <div id="oportunidades_control" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
       </div>
 
       <button type="button" class="ver-mas-toggle w-full flex items-center justify-center gap-2 text-sm font-semibold text-indigo-600 dark:text-indigox border border-dashed border-indigo-300 dark:border-indigo-500/40 rounded-xl py-2 hover:bg-indigo-50/60 dark:hover:bg-panel-surface2 transition" data-target="control_detalle" aria-expanded="false">
@@ -605,6 +597,10 @@
       </button>
 
       <div id="control_detalle" class="hidden space-y-2.5">
+        <div class="rounded-2xl border border-amber/30 bg-white dark:bg-panel-surface p-3">
+          <h4 class="font-display font-700 text-base mb-1">¿Dónde debemos actuar?</h4>
+          <div id="oportunidades_control" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+        </div>
         <!-- COSTOS UNITARIOS P&V — detalle de tendencia; el resumen ya está en las tarjetas de Cumplimiento -->
         <div>
           <h4 class="font-display font-700 text-base mb-2">💰 Costos Unitarios — Perforación &amp; Voladura</h4>
@@ -873,14 +869,9 @@
 
       <div id="kpi_perforacion_top" class="flex flex-wrap gap-2 [&>*]:flex-1 [&>*]:min-w-[220px]"></div>
 
-      <div class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/30 dark:bg-panel-surface p-3">
-        <h4 class="font-display font-700 text-sm mb-2">🔧 Calidad y Costos Adicionales</h4>
-        <div id="kpi_perforacion_calidad" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
-      </div>
-
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
         <h4 class="font-display font-700 text-base mb-2">Tendencia mensual — Metros perforados</h4>
-        <div style="height:200px"><canvas id="chart_perf_trend"></canvas></div>
+        <div style="height:160px"><canvas id="chart_perf_trend"></canvas></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-2">
@@ -915,6 +906,11 @@
       </button>
 
       <div id="perforacion_detalle" class="hidden space-y-2.5">
+      <div class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/30 dark:bg-panel-surface p-3">
+        <h4 class="font-display font-700 text-sm mb-2">🔧 Calidad y Costos Adicionales</h4>
+        <div id="kpi_perforacion_calidad" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+      </div>
+
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
           <h4 class="font-display font-700 text-base mb-1">📈 Relación Costo–Performance</h4>
           <h5 class="font-display font-600 text-sm mb-2">Costo Perforación US$/TM ↔ Utilización</h5>
@@ -970,14 +966,9 @@
 
       <div id="kpi_perforacion_pc_top" class="flex flex-wrap gap-2 [&>*]:flex-1 [&>*]:min-w-[220px]"></div>
 
-      <div class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/30 dark:bg-panel-surface p-3">
-        <h4 class="font-display font-700 text-sm mb-2">🔧 Calidad y Costos Adicionales</h4>
-        <div id="kpi_perforacion_pc_calidad" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
-      </div>
-
       <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
         <h4 class="font-display font-700 text-base mb-2">Tendencia mensual — Metros perforados (Pre-Corte)</h4>
-        <div style="height:200px"><canvas id="chart_perf_pc_trend"></canvas></div>
+        <div style="height:160px"><canvas id="chart_perf_pc_trend"></canvas></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-2">
@@ -1012,6 +1003,11 @@
       </button>
 
       <div id="perforacion_pc_detalle" class="hidden space-y-2.5">
+      <div class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/30 dark:bg-panel-surface p-3">
+        <h4 class="font-display font-700 text-sm mb-2">🔧 Calidad y Costos Adicionales</h4>
+        <div id="kpi_perforacion_pc_calidad" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+      </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-2">
           <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3" id="card_aceros_perforacion_pc_table">
             <h4 class="font-display font-700 text-base mb-1">Consumo de Aceros — Real vs Plan</h4>
@@ -1279,7 +1275,7 @@
         <div class="lg:col-span-6 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
           <h4 class="font-display font-700 text-base mb-1">Puente Plan → Ejecutado</h4>
           <p class="text-[11px] text-slate-400 mb-2">Solo período con Plan de costo disponible.</p>
-          <div style="height:250px"><canvas id="chart_costos_waterfall"></canvas></div>
+          <div style="height:200px"><canvas id="chart_costos_waterfall"></canvas></div>
         </div>
       </div>
 
@@ -1566,10 +1562,6 @@
 
   </div>
 </main>
-
-<footer class="max-w-[2100px] mx-auto px-4 sm:px-6 py-6 text-center text-[11px] text-slate-400 dark:text-slate-600">
-  Panel Gerencial · Todo el procesamiento ocurre en tu navegador — ningún dato sale de este equipo.
-</footer>
   </div>
 
 </div><!-- /#appShell -->
@@ -3976,7 +3968,7 @@ function renderGaugeCard(container, { title, planVal, ejecVal, decimals, suffix,
   card.className = `rounded-2xl border-2 ${STATUS.border} ${STATUS.bg} p-3 shadow-sm`;
   card.innerHTML = `
     <p class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-bold text-center mb-1">${escapeHtml(title)}</p>
-    <div style="height:172px"><canvas id="${canvasId}"></canvas></div>
+    <div style="height:140px"><canvas id="${canvasId}"></canvas></div>
     <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-1 px-1">
       <span>Plan: <b class="text-slate-700 dark:text-slate-200">${planVal!==null&&planVal!==undefined ? fmtNum(planVal,decimals)+(suffix||'') : '—'}</b></span>
       <span class="font-bold ${STATUS.text}">${dev!==null?(dev>=0?'+':'')+fmtNum(dev,1)+'%':''}</span>
@@ -4616,12 +4608,12 @@ function renderTabControl(){
   tbodyDesvios.innerHTML = top.length ? top.map(d=>{
     const status = semaforoStatus(d.dev, d.goodDirection);
     return `<tr>
-      <td class="py-1.5 pr-2 font-medium">${escapeHtml(d.label)}</td>
-      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(d.plan,1)}</td>
-      <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(d.ejec,1)}</td>
-      <td class="py-1.5 pr-2 text-right font-mono-num ${(d.goodDirection==='higher'?d.dev>=0:d.dev<=0)?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${d.dev>=0?'+':''}${nf1.format(d.dev)}%</td>
-      <td class="py-1.5 pr-2">${CRIT_LABEL[status]||'—'}</td>
-      <td class="py-1.5 text-slate-500 dark:text-slate-400">${escapeHtml(d.impacto||'—')}</td>
+      <td class="py-1 pr-2 font-medium">${escapeHtml(d.label)}</td>
+      <td class="py-1 pr-2 text-right font-mono-num">${fmtNum(d.plan,1)}</td>
+      <td class="py-1 pr-2 text-right font-mono-num">${fmtNum(d.ejec,1)}</td>
+      <td class="py-1 pr-2 text-right font-mono-num ${(d.goodDirection==='higher'?d.dev>=0:d.dev<=0)?'text-emerald-600 dark:text-emerald-400':'text-rose'}">${d.dev>=0?'+':''}${nf1.format(d.dev)}%</td>
+      <td class="py-1 pr-2">${CRIT_LABEL[status]||'—'}</td>
+      <td class="py-1 text-slate-500 dark:text-slate-400">${escapeHtml(d.impacto||'—')}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="6" class="text-center text-slate-400 py-6">Sin datos suficientes para calcular desviaciones</td></tr>`;
 
