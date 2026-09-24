@@ -820,17 +820,22 @@
         <div id="filters_frag" class="flex flex-wrap items-center gap-2"></div>
       </div>
 
-      <div id="kpi_frag" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+      <div id="kpi_frag" class="flex flex-wrap gap-2 [&>*]:flex-1 [&>*]:min-w-[200px]"></div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
+        <h4 class="font-display font-700 text-base mb-2">Fragmentación — Percentiles (pulg)</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="frag_percentiles"></div>
+      </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-2">
         <div class="lg:col-span-7 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
           <h4 class="font-display font-700 text-base mb-1">P80 vs Target por Fase</h4>
-          <p class="text-xs text-slate-400 mb-2">Mineral — P80 real vs target por fase.</p>
+          <p class="text-xs text-slate-400 mb-2">Mineral (target 3") y Desmonte (target 8") — P80 real vs target por fase.</p>
           <div style="height:220px"><canvas id="chart_frag_p80"></canvas></div>
         </div>
         <div class="lg:col-span-5 min-w-0 rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
           <h4 class="font-display font-700 text-base mb-1">P80 — Ranking de desviación por Zona</h4>
-          <p class="text-xs text-slate-400 mb-2">Fase / Banco — solo Mineral.</p>
+          <p class="text-xs text-slate-400 mb-2">Fase / Banco / Material.</p>
           <div class="overflow-auto max-h-[320px]">
             <table class="w-full text-xs">
               <thead class="text-slate-400 uppercase text-[10px] sticky top-0 bg-white dark:bg-panel-surface">
@@ -909,6 +914,14 @@
       <div class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/30 dark:bg-panel-surface p-3">
         <h4 class="font-display font-700 text-sm mb-2">🔧 Calidad y Costos Adicionales</h4>
         <div id="kpi_perforacion_calidad" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
+        <div class="flex items-center justify-between flex-wrap gap-1 mb-2">
+          <h4 class="font-display font-700 text-base">⛽ Fuel Oil — Consumo por Hora</h4>
+          <p id="fuel_ratio_perf_total" class="text-xs font-mono-num text-slate-400"></p>
+        </div>
+        <div id="fuel_ratio_perf" class="space-y-1.5"></div>
       </div>
 
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
@@ -1006,6 +1019,14 @@
       <div class="rounded-2xl border-2 border-amber-300 dark:border-amber-500/40 bg-amber-50/30 dark:bg-panel-surface p-3">
         <h4 class="font-display font-700 text-sm mb-2">🔧 Calidad y Costos Adicionales</h4>
         <div id="kpi_perforacion_pc_calidad" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3">
+        <div class="flex items-center justify-between flex-wrap gap-1 mb-2">
+          <h4 class="font-display font-700 text-base">⛽ Fuel Oil — Consumo por Hora</h4>
+          <p id="fuel_ratio_perf_pc_total" class="text-xs font-mono-num text-slate-400"></p>
+        </div>
+        <div id="fuel_ratio_perf_pc" class="space-y-1.5"></div>
       </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-2">
@@ -1997,12 +2018,16 @@ const SEMAFORO_BG = { green:'bg-emerald-500', orange:'bg-amber', red:'bg-rose', 
 /* ======================================================================
    ESTADO GLOBAL
    ====================================================================== */
-const REQUIRED_SHEETS = ['Plan vs Ejec.', 'Plan vs Ejec. PC', 'TON ROTO', 'Drilling', 'DrillingPC', 'Blasting', 'Blasting PC', 'Frag. PortaM', 'Vib & Air Blast.', 'Vib & Air Blast. (2)', 'ACTIVIDADES'];
+const REQUIRED_SHEETS = ['Plan vs Ejec.', 'Plan vs Ejec. PC', 'TON ROTO', 'Drilling', 'DrillingPC', 'Blasting', 'Blasting PC', 'Frag. PortaM', 'Vib & Air Blast.', 'Vib & Air Blast. (2)', 'ACTIVIDADES', 'BD Fuel-MIS'];
 // Hojas complementarias/opcionales: su ausencia es una situación normal (por
 // ejemplo, "Vib & Air Blast. (2)" es una segunda campaña de monitoreo que no
 // siempre existe) y no debe mostrarse como una advertencia — el panel ya
-// funciona correctamente sin ellas.
-const OPTIONAL_SHEETS = new Set(['Vib & Air Blast. (2)', 'ACTIVIDADES'].map(s=>s.trim().toLowerCase()));
+// funciona correctamente sin ellas. "BD Fuel-MIS" (consumo de combustible
+// por abastecimiento — Galones Abast./Costo Galón/Gasto Total por equipo)
+// se suma como opcional por el mismo motivo: es una hoja nueva para el
+// ratio Galones/Hora de Perforación, y un archivo de un período anterior
+// podría no tenerla todavía.
+const OPTIONAL_SHEETS = new Set(['Vib & Air Blast. (2)', 'ACTIVIDADES', 'BD Fuel-MIS'].map(s=>s.trim().toLowerCase()));
 
 // Bitácora de Seguimiento — declarado temprano a propósito: se usa desde
 // initBitacora(), que se llama al inicio de la página (antes de cargar
@@ -2012,6 +2037,7 @@ const BITACORA_KEY = 'bi_bitacora_v1';
 const DATA = {
   planEjec: [], planEjecPC: [], tonRoto: [], drilling: [], drillingPC: [], blasting: [], blastingPC: [], frag: [], vib: [],
   actividades: [], // Detalle de demoras (archivo separado, opcional) — evento por evento
+  fuelMis: [], // Abastecimientos de combustible por equipo (hoja "BD Fuel-MIS") — Galones Abast./Costo Galón/Gasto Total, evento por evento
   actividadesOutliersExcluidos: 0,
   missingSheets: [],
 };
@@ -2742,6 +2768,7 @@ function handleFile(file){
       DATA.vib = vib1.concat(vib2);
       DATA.actividades = found['ACTIVIDADES'] ? parseSheet(wb, found['ACTIVIDADES']) : [];
       DATA.actividadesOutliersExcluidos = sanitizeActividadesOutliers(DATA.actividades);
+      DATA.fuelMis = found['BD Fuel-MIS'] ? parseSheet(wb, found['BD Fuel-MIS']) : [];
       DATA.missingSheets = missing;
 
       // Solo se advierte de hojas REQUERIDAS ausentes — las opcionales (como
@@ -2803,7 +2830,7 @@ function handleFile(file){
 /* ======================================================================
    COLUMNAS DE FECHA POR HOJA Y HELPERS DE FILTRADO
    ====================================================================== */
-const DATE_COL = { planEjec:'FECHA', planEjecPC:'FECHA', tonRoto:'Fecha', drilling:'Fecha', drillingPC:'Fecha', blasting:'FECHA', blastingPC:'FECHA', frag:'FECHA', vib:'FECHA', actividades:'Fecha' };
+const DATE_COL = { planEjec:'FECHA', planEjecPC:'FECHA', tonRoto:'Fecha', drilling:'Fecha', drillingPC:'Fecha', blasting:'FECHA', blastingPC:'FECHA', frag:'FECHA', vib:'FECHA', actividades:'Fecha', fuelMis:'Fecha' };
 
 function applyDateFilter(records, dateCol, dateFrom, dateTo){
   if (!dateFrom && !dateTo) return records;
@@ -2839,6 +2866,7 @@ function globalDateRange(){
   push(DATA.blasting, DATE_COL.blasting); push(DATA.frag, DATE_COL.frag);
   push(DATA.drilling, DATE_COL.drilling); push(DATA.vib, DATE_COL.vib);
   push(DATA.planEjecPC, DATE_COL.planEjecPC); push(DATA.drillingPC, DATE_COL.drillingPC); push(DATA.blastingPC, DATE_COL.blastingPC);
+  push(DATA.fuelMis, DATE_COL.fuelMis);
   return dateMinMax(allDates);
 }
 
@@ -4556,19 +4584,14 @@ function renderTabControl(){
       compareVal: vibRecsCompare ? sumCol(vibRecsCompare, 'AIR BLAST Db(L)').avg : undefined, compareLabel: compareLabelTxt }));
   }
   if (DATA.frag.length){
+    // Nota: "P80 (Desmonte)" vivía aquí también — se sacó a pedido del
+    // usuario, ahora solo vive en la pestaña Fragmentación (junto a "P80
+    // (Mineral)", que sí se queda aquí como indicador ejecutivo principal).
     const fragMineralCards = mineralOnly(fragRecs);
     const p80Real = sumCol(fragMineralCards, 'P80 (pulg)').avg;
     const p80Plan = sumCol(fragMineralCards, 'Target P80 (Pulg.)').avg;
     cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'🪨', title:'P80 (Mineral)', unit:'pulg', planVal:p80Plan, realVal:p80Real, decimals:2, goodDirection:'lower',
       compareVal: fragRecsCompare ? sumCol(mineralOnly(fragRecsCompare), 'P80 (pulg)').avg : undefined, compareLabel: compareLabelTxt }));
-
-    const fragDesmonteCards = desmonteOnly(fragRecs);
-    const p80RealD = sumCol(fragDesmonteCards, 'P80 (pulg)').avg;
-    const p80PlanD = sumCol(fragDesmonteCards, 'Target P80 (Pulg.)').avg;
-    if (fragDesmonteCards.length){
-      cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'🪨', title:'P80 (Desmonte)', unit:'pulg', planVal:p80PlanD, realVal:p80RealD, decimals:2, goodDirection:'lower',
-        compareVal: fragRecsCompare ? sumCol(desmonteOnly(fragRecsCompare), 'P80 (pulg)').avg : undefined, compareLabel: compareLabelTxt }));
-    }
   }
   if (!targetCardsContainer.children.length){
     targetCardsContainer.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hojas necesarias no disponibles.</div>';
@@ -5151,6 +5174,17 @@ function renderTabFrag(){
   renderKpiCard(kpiContainer, { title:'P80 Promedio (Mineral)', mode:'calc', calcVal:p80avg, decimals:2, suffix:' pulg',
     months, series: monthlyAvg(fragMineralTab, DATE_COL.frag, 'P80 (pulg)', months) });
 
+  // P80 (Desmonte) — vivía como tarjeta en Resumen Gerencial; movida aquí a
+  // pedido del usuario para tener ambos materiales juntos en Fragmentación.
+  // Target propio (8 pulg, más permisivo que el de Mineral) — mismo patrón
+  // que mineralOnly()/desmonteOnly() ya usado en el resto del panel.
+  const fragDesmonteTab = desmonteOnly(recs);
+  if (fragDesmonteTab.length){
+    const p80avgD = sumCol(fragDesmonteTab,'P80 (pulg)').avg;
+    renderKpiCard(kpiContainer, { title:'P80 Promedio (Desmonte)', mode:'calc', calcVal:p80avgD, decimals:2, suffix:' pulg',
+      months, series: monthlyAvg(fragDesmonteTab, DATE_COL.frag, 'P80 (pulg)', months) });
+  }
+
   let peorDev = null;
   for (const r of recs){
     const p80 = parseNumber(r['P80 (pulg)']), tgt = parseNumber(r['Target P80 (Pulg.)']);
@@ -5160,29 +5194,88 @@ function renderTabFrag(){
   }
   renderKpiCard(kpiContainer, { title:'Peor Desviación P80', mode:'calc', calcVal:peorDev, decimals:1, suffix:'%' });
 
-  // Chart P80 vs Target por Fase
-  const fases = distinctValues(fragMineralTab, 'FASE');
+  // Percentiles de fragmentación (P20/P50/P80/P100) + % de finos — dato ya
+  // viene calculado por registro en la hoja ("P100 (pulg)", "P80 (pulg)",
+  // "P50 (pulg)", "P20 (pulg)", "Finos < 0.50 pulg"), acá solo se promedia
+  // sobre el período filtrado, igual que ya se hace con P80 Promedio. Mineral
+  // y Desmonte se muestran por separado (metas muy distintas: 3" vs 8").
+  const percentilesContainer = document.getElementById('frag_percentiles');
+  if (percentilesContainer){
+    const trackHtml = (label, tab, targetPulg) => {
+      if (!tab.length) return `<div class="rounded-xl bg-slate-50 dark:bg-panel-surface2 p-3 text-center text-xs text-slate-400 flex items-center justify-center">${escapeHtml(label)}: sin datos para el período</div>`;
+      const p20 = sumCol(tab,'P20 (pulg)').avg, p50 = sumCol(tab,'P50 (pulg)').avg;
+      const p80 = sumCol(tab,'P80 (pulg)').avg, p100 = sumCol(tab,'P100 (pulg)').avg;
+      const finos = sumCol(tab,'Finos < 0.50 pulg').avg;
+      const points = [
+        { n:20, v:p20, dot:'bg-indigo-500', text:'text-indigo-600 dark:text-indigo-400' },
+        { n:50, v:p50, dot:'bg-slate-500', text:'text-slate-600 dark:text-slate-300' },
+        { n:80, v:p80, dot:'bg-amber-500', text:'text-amber' },
+        { n:100, v:p100, dot:'bg-rose-500', text:'text-rose' },
+      ];
+      // Posiciones FIJAS (no proporcionales al valor): P100 suele ser mucho
+      // mayor que P80 (capta los bolones sobredimensionados) y una escala
+      // proporcional dejaría P20/P50/P80 apretados contra el borde izquierdo.
+      const positions = [8, 36, 64, 92];
+      const dotsHtml = points.map((p,i)=> p.v===null ? '' : `
+        <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center" style="left:${positions[i]}%">
+          <span class="text-[10px] font-mono-num font-bold ${p.text} mb-1 whitespace-nowrap">${fmtNum(p.v,2)}</span>
+          <span class="w-2.5 h-2.5 rounded-full ${p.dot} border-2 border-white dark:border-panel-surface shadow"></span>
+          <span class="text-[9px] text-slate-400 mt-1">P${p.n}</span>
+        </div>`).join('');
+      const finosHtml = finos!==null ? `<span class="text-[10px] text-slate-400 whitespace-nowrap">Finos (&lt;0.5"): <b class="font-mono-num text-slate-600 dark:text-slate-300">${fmtNum(finos*100,1)}%</b></span>` : '';
+      return `
+        <div class="rounded-xl bg-slate-50/60 dark:bg-panel-surface2 p-3">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <p class="text-xs font-semibold text-slate-500">${escapeHtml(label)} <span class="text-slate-400 font-normal">· target ${fmtNum(targetPulg,0)}"</span></p>
+            ${finosHtml}
+          </div>
+          <div class="relative h-12 mt-3">
+            <div class="absolute top-1/2 left-[8%] right-[8%] h-0.5 bg-slate-200 dark:bg-panel-border -translate-y-1/2"></div>
+            ${dotsHtml}
+          </div>
+        </div>`;
+    };
+    percentilesContainer.innerHTML = trackHtml('Mineral', fragMineralTab, 3) + trackHtml('Desmonte', fragDesmonteTab, 8);
+  }
+
+  // Chart P80 vs Target por Fase — Mineral y Desmonte lado a lado (cada uno
+  // con su propio Target, 3 pulg vs 8 pulg) para comparar ambos materiales
+  // en un solo gráfico en vez de mostrar solo Mineral.
+  const fases = distinctValues(recs, 'FASE');
   if (fases.length && chartCanvas){
-    const p80ByFase = fases.map(fase => sumCol(fragMineralTab.filter(r=>String(r['FASE']||'').trim()===fase), 'P80 (pulg)').avg);
-    const targetByFase = fases.map(fase => sumCol(fragMineralTab.filter(r=>String(r['FASE']||'').trim()===fase), 'Target P80 (Pulg.)').avg);
+    const p80ByFaseM = fases.map(fase => sumCol(fragMineralTab.filter(r=>String(r['FASE']||'').trim()===fase), 'P80 (pulg)').avg);
+    const targetByFaseM = fases.map(fase => sumCol(fragMineralTab.filter(r=>String(r['FASE']||'').trim()===fase), 'Target P80 (Pulg.)').avg);
+    const datasetsFase = [
+      { label:'P80 Real (Mineral)', data:p80ByFaseM, color: c.teal },
+      { label:'Target (Mineral)', data:targetByFaseM, color: c.text+'88' },
+    ];
+    if (fragDesmonteTab.length){
+      const p80ByFaseD = fases.map(fase => sumCol(fragDesmonteTab.filter(r=>String(r['FASE']||'').trim()===fase), 'P80 (pulg)').avg);
+      const targetByFaseD = fases.map(fase => sumCol(fragDesmonteTab.filter(r=>String(r['FASE']||'').trim()===fase), 'Target P80 (Pulg.)').avg);
+      datasetsFase.push(
+        { label:'P80 Real (Desmonte)', data:p80ByFaseD, color: c.amber },
+        { label:'Target (Desmonte)', data:targetByFaseD, color: c.text+'55' },
+      );
+    }
     MiniChart.bar(chartCanvas, {
       labels: fases, colors: c,
       formatTooltip: v=>fmtNum(v,2)+' pulg',
-      datasets: [
-        { label:'P80 Real', data:p80ByFase, color: c.teal },
-        { label:'Target', data:targetByFase, color: c.text+'88' },
-      ]
+      datasets: datasetsFase
     });
   } else if (chartCanvas){
     MiniChart.clear(chartCanvas);
   }
 
-  // Ranking (Zona = Fase / Banco)
+  // Ranking (Zona = Fase / Banco / Material) — incluye ambos materiales,
+  // cada uno comparado contra SU PROPIO target (Mineral 3 pulg, Desmonte 8
+  // pulg), así el % de desviación sigue siendo comparable entre ambos.
   const zoneMap = new Map();
-  for (const r of mineralOnly(recs)){
+  for (const r of recs){
     const fase = String(r['FASE']||'(Sin dato)').trim();
     const banco = String(r['BANCO']||'(Sin dato)').trim();
-    const key = `${fase} / ${banco}`;
+    const materialRaw = String(r['MATERIAL']||'').trim().toUpperCase();
+    const material = materialRaw==='D' ? 'Desmonte' : materialRaw==='M' ? 'Mineral' : '(Material sin dato)';
+    const key = `${fase} / ${banco} (${material})`;
     if (!zoneMap.has(key)) zoneMap.set(key, []);
     zoneMap.get(key).push(r);
   }
@@ -5596,10 +5689,95 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
             <p class="font-mono-num font-bold text-lg mt-1 ${colorClass||''}">${val===null?'—':val}</p>
             <p class="text-[10px] text-slate-400">${unit}</p>
           </div>`;
+
+        // Ratio de combustible POR EQUIPO (perforadora) — mismos datos que el
+        // ratio de flota de arriba (GASTO DIARIO COMBUSTIBLE / Metros
+        // Perforados), solo agrupados por 'Perforadora' en vez de sumados
+        // todos juntos, para poder comparar eficiencia entre equipos y
+        // mostrar el margen de desvío entre el más y el menos eficiente.
+        const combustiblePorEquipo = distinctValues(drillRecs, 'Perforadora').map(eq=>{
+          const recsEq = drillRecs.filter(r=>String(r['Perforadora']||'').trim()===eq);
+          const gastoEq = sumCol(recsEq,'GASTO DIARIO COMBUSTIBLE').sum;
+          const metrosEq = sumCol(recsEq,'Metros Perforados').sum;
+          return { eq, ratio: metrosEq ? gastoEq/metrosEq : null };
+        }).filter(x=>x.ratio!==null).sort((a,b)=>a.ratio-b.ratio);
+
+        let combustibleChipsHtml = '';
+        let combustibleDesvioHtml = '';
+        if (combustiblePorEquipo.length){
+          combustibleChipsHtml = `<div class="guardia-kpi-byequipo">${combustiblePorEquipo.map(item=>`<span class="guardia-kpi-byequipo-item"><b class="font-mono-num">${escapeHtml(item.eq)}</b> ${fmtNum(item.ratio,3)}</span>`).join('')}</div>`;
+          if (combustiblePorEquipo.length>1){
+            const mejorEq = combustiblePorEquipo[0]; // menor ratio US$/m = más eficiente
+            const peorEq = combustiblePorEquipo[combustiblePorEquipo.length-1];
+            const desvioPct = mejorEq.ratio ? ((peorEq.ratio-mejorEq.ratio)/mejorEq.ratio)*100 : null;
+            combustibleDesvioHtml = `<p class="text-[10px] text-slate-400 mt-1">Mejor: <b class="font-mono-num text-emerald-600 dark:text-emerald-400">${escapeHtml(mejorEq.eq)}</b> · Peor: <b class="font-mono-num text-rose">${escapeHtml(peorEq.eq)}</b>${desvioPct!==null?` · Desvío: <b class="font-mono-num">+${fmtNum(desvioPct,0)}%</b>`:''}</p>`;
+          }
+        }
+        const ratioCombustibleCard = `
+          <div class="rounded-xl bg-white dark:bg-panel-surface2 border border-slate-200 dark:border-panel-border p-3 text-center">
+            <p class="text-[10px] uppercase text-slate-400 font-semibold">⛽ Ratio Combustible</p>
+            <p class="font-mono-num font-bold text-lg mt-1">${ratioCombustibleMetro!==null?fmtNum(ratioCombustibleMetro,3):'—'}</p>
+            <p class="text-[10px] text-slate-400">US$/metro perforado</p>
+            ${combustibleChipsHtml}
+            ${combustibleDesvioHtml}
+          </div>`;
+
         kpiCalidad.innerHTML =
           miniCardCalidad('🔁','Taladros Reperforados', taladrosReperf, `de ${fmtNum(taladrosTotalGuide+taladrosReperf,0)} totales (${pctReperf!==null?fmtNum(pctReperf,1)+'%':'—'})`, 'text-rose') +
           miniCardCalidad('💵','Costo Total de Reperforación', costoTotalReperf!==null?fmtNum(costoTotalReperf,0):null, 'US$ en el período — mismo costo/taladro que uno nuevo', 'text-rose') +
-          miniCardCalidad('⛽','Ratio Combustible', ratioCombustibleMetro!==null?fmtNum(ratioCombustibleMetro,3):null, 'US$/metro perforado', '');
+          ratioCombustibleCard;
+      }
+    }
+  }
+
+  // Fuel Oil — Consumo por Hora (Galones Abast. / Hr. Oper., por equipo) —
+  // cruza la hoja "BD Fuel-MIS" (eventos de abastecimiento: Equipo, Fecha,
+  // Galones Abast., Gasto Total) con las horas operativas de Drilling/
+  // DrillingPC. Esa hoja es ÚNICA para toda la flota (no separada
+  // Producción/Pre-Corte), así que se filtra a solo los equipos que
+  // pertenecen a ESTE módulo (los mismos de drillRecs) para no mezclar el
+  // consumo de Perforación con el de Pre-Corte.
+  const fuelRatioContainer = document.getElementById(`fuel_ratio_${idPrefix}`);
+  const fuelRatioTotalEl = document.getElementById(`fuel_ratio_${idPrefix}_total`);
+  if (fuelRatioContainer){
+    const perforadorasFuel = distinctValues(drillRecs, 'Perforadora');
+    const perforadorasSetFuel = new Set(perforadorasFuel);
+    let fuelRecs = applyDateFilter(DATA.fuelMis, DATE_COL.fuelMis, f.dateFrom, f.dateTo);
+    fuelRecs = fuelRecs.filter(r => perforadorasSetFuel.has(String(r['Equipo']||'').trim()));
+
+    if (!DATA.fuelMis.length){
+      fuelRatioContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Hoja "BD Fuel-MIS" no disponible.</p>';
+      if (fuelRatioTotalEl) fuelRatioTotalEl.textContent = '';
+    } else if (!fuelRecs.length){
+      fuelRatioContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Sin abastecimientos para el período/equipos filtrados.</p>';
+      if (fuelRatioTotalEl) fuelRatioTotalEl.textContent = '';
+    } else {
+      const fuelPorEquipo = perforadorasFuel.map(eq=>{
+        const fEq = fuelRecs.filter(r=>String(r['Equipo']||'').trim()===eq);
+        const galEq = sumCol(fEq,'Galones Abast.').sum;
+        const hrEq = sumCol(drillRecs.filter(r=>String(r['Perforadora']||'').trim()===eq), 'Hr. Oper.').sum;
+        return { eq, gal: galEq, ratio: hrEq ? galEq/hrEq : null };
+      }).filter(x=>x.ratio!==null && x.gal>0).sort((a,b)=>b.ratio-a.ratio);
+
+      const galTotal = sumCol(fuelRecs,'Galones Abast.').sum;
+      const gastoTotal = sumCol(fuelRecs,'Gasto Total').sum;
+      if (fuelRatioTotalEl) fuelRatioTotalEl.textContent = `${fmtNum(galTotal,0)} gal · US$ ${fmtNum(gastoTotal,0)}`;
+
+      if (!fuelPorEquipo.length){
+        fuelRatioContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Sin datos suficientes (Galones u Horas Oper.) para el período.</p>';
+      } else {
+        const maxRatio = Math.max(...fuelPorEquipo.map(x=>x.ratio));
+        fuelRatioContainer.innerHTML = fuelPorEquipo.map(item=>{
+          const pct = maxRatio ? Math.max(4, (item.ratio/maxRatio)*100) : 0;
+          return `
+          <div class="flex items-center gap-2" title="${escapeHtml(item.eq)}: ${fmtNum(item.ratio,1)} gal/h · ${fmtNum(item.gal,0)} gal en el período">
+            <span class="text-xs font-mono-num font-semibold w-24 shrink-0 truncate">${escapeHtml(item.eq)}</span>
+            <div class="flex-1 h-3.5 rounded-full bg-slate-100 dark:bg-panel-surface2 overflow-hidden">
+              <div class="h-full rounded-full bg-indigo-500" style="width:${pct.toFixed(1)}%"></div>
+            </div>
+            <span class="text-xs font-mono-num font-semibold w-16 text-right shrink-0">${fmtNum(item.ratio,1)} gal/h</span>
+          </div>`;
+        }).join('');
       }
     }
   }
