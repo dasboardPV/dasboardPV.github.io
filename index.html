@@ -1181,7 +1181,7 @@
       <div id="confiabilidad_wrap" class="hidden">
         <div class="rounded-2xl border-2 border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/40 dark:bg-panel-surface p-3 mb-2">
           <h4 class="font-display font-700 text-base mb-1">🔧 Confiabilidad de Equipos — MTBF · MTTR</h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400">A partir del detalle evento-por-evento de la hoja "ACTIVIDADES" (2026). MTBF = tiempo operativo ÷ Nº de fallas · MTTR = tiempo de reparación ÷ Nº de fallas · Confiabilidad = MTBF ÷ (MTBF + MTTR).</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">A partir del detalle evento-por-evento de la hoja "ACTIVIDADES" (2026). MTBF = tiempo operativo ÷ Nº de fallas (correctivas) · MTTR = tiempo de reparación correctiva ÷ Nº de fallas · Confiabilidad = MTBF ÷ (MTBF + MTTR). El mantenimiento Preventivo no cuenta como falla — se muestra aparte.</p>
         </div>
 
         <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3 mb-2">
@@ -1196,7 +1196,8 @@
                   <th class="text-right py-1.5 pr-2">MTBF (hr)</th>
                   <th class="text-right py-1.5 pr-2">MTTR (hr)</th>
                   <th class="text-right py-1.5 pr-2">Confiabilidad</th>
-                  <th class="text-right py-1.5">N° Fallas</th>
+                  <th class="text-right py-1.5 pr-2">N° Fallas</th>
+                  <th class="text-right py-1.5">Preventivo (hr)</th>
                 </tr>
               </thead>
               <tbody id="table_confiabilidad_ranking" class="divide-y divide-slate-100 dark:divide-panel-border/60"></tbody>
@@ -1238,7 +1239,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
           <div class="min-w-0">
             <h5 class="font-display font-700 text-sm mb-2">⛏️ DM45 (Producción)</h5>
-            <div id="confiab_kpi_dm45" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2"></div>
+            <div id="confiab_kpi_dm45" class="flex flex-wrap gap-2 mb-2"></div>
             <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3 mb-2">
               <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Pareto — Demoras Operativas</h6>
               <div style="height:160px"><canvas id="chart_pareto_op_dm45"></canvas></div>
@@ -1251,7 +1252,7 @@
           </div>
           <div class="min-w-0">
             <h5 class="font-display font-700 text-sm mb-2">🪨 Leopard / DI650i (Precorte)</h5>
-            <div id="confiab_kpi_leopard" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2"></div>
+            <div id="confiab_kpi_leopard" class="flex flex-wrap gap-2 mb-2"></div>
             <div class="rounded-2xl border border-slate-200 dark:border-panel-border bg-white dark:bg-panel-surface p-3 mb-2">
               <h6 class="font-display font-600 text-xs uppercase text-slate-400 mb-2">Pareto — Demoras Operativas</h6>
               <div style="height:160px"><canvas id="chart_pareto_op_leopard"></canvas></div>
@@ -1790,6 +1791,52 @@ function avgNonZero(records, col){
   return n? s/n : null;
 }
 
+// Promedio válido para Disp. Mecánica / Utilización de PRODUCCIÓN (Drilling)
+// — excluye ceros (mismo criterio que avgNonZero) Y valores fuera del rango
+// físicamente válido 0-100%. Alineado 2026-09-24 con las medidas DAX
+// "Disponibilidad Mecánica Perforación" / "Utilización Perforación" del
+// modelo Power BI real conectado (bug crítico #4, confirmado por el usuario
+// en Power BI: filas en -75%, 201%, -60.41%, excluidas ahí con CALCULATE
+// antes de promediar). NO se aplica a Pre-Corte (DrillingPC): las medidas
+// DAX homólogas de Precorte ("Disponibilidad Mecánica PC"/"Utilización PC")
+// usan AVERAGE simple sin este filtro — se replica esa asimetría tal cual
+// está en Power BI, no es una omisión.
+function avgNonZeroValidPct(records, col){
+  let s=0, n=0;
+  for (const r of records){
+    const v = parseNumber(r[col]);
+    if (v!==null && v!==0 && v>=0 && v<=100){ s+=v; n++; }
+  }
+  return n? s/n : null;
+}
+
+// Calidad de Perforación = % de taladros perforados que NO necesitaron
+// reperforación = (Taladros Perforados − Taladros Reperforados) / Taladros
+// Perforados × 100. Misma fórmula (ratio de sumas, no promedio de ratios)
+// que las medidas DAX "Calidad Perforación" / "Calidad Perforación PC" del
+// modelo Power BI real (creadas 2026-09-21). Usada tal cual para Producción
+// y Pre-Corte — ninguna de las dos versiones DAX filtra rango aquí.
+function calidadPerforacion(records){
+  const perforados = sumCol(records,'Taladros Perforados').sum;
+  const reperforados = sumCol(records,'Taladros Reperforados').sum;
+  return perforados ? ((perforados-reperforados)/perforados)*100 : null;
+}
+
+// OEE = Disponibilidad Mecánica × Utilización × Calidad de Perforación —
+// fórmula clásica, alineada 2026-09-24 con las medidas DAX "OEE Perforación"
+// / "OEE PC" del modelo Power BI real (recalculadas 2026-09-23; antes eran
+// un promedio directo de la columna OEE del Excel, sin esta descomposición).
+// validarRango=true (solo Producción) aplica el mismo filtro 0-100% que
+// avgNonZeroValidPct a los componentes Disp. Mecánica/Utilización.
+function oeeClasico(records, validarRango){
+  const avgFn = validarRango ? avgNonZeroValidPct : avgNonZero;
+  const dm = avgFn(records, 'Disp. Mecánica');
+  const util = avgFn(records, 'Utilización');
+  const calidad = calidadPerforacion(records);
+  if (dm===null || util===null || calidad===null) return null;
+  return (dm/100) * (util/100) * (calidad/100) * 100;
+}
+
 // Denominador correcto para $/TM (Voladura y Perforación): el tonelaje MINADO
 // ejecutado (hoja "Plan vs Ejec."), no el tonelaje ROTO de blasteo puntual
 // (hoja "TON ROTO", que es un subconjunto y da un $/t artificialmente alto).
@@ -1920,7 +1967,7 @@ const AGENTES_VOLADURA_PC = [
   { label:'Taponex', plan:'PLAN TAPONEX (und)', ejec:'CONSUMO TAPONEX (und)', unit:'und' },
 ];
 
-function collectDesviaciones(peRecs, fragRecs, pePcRecs){
+function collectDesviaciones(peRecs, fragRecs, pePcRecs, drillRecs, drillPcRecs, blastPcRecs){
   const desvios = [];
   function addDesvio(label, plan, ejec, goodDirection, impacto){
     const dev = deviation(plan, ejec);
@@ -1930,7 +1977,12 @@ function collectDesviaciones(peRecs, fragRecs, pePcRecs){
   if (DATA.planEjec.length){
     addDesvio('Tonelaje Roto', sumCol(peRecs,'TONELAJE ROTO DIA (PLAN)').sum, sumCol(peRecs,'TONELAJE ROTO POR DISPARO (EJECUTADO)').sum, 'higher', 'Producción');
     addDesvio('Tonelaje Minado', sumCol(peRecs,'TON MINADO DIA (PLAN)').sum, sumCol(peRecs,'TONELAJE MINADO MATERIAL INSITU DIA (EJECUTADO)').sum, 'higher', 'Producción');
-    addDesvio('Metros Perforados', sumCol(peRecs,'METROS (PLAN)').sum, sumCol(peRecs,'METROS (EJECUTADO)').sum, 'higher', 'Producción futura');
+    // Metros Ejecutados (Real) alineado 2026-09-24 con la medida DAX "Metros
+    // Ejecutados" del modelo Power BI real: se calcula directo de
+    // Drilling[Metros Perforados] (detalle operativo) en vez de la columna
+    // resumen diario 'Plan vs Ejec'[METROS (EJECUTADO)], que Power BI
+    // confirmó que difería 22.210 m (2,9%) contra el detalle real.
+    addDesvio('Metros Perforados', sumCol(peRecs,'METROS (PLAN)').sum, drillRecs ? sumCol(drillRecs,'Metros Perforados').sum : sumCol(peRecs,'METROS (EJECUTADO)').sum, 'higher', 'Producción futura');
     addDesvio('Taladros', sumCol(peRecs,'TALADROS DIA (PLAN)').sum, sumCol(peRecs,'TALADROS (EJECUTADO)').sum, 'higher', 'Producción futura');
     addDesvio('Utilización', avgNonZero(peRecs,'UTILIZACION PLAN (%)'), avgNonZero(peRecs,'UTILIZACION EJEC (%)'), 'higher', 'Performance');
     addDesvio('Disp. Mecánica', avgNonZero(peRecs,'D.M. PLAN (%)'), avgNonZero(peRecs,'D.M. EJEC (%)'), 'higher', 'Performance');
@@ -1960,8 +2012,15 @@ function collectDesviaciones(peRecs, fragRecs, pePcRecs){
     addDesvio('P80 vs Target', sumCol(fragMineral,'Target P80 (Pulg.)').avg, sumCol(fragMineral,'P80 (pulg)').avg, 'lower', 'Fragmentación');
   }
   if (DATA.planEjecPC.length){
-    addDesvio('Metros Pre-Corte', sumCol(pePcRecs,'METROS (PLAN)').sum, sumCol(pePcRecs,'METROS (EJECUTADO)').sum, 'higher', 'Producción futura');
-    addDesvio('Enaline Pre-Corte', sumCol(pePcRecs,'PLAN DE ENALINE (kg)').sum, sumCol(pePcRecs,'CONSUMO DE ENALINE (kg)').sum, 'lower', 'Costo');
+    // Metros Ejecutados PC alineado 2026-09-24 con la medida DAX "Metros
+    // Ejecutados PC" — directo de DrillingPC[Metros Perforados] en vez del
+    // resumen diario, que Power BI confirmó que difería 68.999,8 m (52%, la
+    // brecha más grande de todo el modelo).
+    addDesvio('Metros Pre-Corte', sumCol(pePcRecs,'METROS (PLAN)').sum, drillPcRecs ? sumCol(drillPcRecs,'Metros Perforados').sum : sumCol(pePcRecs,'METROS (EJECUTADO)').sum, 'higher', 'Producción futura');
+    // Enaline Pre-Corte (Real) alineado 2026-09-24 con la medida DAX "Consumo
+    // Enaline PC Diario (kg)" — directo de 'Blasting PC'[ENALINE (KG)] en vez
+    // del resumen diario, que Power BI confirmó que difería 1.881,2 kg (1,4%).
+    addDesvio('Enaline Pre-Corte', sumCol(pePcRecs,'PLAN DE ENALINE (kg)').sum, blastPcRecs ? sumCol(blastPcRecs,'ENALINE (KG)').sum : sumCol(pePcRecs,'CONSUMO DE ENALINE (kg)').sum, 'lower', 'Costo');
   }
   desvios.sort((a,b)=> Math.abs(b.dev) - Math.abs(a.dev));
   return desvios;
@@ -1973,7 +2032,7 @@ function collectDesviaciones(peRecs, fragRecs, pePcRecs){
 function updateAlertsBadge(){
   const btn = document.getElementById('btnAlertas');
   if (!DATA.planEjec.length && !DATA.frag.length && !DATA.planEjecPC.length){ btn.classList.add('hidden'); return; }
-  const desvios = collectDesviaciones(DATA.planEjec, DATA.frag, DATA.planEjecPC);
+  const desvios = collectDesviaciones(DATA.planEjec, DATA.frag, DATA.planEjecPC, DATA.drilling, DATA.drillingPC, DATA.blastingPC);
   const criticos = desvios.filter(d=> semaforoStatus(d.dev, d.goodDirection)==='red').length;
   document.getElementById('alertasCount').textContent = criticos;
   btn.classList.toggle('hidden', criticos===0);
@@ -4351,6 +4410,7 @@ function renderTabControl(){
   const fragRecsCompare = compareOn ? applyCategoryFilter(applyCategoryFilter(applyCategoryFilter(applyCategoryFilter(
     applyDateFilter(DATA.frag, DATE_COL.frag, f.compareDateFrom, f.compareDateTo), 'PROYECTO', f.proyecto), 'FASE', f.fase), 'BANCO', f.banco), 'MATERIAL', f.material) : null;
   const vibRecsCompare = compareOn ? applyDateFilter(DATA.vib, DATE_COL.vib, f.compareDateFrom, f.compareDateTo) : null;
+  const drillRecsCompare = compareOn ? applyDateFilter(DATA.drilling, DATE_COL.drilling, f.compareDateFrom, f.compareDateTo) : null;
 
   const {min, max} = dateMinMax(peRecs.map(r=>r[DATE_COL.planEjec]).filter(isDateVal));
   const months = continuousMonths(min, max);
@@ -4432,7 +4492,11 @@ function renderTabControl(){
     const gastoVol = sumCol(blastRecs,'GASTO DE EXPLOSIVO (US$)').sum;
     const gastoPerf = sumCol(drillRecs,'GASTO TOTAL PERFORACION (US$)').sum;
     const tonMinado = tonMinadoEjecSum(peRecs);
-    const metrosEjec = sumCol(peRecs,'METROS (EJECUTADO)').sum;
+    // Metros Ejecutados alineado 2026-09-24 con la medida DAX "Metros
+    // Ejecutados" de Power BI: directo de Drilling[Metros Perforados], no de
+    // la columna resumen diario (diferían 22.210 m / 2,9%, ver nota en
+    // collectDesviaciones).
+    const metrosEjec = sumCol(drillRecs,'Metros Perforados').sum;
     const kgExplosivo = sumCol(blastRecs,'TOTAL EXPLOSIVO (Kg)').sum;
 
     const costoPerfTM = tonMinado? gastoPerf/tonMinado : null;
@@ -4444,7 +4508,7 @@ function renderTabControl(){
     renderKpiCard(kpiCostos, { title:'Perforación US$/TM minada', mode:'calc', calcVal:costoPerfTM, decimals:3, suffix:' US$/t',
       months, series: months.map(m=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; const t=tonMinadoEjecMonthly(peRecs,[m])[0]; return t? g/t : null; }) });
     renderKpiCard(kpiCostos, { title:'Perforación US$/m perforado', mode:'calc', calcVal:costoPerfM, decimals:2, suffix:' US$/m',
-      months, series: months.map(m=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; const mt=monthlySum(peRecs,DATE_COL.planEjec,'METROS (EJECUTADO)',[m])[0]; return mt? g/mt : null; }) });
+      months, series: months.map(m=>{ const g=monthlySum(drillRecs,DATE_COL.drilling,'GASTO TOTAL PERFORACION (US$)',[m])[0]; const mt=monthlySum(drillRecs,DATE_COL.drilling,'Metros Perforados',[m])[0]; return mt? g/mt : null; }) });
     renderKpiCard(kpiCostos, { title:'Gasto Acum. Perforación', mode:'calc', calcVal:gastoPerf, decimals:0, suffix:' US$',
       months, series: cumulativeByMonth(monthlySum(drillRecs, DATE_COL.drilling, 'GASTO TOTAL PERFORACION (US$)', months)) });
     renderKpiCard(kpiCostos, { title:'Voladura US$/TM minada', mode:'calc', calcVal:costoVolTM, decimals:3, suffix:' US$/t',
@@ -4513,9 +4577,11 @@ function renderTabControl(){
     cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'🚛', title:'Tonelaje Minado', unit:'t', planVal:tonMinPlan, realVal:tonMinReal, decimals:0, goodDirection:'higher',
       compareVal: peRecsCompare ? sumCol(peRecsCompare,'TONELAJE MINADO MATERIAL INSITU DIA (EJECUTADO)').sum : undefined, compareLabel: compareLabelTxt }));
 
-    const metrosPlan = sumCol(peRecs,'METROS (PLAN)').sum, metrosReal = sumCol(peRecs,'METROS (EJECUTADO)').sum;
+    // Metros Perforados (Real) alineado 2026-09-24 con la medida DAX "Metros
+    // Ejecutados" de Power BI — directo de Drilling[Metros Perforados].
+    const metrosPlan = sumCol(peRecs,'METROS (PLAN)').sum, metrosReal = sumCol(drillRecs,'Metros Perforados').sum;
     cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'📏', title:'Metros Perforados', unit:'m', planVal:metrosPlan, realVal:metrosReal, decimals:0, goodDirection:'higher',
-      compareVal: peRecsCompare ? sumCol(peRecsCompare,'METROS (EJECUTADO)').sum : undefined, compareLabel: compareLabelTxt }));
+      compareVal: drillRecsCompare ? sumCol(drillRecsCompare,'Metros Perforados').sum : undefined, compareLabel: compareLabelTxt }));
 
     const utilPlan = avgNonZero(peRecs,'UTILIZACION PLAN (%)'), utilReal = avgNonZero(peRecs,'UTILIZACION EJEC (%)');
     cumplimientoResumen.push(renderTargetCard(targetCardsContainer, { icon:'⚙️', title:'Utilización', unit:'%', planVal:utilPlan, realVal:utilReal, decimals:1, goodDirection:'higher',
@@ -4622,7 +4688,7 @@ function renderTabControl(){
   renderComparativoProyectos();
 
   // ---- Principales Desvíos (auto-ranking de |desviación%| across todo el panel) ----
-  const desvios = collectDesviaciones(peRecs, fragRecs, pePcRecs);
+  const desvios = collectDesviaciones(peRecs, fragRecs, pePcRecs, drillRecs, drillPcRecs, blastPcRecs);
   const top = desvios.slice(0,8);
   renderResumenEjecutivo(desvios);
   renderProyeccionCierre();
@@ -4658,7 +4724,7 @@ function renderTabControl(){
     // Calificación compuesta (Utilización + Disp. Mecánica + Usage), no solo OEE.
     const scores = equipos.map(eq=>{
       const recs = drillRecs.filter(r=>String(r['Perforadora']||'').trim()===eq);
-      const parts = [avgNonZero(recs,'Utilización'), avgNonZero(recs,'Disp. Mecánica'), avgNonZero(recs,'USA')].filter(v=>v!==null);
+      const parts = [avgNonZeroValidPct(recs,'Utilización'), avgNonZeroValidPct(recs,'Disp. Mecánica'), avgNonZero(recs,'USA')].filter(v=>v!==null);
       return parts.length ? { eq, score: parts.reduce((a,v)=>a+v,0)/parts.length } : null;
     }).filter(x=>x!==null);
     if (scores.length){
@@ -4910,7 +4976,7 @@ function renderCostoTaladroVoladura(peRecs, agents, taladrosTotal, tableBodyId, 
   const rows = agents.map(a=>{
     const priceInfo = PRECIOS_VOLADURA[a.ejec];
     if (!priceInfo) return null; // sin precio de referencia -> no se incluye (no inventar)
-    const consumo = sumCol(peRecs, a.ejec).sum;
+    const consumo = a.ejecOverrideSum!==undefined ? a.ejecOverrideSum : sumCol(peRecs, a.ejec).sum;
     if (consumo===0) return null;
     const costo = consumo * priceInfo.price;
     return { label:a.label, consumo, costo, note:priceInfo.note };
@@ -4974,7 +5040,7 @@ function renderOportunidadesVoladura(containerId, peRecs, agents, proyectoRecs){
   // matemáticamente) sin que eso sea relevante en dólares. El % se muestra
   // igual, pero ya no decide solo el orden.
   const rows = agents.map(a=>{
-    const plan = sumCol(peRecs, a.plan).sum, real = sumCol(peRecs, a.ejec).sum;
+    const plan = sumCol(peRecs, a.plan).sum, real = a.ejecOverrideSum!==undefined ? a.ejecOverrideSum : sumCol(peRecs, a.ejec).sum;
     if (plan===0 && real===0) return null;
     const dev = deviation(plan, real);
     if (dev===null) return null;
@@ -5033,7 +5099,11 @@ function renderConsumablesModule(peRecs, agents, months, tableBodyId, paretoCanv
   }
 
   const rows = agents.map(a=>{
-    const plan = sumCol(peRecs, a.plan).sum, real = sumCol(peRecs, a.ejec).sum;
+    // ejecOverrideSum: para un agente cuyo consumo real corregido viene de
+    // otra hoja (ver "Enaline" en renderTabVoladuraPC) — mismo patrón que
+    // 'extraAgents' en renderCostoTaladroVoladura, solo que aquí el agente
+    // ya está en la lista y solo se le reemplaza el total real.
+    const plan = sumCol(peRecs, a.plan).sum, real = a.ejecOverrideSum!==undefined ? a.ejecOverrideSum : sumCol(peRecs, a.ejec).sum;
     if (plan===0 && real===0) return null;
     const dev = deviation(plan, real);
     return { ...a, plan, real, dev };
@@ -5094,9 +5164,18 @@ function renderTabVoladuraPC(){
   const pePcRecs = applyDateFilter(DATA.planEjecPC, DATE_COL.planEjecPC, f.dateFrom, f.dateTo);
   let blastPcRecs = applyDateFilter(DATA.blastingPC, DATE_COL.blastingPC, f.dateFrom, f.dateTo);
   blastPcRecs = applyCategoryFilter(blastPcRecs, 'PROYECTO', f.proyecto);
+  const drillPcRecs = applyDateFilter(DATA.drillingPC, DATE_COL.drillingPC, f.dateFrom, f.dateTo);
 
   const {min, max} = dateMinMax(pePcRecs.map(r=>r[DATE_COL.planEjecPC]).filter(isDateVal));
   const months = continuousMonths(min, max);
+
+  // Enaline (Real) alineado 2026-09-24 con la medida DAX "Consumo Enaline PC
+  // Diario (kg)" de Power BI: directo de 'Blasting PC'[ENALINE (KG)] en vez
+  // de la columna resumen diario de Plan vs Ejec PC, que Power BI confirmó
+  // que difería 1.881,2 kg (1,4%). Los demás agentes (Booster, Detonador,
+  // Taponex) no fueron corregidos en Power BI, así que se dejan tal cual.
+  const agentesPcCorregido = AGENTES_VOLADURA_PC.map(a=>
+    a.label==='Enaline' ? { ...a, ejecOverrideSum: sumCol(blastPcRecs,'ENALINE (KG)').sum } : a);
 
   const kpiRatios = document.getElementById('kpi_voladura_pc_ratios');
   kpiRatios.innerHTML = '';
@@ -5113,16 +5192,18 @@ function renderTabVoladuraPC(){
       months, series: monthlySum(blastPcRecs, DATE_COL.blastingPC, 'GASTO DE EXPLOSIVO (US$)', months) });
   }
 
-  renderConsumablesModule(pePcRecs, AGENTES_VOLADURA_PC, months, 'table_consumibles_voladura_pc', null, 'chart_voladura_pc_acum', c, !DATA.planEjecPC.length);
-  renderOportunidadesVoladura('oportunidades_voladura_pc', pePcRecs, AGENTES_VOLADURA_PC, blastPcRecs);
-  renderCostoTaladroVoladura(pePcRecs, AGENTES_VOLADURA_PC, sumCol(blastPcRecs,'TALADROS PRECORTE').sum, 'table_costo_taladro_voladura_pc', 'chart_costo_taladro_voladura_pc', 'tfoot_costo_taladro_voladura_pc', c, !DATA.planEjecPC.length,
+  renderConsumablesModule(pePcRecs, agentesPcCorregido, months, 'table_consumibles_voladura_pc', null, 'chart_voladura_pc_acum', c, !DATA.planEjecPC.length);
+  renderOportunidadesVoladura('oportunidades_voladura_pc', pePcRecs, agentesPcCorregido, blastPcRecs);
+  renderCostoTaladroVoladura(pePcRecs, agentesPcCorregido, sumCol(blastPcRecs,'TALADROS PRECORTE').sum, 'table_costo_taladro_voladura_pc', 'chart_costo_taladro_voladura_pc', 'tfoot_costo_taladro_voladura_pc', c, !DATA.planEjecPC.length,
     [{ label:'Cordón Detonante', records:blastPcRecs, ejec:'CORDON DETONANTE (mts)' }]);
 
   const guide = document.getElementById('guide_voladura_pc');
   if (DATA.blastingPC.length){
     const totalExplosivoKg = sumCol(blastPcRecs,'TOTAL EXPLOSIVO (Kg)').sum;
     const gastoExpl = sumCol(blastPcRecs,'GASTO DE EXPLOSIVO (US$)').sum;
-    const metrosEjec = sumCol(pePcRecs,'METROS (EJECUTADO)').sum;
+    // Metros Ejecutados PC alineado 2026-09-24 con la medida DAX "Metros
+    // Ejecutados PC" de Power BI: directo de DrillingPC[Metros Perforados].
+    const metrosEjec = sumCol(drillPcRecs,'Metros Perforados').sum;
     const taladrosPc = sumCol(blastPcRecs,'TALADROS PRECORTE').sum;
     renderUnitCostGuide(guide, [
       { label:'Costo por Kg de explosivo', value: totalExplosivoKg? gastoExpl/totalExplosivoKg : null, unit:'US$/kg' },
@@ -5384,7 +5465,13 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
   if (!peData.length){
     kpiTop.innerHTML = `<div class="col-span-full text-sm text-slate-400 py-4 text-center">Hoja de plan no disponible.</div>`;
   } else {
-    const metPlan = sumCol(peRecs,'METROS (PLAN)').sum, metEjec = sumCol(peRecs,'METROS (EJECUTADO)').sum;
+    // Metros Ejecutados (Real) alineado 2026-09-24 con las medidas DAX
+    // "Metros Ejecutados"/"Metros Ejecutados PC" de Power BI: directo de
+    // Drilling/DrillingPC[Metros Perforados] (detalle operativo) en vez de la
+    // columna resumen diario 'Plan vs Ejec.'[METROS (EJECUTADO)], que Power
+    // BI confirmó que difería 22.210 m (2,9%) en Producción y 68.999,8 m
+    // (52%, la brecha más grande de todo el modelo) en Pre-Corte.
+    const metPlan = sumCol(peRecs,'METROS (PLAN)').sum, metEjec = sumCol(drillRecs,'Metros Perforados').sum;
     renderGaugeCard(kpiTop, { title:'Metros', planVal:metPlan, ejecVal:metEjec, decimals:0, suffix:' m', goodDirection:'higher' });
 
     const talPlan = sumCol(peRecs,'TALADROS DIA (PLAN)').sum, talEjec = sumCol(peRecs,'TALADROS (EJECUTADO)').sum;
@@ -5448,11 +5535,18 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
 
   const matriz = perforadoras.map(p=>{
     const recs = drillRecs.filter(r=>String(r['Perforadora']||'').trim()===p);
+    // idPrefix==='perf' → Producción (Drilling): aplica el filtro de rango
+    // 0-100% (avgNonZeroValidPct) y el OEE clásico DM×Util×Calidad, alineado
+    // 2026-09-24 con las medidas DAX reales de Power BI. Pre-Corte
+    // (idPrefix==='perf_pc') usa avgNonZero simple, igual que sus medidas
+    // DAX homólogas (sin filtro de rango) — misma asimetría que en Power BI.
+    const isProduccion = idPrefix==='perf';
+    const avgFn = isProduccion ? avgNonZeroValidPct : avgNonZero;
     return {
       p,
-      util: avgNonZero(recs,'Utilización'),
-      dm: avgNonZero(recs,'Disp. Mecánica'),
-      oee: avgNonZero(recs,'OEE'),
+      util: avgFn(recs,'Utilización'),
+      dm: avgFn(recs,'Disp. Mecánica'),
+      oee: oeeClasico(recs, isProduccion),
       vel: avgNonZero(recs,'Velocidad'),
       usa: avgNonZero(recs,'USA'),
       metros: sumCol(recs,'Metros Perforados').sum,
@@ -5511,7 +5605,9 @@ function renderPerforacionModule({ f, peData, drillData, drillSheetName, idPrefi
   // "atrapar" metros perforados sin capturar el reemplazo correspondiente,
   // disparando el número de forma engañosa (todo el histórico da 797 m/und
   // para Brocas; filtrando a un solo año da más de 7,800 — un dato falso).
-  const metrosEjecTotalHistorico = sumCol(peData,'METROS (EJECUTADO)').sum;
+  // Alineado 2026-09-24 con la medida DAX "Metros Ejecutados"/"...PC" de
+  // Power BI: directo de Drilling/DrillingPC[Metros Perforados].
+  const metrosEjecTotalHistorico = sumCol(drillData,'Metros Perforados').sum;
   if (acerosBody){
     if (!peData.length){
       acerosBody.innerHTML = `<tr><td colspan="5" class="text-center text-slate-400 py-4">Hoja de plan no disponible.</td></tr>`;
@@ -5935,23 +6031,37 @@ function calcularConfiabilidad(records, equiposGrupo){
 
   const sumDifHr = (pred) => recs.reduce((a,r)=> pred(r) && typeof r['Dif. Hr']==='number' ? a+r['Dif. Hr'] : a, 0);
 
+  // 2026-09-24: dentro de "Demoras Mecanica" el Excel real trae la Actividad
+  // "Preventivo" (mantenimiento programado) mezclada con las fallas
+  // correctivas (Sistema Eléctrico, Sistema Hidráulico, Motor, Compresor de
+  // aire, etc.). Confirmado por el usuario: el Preventivo NO cuenta como
+  // falla para el MTBF/MTTR — el MTBF mide solo fallas no planificadas; el
+  // preventivo se reporta aparte (horasPreventivo). Sí sigue restando del
+  // tiempo "arriba" (horasUptime), porque durante un preventivo el equipo
+  // tampoco está disponible para producir — solo se excluye del conteo de
+  // fallas y del tiempo de reparación (MTTR).
+  const esPreventivo = r => tipoActividadEfectivo(r)==='Demoras Mecanica' && String(r['Actividad']||'').trim()==='Preventivo';
+  const esFallaCorrectiva = r => tipoActividadEfectivo(r)==='Demoras Mecanica' && !esPreventivo(r);
+
   const horasTotal = sumDifHr(()=>true);
-  const horasMecanica = sumDifHr(r=>tipoActividadEfectivo(r)==='Demoras Mecanica');
+  const horasMecanica = sumDifHr(r=>tipoActividadEfectivo(r)==='Demoras Mecanica'); // total mecánica (correctiva + preventivo) — se mantiene para vistas de downtime total
+  const horasMecanicaCorrectiva = sumDifHr(esFallaCorrectiva);
+  const horasPreventivo = sumDifHr(esPreventivo);
   const horasNoOperativas = sumDifHr(r=>tipoActividadEfectivo(r)==='Demoras No Operativas');
   const horasOperativas = sumDifHr(r=>tipoActividadEfectivo(r)==='Demoras Operativas');
   const horasPerforacion = sumDifHr(r=>tipoActividadEfectivo(r)==='Perforación');
 
-  const numFallas = recs.filter(r=>tipoActividadEfectivo(r)==='Demoras Mecanica').length;
+  const numFallas = recs.filter(esFallaCorrectiva).length;
   const horasUptime = horasTotal - horasMecanica;
   const mtbf = numFallas ? horasUptime/numFallas : null;
-  const mttr = numFallas ? horasMecanica/numFallas : null;
+  const mttr = numFallas ? horasMecanicaCorrectiva/numFallas : null;
 
-  // Última falla mecánica registrada — para las alertas predictivas: cuántas
-  // horas han pasado desde entonces, comparado contra el MTBF propio del
-  // equipo (no un promedio genérico de flota).
+  // Última falla CORRECTIVA registrada (no cuenta un preventivo) — para las
+  // alertas predictivas: cuántas horas han pasado desde entonces, comparado
+  // contra el MTBF propio del equipo (no un promedio genérico de flota).
   let ultimaFallaFecha = null;
   recs.forEach(r=>{
-    if (tipoActividadEfectivo(r)!=='Demoras Mecanica') return;
+    if (!esFallaCorrectiva(r)) return;
     const f = r['Fecha Hora Fin'];
     if (f instanceof Date && !isNaN(f.getTime()) && (!ultimaFallaFecha || f>ultimaFallaFecha)) ultimaFallaFecha = f;
   });
@@ -5972,7 +6082,7 @@ function calcularConfiabilidad(records, equiposGrupo){
   const equiposConDatos = distinctValues(recs, 'Equipo').length;
   const horasCalendario = dias ? dias*24*equiposConDatos : null;
 
-  return { horasTotal, horasMecanica, horasNoOperativas, horasOperativas, horasPerforacion,
+  return { horasTotal, horasMecanica, horasMecanicaCorrectiva, horasPreventivo, horasNoOperativas, horasOperativas, horasPerforacion,
     numFallas, mtbf, mttr, confiabilidad, causasOperativas, horasCalendario, dias, equiposConDatos, ultimaFallaFecha };
 }
 
@@ -6148,9 +6258,10 @@ function renderTabEstadistica(){
         <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.mtbf,1)}</td>
         <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(r.mttr,2)}</td>
         <td class="py-1.5 pr-2 text-right font-mono-num font-bold ${color}">${fmtNum(r.confiabilidad,1)}%</td>
-        <td class="py-1.5 text-right font-mono-num">${r.numFallas}</td>
+        <td class="py-1.5 pr-2 text-right font-mono-num">${r.numFallas}</td>
+        <td class="py-1.5 text-right font-mono-num text-slate-400">${fmtNum(r.horasPreventivo,1)}</td>
       </tr>`;
-    }).join('') : `<tr><td colspan="6" class="text-center text-slate-400 py-4">Sin fallas registradas para este equipo en el período.</td></tr>`;
+    }).join('') : `<tr><td colspan="7" class="text-center text-slate-400 py-4">Sin fallas registradas para este equipo en el período.</td></tr>`;
 
     // ---- Alertas Predictivas de Mantenimiento ----
     // Se usa la fecha más reciente de TODO el archivo de Actividades como
@@ -6373,12 +6484,13 @@ function renderConfiabilidadGrupo(sufijo, actividades, equiposGrupo, c, drillSou
     return;
   }
 
-  const miniStat = (label,val,colorClass)=>`<div class="rounded-lg bg-slate-50 dark:bg-panel-surface2 px-2 py-1.5 text-center"><p class="text-[9px] uppercase text-slate-400">${label}</p><p class="font-mono-num text-sm font-semibold ${colorClass||''}">${val}</p></div>`;
+  const miniStat = (label,val,colorClass)=>`<div class="flex-1 min-w-[90px] rounded-lg bg-slate-50 dark:bg-panel-surface2 px-2 py-1.5 text-center"><p class="text-[9px] uppercase text-slate-400">${label}</p><p class="font-mono-num text-sm font-semibold ${colorClass||''}">${val}</p></div>`;
   kpiDiv.innerHTML =
     miniStat('MTBF', fmtNum(r.mtbf,1)+' hr') +
     miniStat('MTTR', fmtNum(r.mttr,2)+' hr') +
     miniStat('Confiabilidad', fmtNum(r.confiabilidad,1)+'%', r.confiabilidad>=90?'text-emerald-600 dark:text-emerald-400':r.confiabilidad>=80?'text-amber':'text-rose') +
-    miniStat('N° Fallas', fmtNum(r.numFallas,0));
+    miniStat('N° Fallas', fmtNum(r.numFallas,0)) +
+    miniStat('Preventivo', fmtNum(r.horasPreventivo,1)+' hr', 'text-slate-500 dark:text-slate-300');
 
   // Pareto de Demoras Operativas — top 8 causas específicas
   const topCausas = r.causasOperativas.filter(x=>x.horas>0).slice(0,8);
@@ -6408,8 +6520,13 @@ function renderConfiabilidadGrupo(sufijo, actividades, equiposGrupo, c, drillSou
   // ACTIVIDADES (verificado: todo 2025-2026 da Utilización 62.4% para DM45,
   // pero solo-2026 da 56.5% — sí importa la diferencia).
   const drill2026 = drillSourceRecs.filter(r => isDateVal(r['Fecha']) && r['Fecha'].getFullYear()===2026);
-  const dmAvg = avgNonZero(drill2026, 'Disp. Mecánica');
-  const utilAvg = avgNonZero(drill2026, 'Utilización');
+  // sufijo==='dm45' → Producción (Drilling): aplica el filtro de rango
+  // 0-100% (avgNonZeroValidPct), alineado 2026-09-24 con la medida DAX real
+  // de Power BI. 'leopard' (Pre-Corte) usa avgNonZero simple, igual que su
+  // medida DAX homóloga (misma asimetría que en Power BI).
+  const avgFnConf = sufijo==='dm45' ? avgNonZeroValidPct : avgNonZero;
+  const dmAvg = avgFnConf(drill2026, 'Disp. Mecánica');
+  const utilAvg = avgFnConf(drill2026, 'Utilización');
   const horasDisponibles = dmAvg!==null ? r.horasTotal * (dmAvg/100) : null;
   const horasReales = (horasDisponibles!==null && utilAvg!==null) ? horasDisponibles * (utilAvg/100) : null;
   const brecha = (horasDisponibles!==null && horasReales!==null) ? horasDisponibles - horasReales : null;
@@ -6727,7 +6844,9 @@ function renderVsmComparacion(drillRecs, drillPcRecs, peRecsBsm, c){
 
   const equiposDM = drillRecs.length ? equiposActivos(drillRecs, DATE_COL.drilling, 'Perforadora', 'Metros Perforados', 1) : [];
   const drillActivos = drillRecs.filter(r=>equiposDM.includes(String(r['Perforadora']||'').trim()));
-  const velDM = avgNonZero(drillActivos, 'Velocidad'), dmDM = avgNonZero(drillActivos, 'Disp. Mecánica'), utilDM = avgNonZero(drillActivos, 'Utilización');
+  // Producción (Drilling): filtro de rango 0-100% alineado 2026-09-24 con la
+  // medida DAX real de Power BI.
+  const velDM = avgNonZero(drillActivos, 'Velocidad'), dmDM = avgNonZeroValidPct(drillActivos, 'Disp. Mecánica'), utilDM = avgNonZeroValidPct(drillActivos, 'Utilización');
   const ratioReal = (()=>{
     const talTotal = sumCol(peRecsBsm,'TALADROS (EJECUTADO)').sum;
     const tonTotal = sumCol(peRecsBsm,'TONELAJE ROTO POR DISPARO (EJECUTADO)').sum;
@@ -6817,8 +6936,10 @@ function renderVsmDiagramaYSimulador(drillRecs, peRecsBsm, capacidadVoladuraMens
   const equiposReales = drillRecs.length ? equiposActivos(drillRecs, DATE_COL.drilling, 'Perforadora', 'Metros Perforados', 1) : [];
   const drillActivos = drillRecs.filter(r=>equiposReales.includes(String(r['Perforadora']||'').trim()));
   const velReal = avgNonZero(drillActivos, 'Velocidad');
-  const dmReal = avgNonZero(drillActivos, 'Disp. Mecánica');
-  const utilReal = avgNonZero(drillActivos, 'Utilización');
+  // Producción (Drilling): filtro de rango 0-100% alineado 2026-09-24 con la
+  // medida DAX real de Power BI.
+  const dmReal = avgNonZeroValidPct(drillActivos, 'Disp. Mecánica');
+  const utilReal = avgNonZeroValidPct(drillActivos, 'Utilización');
   const ratioReal = (()=>{
     const talTotal = sumCol(peRecsBsm,'TALADROS (EJECUTADO)').sum;
     const tonTotal = sumCol(peRecsBsm,'TONELAJE ROTO POR DISPARO (EJECUTADO)').sum;
@@ -7579,11 +7700,16 @@ function renderTabGuardia(){
     if (!anyData){
       kpiEl.innerHTML = '<div class="col-span-full text-sm text-slate-400 py-4 text-center">Carga tu Excel para ver los indicadores del día.</div>';
     } else {
-      const metrosPlan = sumCol(peDay,'METROS (PLAN)').sum, metrosEjec = sumCol(peDay,'METROS (EJECUTADO)').sum;
+      // Mt. Perforados/Pre-Corte (Real) alineado 2026-09-24 con las medidas
+      // DAX "Metros Ejecutados"/"...PC" de Power BI: directo de
+      // Drilling/DrillingPC[Metros Perforados] — de paso, esto hace que el
+      // total de la tarjeta y el desglose por equipo (que ya usaba drillDay)
+      // sean siempre consistentes entre sí.
+      const metrosPlan = sumCol(peDay,'METROS (PLAN)').sum, metrosEjec = sumCol(drillDay,'Metros Perforados').sum;
       const metrosPorEquipo = guardiaPorEquipoDia(drillDay, 'Metros Perforados', 'sum');
       renderGuardiaKpiTile(kpiEl, { icon:'📏', title:'Mt. Perforados', unit:'m', deltaUnit:' m', planVal:metrosPlan, realVal:metrosEjec, decimals:0, goodDirection:'higher', byEquipo:metrosPorEquipo, byEquipoUnit:' m', byEquipoDecimals:0 });
 
-      const metrosPcPlan = sumCol(pePcDay,'METROS (PLAN)').sum, metrosPcEjec = sumCol(pePcDay,'METROS (EJECUTADO)').sum;
+      const metrosPcPlan = sumCol(pePcDay,'METROS (PLAN)').sum, metrosPcEjec = sumCol(drillPcDay,'Metros Perforados').sum;
       renderGuardiaKpiTile(kpiEl, { icon:'📐', title:'Mt. Pre-Corte', unit:'m', deltaUnit:' m', planVal:metrosPcPlan, realVal:metrosPcEjec, decimals:0, goodDirection:'higher' });
 
       const tonPlan = sumCol(peDay,'TONELAJE ROTO DIA (PLAN)').sum, tonEjec = sumCol(peDay,'TONELAJE ROTO POR DISPARO (EJECUTADO)').sum;
