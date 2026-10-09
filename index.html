@@ -1234,6 +1234,8 @@
           </div>
           <div id="operadores_destacados" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
           <p class="text-[10px] text-slate-400 mt-2">No se incluyen fallas mecánicas: dependen más del equipo que del operador.</p>
+          <p class="text-[10px] text-slate-400 mt-1">% Reperf. = calidad de perforación: se calcula sobre el operador que perforó el taladro <strong>por primera vez</strong>, no sobre quien ejecuta la Reperforación — si el turno noche deja un taladro para reperforar y el turno día lo corrige, el % Reperf. sube para quien lo perforó originalmente, no para quien lo arregló.</p>
+          <p class="text-[10px] text-slate-400 mt-1" id="operadores_reperf_metodo_nota"></p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
@@ -2435,6 +2437,29 @@ function sanitizeImplausibleDates(records, headers){
   return cleared;
 }
 
+// 2026-10-07: la actualización de BD_Compilados_PV.xlsx cambió el nombre Y
+// LA UNIDAD de la columna de duración de ACTIVIDADES — la versión anterior
+// traía 'Dif. Hr ' (horas); la nueva la reemplaza por 'Diferencia de
+// Horómetros', que son MINUTOS, no horas (verificado: exactamente ×60 del
+// valor que habría dado la versión anterior, en más de 1700 filas de
+// muestra, sin una sola excepción). También cambió 'Codigo Taladro' →
+// 'Código Taladro' (solo la tilde). Se normaliza aquí, al cargar — antes de
+// sanitizeActividadesOutliers — para que Confiabilidad (MTBF/MTTR), Demoras
+// y Desempeño por Operador sigan funcionando igual sin importar cuál de las
+// dos versiones del archivo se suba, en vez de que cada cálculo que usa
+// 'Dif. Hr'/'Codigo Taladro' se quede en silencio con la hoja nueva.
+function normalizeActividadesSchema(records){
+  for (const r of records){
+    if (r['Dif. Hr']===undefined && r['Diferencia de Horómetros']!==undefined){
+      const mins = r['Diferencia de Horómetros'];
+      r['Dif. Hr'] = typeof mins==='number' ? mins/60 : mins;
+    }
+    if (r['Codigo Taladro']===undefined && r['Código Taladro']!==undefined){
+      r['Codigo Taladro'] = r['Código Taladro'];
+    }
+  }
+}
+
 // Verificado en el Excel "BD_Actividades_perforadoras_2026": de 117,357
 // filas, solo 1 tiene una duración implausible (35,271 hr) por un typo de
 // año en "Fecha Hora Inicio" (2022 en vez de 2026). El resto de eventos de
@@ -2826,6 +2851,7 @@ function handleFile(file){
       const vib2 = found['Vib & Air Blast. (2)'] ? parseSheet(wb, found['Vib & Air Blast. (2)']) : [];
       DATA.vib = vib1.concat(vib2);
       DATA.actividades = found['ACTIVIDADES'] ? parseSheet(wb, found['ACTIVIDADES']) : [];
+      normalizeActividadesSchema(DATA.actividades);
       DATA.actividadesOutliersExcluidos = sanitizeActividadesOutliers(DATA.actividades);
       DATA.fuelMis = found['BD Fuel-MIS'] ? parseSheet(wb, found['BD Fuel-MIS']) : [];
       DATA.missingSheets = missing;
@@ -6341,18 +6367,74 @@ function renderTabEstadistica(){
 function renderDesempenoOperadores(actividades){
   const tbody = document.getElementById('table_operadores');
   const destacadosDiv = document.getElementById('operadores_destacados');
+  const metodoNotaEl = document.getElementById('operadores_reperf_metodo_nota');
   if (!tbody || !destacadosDiv) return;
   if (!actividades.length){
     tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">Hoja de Actividades no disponible.</td></tr>';
     destacadosDiv.innerHTML = '';
+    if (metodoNotaEl) metodoNotaEl.innerHTML = '';
     return;
   }
 
   const porOperador = new Map();
   const getOp = (nombre) => {
-    if (!porOperador.has(nombre)) porOperador.set(nombre, { horasTotal:0, horasPerf:0, taladros:new Set(), taladrosReperf:new Set(), turnos:{}, causas:new Map() });
+    if (!porOperador.has(nombre)) porOperador.set(nombre, { horasTotal:0, horasPerf:0, taladros:new Set(), taladrosReperf:new Set(), taladrosTotalEstimado:0, taladrosReperfEstimado:0, turnos:{}, causas:new Map() });
     return porOperador.get(nombre);
   };
+
+  // 2026-10-07: la hoja Actividades del Excel actualizado ya no incluye
+  // ningún registro con Actividad='Reperforado' (se verificó en el archivo
+  // completo) — ese dato a nivel de taladro individual dejó de existir. El
+  // conteo real de taladros reperforados sigue existiendo, pero solo a nivel
+  // Equipo+Día en Drilling/DrillingPC ("Taladros Reperforados" / "Taladros
+  // Perforados"). Confirmado con el usuario: mientras Actividades no traiga
+  // de nuevo la etiqueta explícita, se reparte ese total diario entre los
+  // operadores que perforaron ese equipo ese día, proporcional a sus horas
+  // de Perforación — es una aproximación (no exacta por taladro), por eso se
+  // marca como "estimado" en la tabla. Si en algún momento Actividades
+  // vuelve a traer la etiqueta 'Reperforado', el cálculo exacto de abajo
+  // (taladroInfo) se usa automáticamente en su lugar.
+  const tieneEtiquetaReperforado = actividades.some(r => String(r['Actividad']||'').trim()==='Reperforado');
+  if (metodoNotaEl){
+    metodoNotaEl.innerHTML = tieneEtiquetaReperforado
+      ? '✅ % Reperf. exacto: calculado por taladro desde Actividades.'
+      : '≈ % Reperf. <strong>estimado</strong>: Actividades no trae la etiqueta de taladro reperforado en este archivo, se reparte el total diario de Drilling/DrillingPC entre los operadores según sus horas de perforación ese día.';
+  }
+
+  // 2026-10-07: la Reperforación de un taladro casi siempre la ejecuta un
+  // operador distinto al que lo perforó originalmente (típicamente el turno
+  // siguiente — de día — limpiando lo que dejó el turno anterior, de noche).
+  // El % de Reperforación debe medir la CALIDAD DE PERFORACIÓN de quien
+  // perforó el taladro por primera vez, no penalizar a quien hace el trabajo
+  // de corrección. Verificado con el usuario: "los que reperforan son los
+  // que dejaron el turno anterior/noche, a ellos se debe considerar como que
+  // dejan más para reperforar, no los que lo ejecutan". Primera pasada: por
+  // cada Código Taladro se identifica (a) quién lo perforó por primera vez
+  // (evento 'Perforación' con Actividad != 'Reperforado', el de 'Fecha Hora
+  // Inicio' más temprana) y (b) si ese taladro fue reperforado en algún
+  // momento, sin importar quién ejecutó la corrección.
+  const taladroInfo = new Map();
+  actividades.forEach(r=>{
+    if (r['Tipo Actividad']!=='Perforación') return;
+    const codigo = r['Codigo Taladro'];
+    if (!codigo) return;
+    if (!taladroInfo.has(codigo)) taladroInfo.set(codigo, { primerOperador:null, primerFecha:null, fueReperforado:false });
+    const info = taladroInfo.get(codigo);
+    const actividadR = String(r['Actividad']||'').trim();
+    if (actividadR==='Reperforado'){
+      info.fueReperforado = true;
+      return;
+    }
+    const op = String(r['Operador']||'').trim();
+    if (!op) return;
+    const fecha = (r['Fecha Hora Inicio'] instanceof Date && !isNaN(r['Fecha Hora Inicio'].getTime())) ? r['Fecha Hora Inicio'] : null;
+    if (!info.primerOperador){
+      info.primerOperador = op; info.primerFecha = fecha;
+    } else if (fecha && (!info.primerFecha || fecha<info.primerFecha)){
+      info.primerOperador = op; info.primerFecha = fecha;
+    }
+  });
+
   actividades.forEach(r=>{
     const op = String(r['Operador']||'').trim();
     const dif = r['Dif. Hr'];
@@ -6375,13 +6457,58 @@ function renderDesempenoOperadores(actividades){
     if (r['Tipo Actividad']==='Perforación'){
       st.horasPerf += dif;
       if (turno && st.turnos[turno]) st.turnos[turno].horasPerf += dif;
-      const actividad = String(r['Actividad']||'').trim();
-      if (r['Codigo Taladro']){
-        if (actividad==='Reperforado') st.taladrosReperf.add(r['Codigo Taladro']);
-        else st.taladros.add(r['Codigo Taladro']);
-      }
     }
   });
+
+  // Atribución de taladros/taladrosReperf: va al operador que perforó
+  // ORIGINALMENTE (taladroInfo), no a quien ejecutó la Reperforación — así
+  // el % de Reperforación mide la calidad de perforación de cada operador.
+  // Solo aporta datos reales cuando Actividades sí trae la etiqueta
+  // 'Reperforado' (ver tieneEtiquetaReperforado arriba).
+  taladroInfo.forEach((info, codigo)=>{
+    if (!info.primerOperador) return; // no se pudo determinar quién lo perforó primero (dato incompleto)
+    const st = getOp(info.primerOperador);
+    if (info.fueReperforado) st.taladrosReperf.add(codigo);
+    else st.taladros.add(codigo);
+  });
+
+  // Estimación basada en Drilling/DrillingPC (ver nota arriba) — se calcula
+  // siempre (es barato) pero solo se usa para mostrar el % de Reperforación
+  // cuando Actividades no trae la etiqueta explícita.
+  if (!tieneEtiquetaReperforado){
+    const horasPerfPorDiaEquipo = new Map(); // `${dia}|${equipo}` -> Map(operador -> horas de Perforación)
+    actividades.forEach(r=>{
+      if (r['Tipo Actividad']!=='Perforación') return;
+      const fecha = r['Fecha'];
+      const equipo = String(r['Equipo']||'').trim();
+      const op = String(r['Operador']||'').trim();
+      const dif = r['Dif. Hr'];
+      if (!isDateVal(fecha) || !equipo || !op || typeof dif!=='number' || dif<0 || dif>200) return;
+      const key = `${dayKey(fecha)}|${equipo}`;
+      if (!horasPerfPorDiaEquipo.has(key)) horasPerfPorDiaEquipo.set(key, new Map());
+      const m = horasPerfPorDiaEquipo.get(key);
+      m.set(op, (m.get(op)||0)+dif);
+    });
+
+    [...DATA.drilling, ...DATA.drillingPC].forEach(r=>{
+      const fecha = r['Fecha'];
+      const equipo = String(r['Perforadora']||'').trim();
+      const totalDia = r['Taladros Perforados'];
+      const reperfDia = r['Taladros Reperforados'];
+      if (!isDateVal(fecha) || !equipo || typeof totalDia!=='number' || typeof reperfDia!=='number' || totalDia<=0) return;
+      const key = `${dayKey(fecha)}|${equipo}`;
+      const horasMap = horasPerfPorDiaEquipo.get(key);
+      if (!horasMap || !horasMap.size) return; // sin datos de Actividades ese día/equipo — no se puede repartir
+      const horasTotalDia = Array.from(horasMap.values()).reduce((a,h)=>a+h,0);
+      if (!horasTotalDia) return;
+      horasMap.forEach((horasOp, op)=>{
+        const participacion = horasOp/horasTotalDia;
+        const st = getOp(op);
+        st.taladrosTotalEstimado += totalDia*participacion;
+        st.taladrosReperfEstimado += reperfDia*participacion;
+      });
+    });
+  }
 
   // Utilización por turno (Día/Noche) — verificado con datos reales: casi
   // todos los operadores rinden notablemente mejor de noche (menos
@@ -6402,7 +6529,10 @@ function renderDesempenoOperadores(actividades){
     .map(([op, st])=>({
       op, horasTotal: st.horasTotal, taladros: st.taladros.size, taladrosReperf: st.taladrosReperf.size,
       taladrosPorHora: st.horasTotal ? st.taladros.size/st.horasTotal : 0,
-      pctReperf: (st.taladros.size+st.taladrosReperf.size) ? (st.taladrosReperf.size/(st.taladros.size+st.taladrosReperf.size))*100 : null,
+      pctReperf: tieneEtiquetaReperforado
+        ? ((st.taladros.size+st.taladrosReperf.size) ? (st.taladrosReperf.size/(st.taladros.size+st.taladrosReperf.size))*100 : null)
+        : (st.taladrosTotalEstimado>0 ? (st.taladrosReperfEstimado/st.taladrosTotalEstimado)*100 : null),
+      reperfEsEstimado: !tieneEtiquetaReperforado,
       util: st.horasTotal ? (st.horasPerf/st.horasTotal)*100 : 0,
       utilDia: utilPorTurno(st,'Dia'), utilNoche: utilPorTurno(st,'Noche'),
       turnoPredom: turnoPredominante(st),
@@ -6431,7 +6561,7 @@ function renderDesempenoOperadores(actividades){
       <td class="py-1.5 pr-2 text-slate-500">${escapeHtml(x.turnoPredom)}</td>
       <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(x.horasTotal,0)}</td>
       <td class="py-1.5 pr-2 text-right font-mono-num">${fmtNum(x.taladrosPorHora,2)}</td>
-      <td class="py-1.5 pr-2 text-right font-mono-num font-bold ${reperfColor}">${x.pctReperf===null?'—':fmtNum(x.pctReperf,1)+'%'}</td>
+      <td class="py-1.5 pr-2 text-right font-mono-num font-bold ${reperfColor}" title="${x.reperfEsEstimado?'Estimado: repartido desde el total diario de Drilling/DrillingPC (Actividades no trae la etiqueta exacta por taladro)':'Exacto: calculado por taladro desde Actividades'}">${x.pctReperf===null?'—':(x.reperfEsEstimado?'≈':'')+fmtNum(x.pctReperf,1)+'%'}</td>
       <td class="py-1.5 pr-2 text-right font-mono-num ${x.utilDia===null?'text-slate-300':''}">${x.utilDia===null?'—':fmtNum(x.utilDia,1)+'%'}</td>
       <td class="py-1.5 pr-2 text-right font-mono-num ${x.utilNoche===null?'text-slate-300':''}">${x.utilNoche===null?'—':fmtNum(x.utilNoche,1)+'%'}</td>
       <td class="py-1.5 pl-2"><span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full ${status.b}"></span>${status.l}</span></td>
