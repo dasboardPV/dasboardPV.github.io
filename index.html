@@ -270,6 +270,11 @@
   .guardia-kpi-tile-icon-wrap { display:flex; align-items:center; justify-content:center; width:1.25rem; height:1.25rem; border-radius:.45rem; font-size:.7rem; line-height:1; flex-shrink:0; }
   .guardia-kpi-tile-title { font-size:.6rem; text-transform:uppercase; letter-spacing:.02em; font-weight:700; color:#94A3B8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .guardia-kpi-tile-value { font-weight:800; font-size:1.02rem; line-height:1.1; margin:.03rem 0 .18rem; }
+  /* Mensaje compacto cuando el KPI no aplica ese día (ej. "Sin disparo
+     registrado" en Ton. Roto — un día sin voladura no es un dato faltante,
+     es normal; mostrar 0 t / 0% de cumplimiento se leía como un error). */
+  .guardia-kpi-tile-empty { font-weight:600; font-size:.66rem; line-height:1.2; color:#94A3B8; margin:.15rem 0 .1rem; }
+  .dark .guardia-kpi-tile-empty { color:#64748B; }
   .guardia-kpi-tile-row { font-size:.64rem; color:#94A3B8; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   /* Mini "meter" bajo el valor: representa visualmente el % de cumplimiento
      (escala 0-130%, con una marca vertical en el 100% = meta) en vez de que
@@ -2151,8 +2156,8 @@ function colors(){ return document.documentElement.classList.contains('dark') ? 
 // paletas del skill de dataviz (separación CVD y contraste OK para cada par
 // barra-de-dato / línea-de-tendencia usado en estos 3 gráficos).
 const GUARDIA_CHART_PALETTE = {
-  light: { planNeutral:'#94A3B8', metrosEjec:'#2563EB', tonEjec:'#0D9488', p80Bar:'#7C3AED', trend:'#DC2626' },
-  dark:  { planNeutral:'#64748B', metrosEjec:'#5B8DEF', tonEjec:'#33A69B', p80Bar:'#9F7AEA', trend:'#EF5A5A' },
+  light: { planNeutral:'#94A3B8', metrosEjec:'#2563EB', tonEjec:'#0D9488', p80Bar:'#7C3AED', p80BarDesmonte:'#D97706', trend:'#DC2626' },
+  dark:  { planNeutral:'#64748B', metrosEjec:'#5B8DEF', tonEjec:'#33A69B', p80Bar:'#9F7AEA', p80BarDesmonte:'#F59E0B', trend:'#EF5A5A' },
 };
 function guardiaChartColors(){ return document.documentElement.classList.contains('dark') ? GUARDIA_CHART_PALETTE.dark : GUARDIA_CHART_PALETTE.light; }
 
@@ -3283,7 +3288,12 @@ const MiniChart = (function(){
 
     let maxV = 0, minV = 0;
     datasets.forEach(ds => ds.data.forEach(v=>{ if (v!==null && v!==undefined){ if (v>maxV) maxV=v; if (v<minV) minV=v; } }));
-    if (referenceLine!==undefined && referenceLine>maxV) maxV = referenceLine;
+    // referenceLine acepta un número (una sola línea punteada, uso original)
+    // o un arreglo de {value, color, label} para varias líneas con distinto
+    // color/etiqueta — p.ej. Target P80 Mineral (3") y Target P80 Desmonte
+    // (8") a la vez en el mismo gráfico, en vez de promediarlos entre sí.
+    const refLines = referenceLine===undefined ? [] : (Array.isArray(referenceLine) ? referenceLine.filter(r=>r && r.value!==undefined && r.value!==null) : [{ value: referenceLine }]);
+    refLines.forEach(r => { if (r.value>maxV) maxV = r.value; });
     const scale = niceScale(minV, maxV, 5);
     const yToPx = v => padTop + plotH - ((v-scale.min)/(scale.max-scale.min))*plotH;
 
@@ -3330,14 +3340,19 @@ const MiniChart = (function(){
       });
     });
 
-    // Línea de referencia (ej. 100% de cumplimiento)
-    if (referenceLine!==undefined){
-      const ry = yToPx(referenceLine);
+    // Línea(s) de referencia (ej. 100% de cumplimiento, o un target por serie)
+    refLines.forEach(r => {
+      const ry = yToPx(r.value);
       ctx.save();
-      ctx.strokeStyle = colors.text; ctx.setLineDash([4,3]); ctx.lineWidth=1;
+      ctx.strokeStyle = r.color || colors.text; ctx.setLineDash([4,3]); ctx.lineWidth=1;
       ctx.beginPath(); ctx.moveTo(padLeft, ry); ctx.lineTo(w-padRight, ry); ctx.stroke();
+      if (r.label){
+        ctx.setLineDash([]); ctx.fillStyle = r.color || colors.text; ctx.font = '9px Inter, sans-serif';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText(r.label, padLeft+2, ry-2);
+      }
       ctx.restore();
-    }
+    });
 
     // Línea de tendencia superpuesta (eje Y secundario a la derecha) — p.ej.
     // % de Cumplimiento día a día sobre las mismas barras Plan/Ejecutado.
@@ -7489,19 +7504,31 @@ function renderGuardiaKpiTile(container, spec){
     byEquipoHtml = `<div class="guardia-kpi-byequipo">${spec.byEquipo.map(item=>`<span class="guardia-kpi-byequipo-item"><b class="font-mono-num">${escapeHtml(item.eq)}</b> ${fmtNum(item.val,beDecimals)}${beUnit}</span>`).join('')}</div>`;
   }
 
+  // 2026-10-09: para KPIs donde un valor en null/0 ese día es NORMAL (ej.
+  // Ton. Roto en un día sin voladura — el Ejecutado se registra por
+  // disparo, no a diario) y no un dato faltante, spec.emptyLabel permite
+  // mostrar un mensaje corto en vez de "0 t / 0% de cumplimiento", que se
+  // leía como un error. Solo aplica si de verdad no hay valor real (no se
+  // usa si realVal es 0 pero sí medido).
+  const showEmpty = !isCalc && (spec.realVal===null || spec.realVal===undefined) && spec.emptyLabel;
+
   const card = document.createElement('div');
-  card.className = 'guardia-kpi-tile ' + statusClass;
+  card.className = 'guardia-kpi-tile ' + (showEmpty ? 'guardia-status-gray' : statusClass);
   if (spec.note) card.title = spec.note;
   card.innerHTML = `
     <div class="guardia-kpi-tile-head">
       <span class="guardia-kpi-tile-icon-wrap">${spec.icon||''}</span>
       <span class="guardia-kpi-tile-title">${escapeHtml(spec.title)}</span>
     </div>
+    ${showEmpty ? `
+    <p class="guardia-kpi-tile-empty">${escapeHtml(spec.emptyLabel)}</p>
+    ` : `
     <p class="guardia-kpi-tile-value font-mono-num">${fmt(mainVal)}</p>
     ${isCalc ? '' : `
     <p class="guardia-kpi-tile-row">Plan: <b class="font-mono-num">${fmt(spec.planVal)}</b>${devAbs===null?'':` <span class="font-mono-num font-semibold ${devColor}">${arrow} ${devAbs>=0?'+':''}${fmtNum(devAbs,decimals)}${deltaUnit}</span>`}</p>
     ${meterHtml}
     <span class="guardia-kpi-cumpl-badge">Cumpl.: ${cumplimiento===null?'—':fmtNum(cumplimiento,1)+'%'}</span>
+    `}
     `}
     ${byEquipoHtml}
   `;
@@ -7842,8 +7869,20 @@ function renderTabGuardia(){
       const metrosPcPlan = sumCol(pePcDay,'METROS (PLAN)').sum, metrosPcEjec = sumCol(drillPcDay,'Metros Perforados').sum;
       renderGuardiaKpiTile(kpiEl, { icon:'📐', title:'Mt. Pre-Corte', unit:'m', deltaUnit:' m', planVal:metrosPcPlan, realVal:metrosPcEjec, decimals:0, goodDirection:'higher' });
 
-      const tonPlan = sumCol(peDay,'TONELAJE ROTO DIA (PLAN)').sum, tonEjec = sumCol(peDay,'TONELAJE ROTO POR DISPARO (EJECUTADO)').sum;
-      renderGuardiaKpiTile(kpiEl, { icon:'⛰️', title:'Ton. Roto', unit:'t', deltaUnit:' t', planVal:tonPlan, realVal:tonEjec, decimals:0, goodDirection:'higher' });
+      // 2026-10-09: 'TONELAJE ROTO POR DISPARO (EJECUTADO)' se registra por
+      // disparo (voladura), no a diario — la mayoría de días no hay disparo,
+      // así que un 0 ahí no es "no se cumplió la meta", es que ese día no se
+      // voló. Antes se mostraba igual que cualquier otro 0 (0 t / 0% de
+      // cumplimiento), lo que se veía como que el dato "no estaba jalando"
+      // (reportado por el usuario). sumCol().count permite distinguir "no
+      // hubo disparo" (count=0, sin filas con valor) de "sí hubo pero fue
+      // 0 t" (no debería pasar en la práctica, pero se respeta si ocurre).
+      const tonPlanAgg = sumCol(peDay,'TONELAJE ROTO DIA (PLAN)');
+      const tonEjecAgg = sumCol(peDay,'TONELAJE ROTO POR DISPARO (EJECUTADO)');
+      const sinDisparo = tonEjecAgg.count===0;
+      renderGuardiaKpiTile(kpiEl, { icon:'⛰️', title:'Ton. Roto', unit:'t', deltaUnit:' t',
+        planVal: tonPlanAgg.sum, realVal: sinDisparo ? null : tonEjecAgg.sum, decimals:0, goodDirection:'higher',
+        emptyLabel: 'Sin disparo registrado', note: sinDisparo ? 'El Tonelaje Roto Ejecutado se registra por disparo, no a diario — ningún disparo cayó en este día.' : undefined });
 
       // Disponibilidad Mecánica y Utilización — mismas columnas Plan/Ejec.
       // que usan el Resumen Gerencial y el VSM (D.M. PLAN/EJEC (%) y
@@ -7882,8 +7921,19 @@ function renderTabGuardia(){
 
       renderGuardiaKpiTile(kpiEl, { icon:'💣', title:'Exp. Pre-Corte', unit:'kg', mode:'calc', calcVal: sumCol(blastPcDay,'TOTAL EXPLOSIVO (Kg)').sum, decimals:0, suffix:' kg' });
 
-      const p80 = avgNonZero(fragDay,'P80 (pulg)'), p80Target = avgNonZero(fragDay,'Target P80 (Pulg.)');
-      renderGuardiaKpiTile(kpiEl, { icon:'🎯', title:'P80', unit:'"', deltaUnit:'"', planVal:p80Target, realVal:p80, decimals:2, goodDirection:'lower' });
+      // 2026-10-09: antes se promediaba P80/Target P80 de TODOS los
+      // materiales juntos (Mineral + Desmonte) — Mineral tiene Target P80 =
+      // 3" y Desmonte = 8" (más grueso, no requiere el mismo control de
+      // tamaño para chancado; mismo criterio que mineralOnly/desmonteOnly
+      // usado en el resto del panel), así que un día con blasteo de ambos
+      // materiales mostraba un "target" mixto sin sentido (ej. (3+8)/2=5.5,
+      // se veía como "6" — reportado por el usuario). Se separa en dos
+      // tarjetas, una por material, cada una con su propio target real.
+      const p80M = avgNonZero(mineralOnly(fragDay),'P80 (pulg)'), p80TargetM = avgNonZero(mineralOnly(fragDay),'Target P80 (Pulg.)');
+      renderGuardiaKpiTile(kpiEl, { icon:'🎯', title:'P80 Mineral', unit:'"', deltaUnit:'"', planVal:p80TargetM, realVal:p80M, decimals:2, goodDirection:'lower' });
+
+      const p80D = avgNonZero(desmonteOnly(fragDay),'P80 (pulg)'), p80TargetD = avgNonZero(desmonteOnly(fragDay),'Target P80 (Pulg.)');
+      renderGuardiaKpiTile(kpiEl, { icon:'🎯', title:'P80 Desmonte', unit:'"', deltaUnit:'"', planVal:p80TargetD, realVal:p80D, decimals:2, goodDirection:'lower' });
 
       // Factor de Potencia real (F.P. (TEORICA) de la hoja Voladura) — antes
       // esta tarjeta calculaba un ratio propio (Kg explosivo ÷ Tonelaje Roto
@@ -7924,7 +7974,10 @@ function renderTabGuardia(){
     else {
       const tonPlanSerie = dailySum(DATA.planEjec, DATE_COL.planEjec, 'TONELAJE ROTO DIA (PLAN)', days);
       const tonEjecSerie = dailySum(DATA.tonRoto, DATE_COL.tonRoto, 'Ton. Roto', days);
-      const tonCumplSerie = tonPlanSerie.map((p,i)=> p ? (tonEjecSerie[i]/p)*100 : null);
+      // Igual criterio que la tarjeta del día: un día sin disparo (0 t
+      // ejecutado) no es "0% de cumplimiento" — es que ese día no se voló.
+      // Se deja como hueco en la línea de tendencia en vez de caer a 0%.
+      const tonCumplSerie = tonPlanSerie.map((p,i)=> (p && tonEjecSerie[i]>0) ? (tonEjecSerie[i]/p)*100 : null);
       MiniChart.bar(tonChart, {
         labels: days.map(dayLabelShort), colors: c, formatTooltip: v=>fmtNum(v)+' t',
         datasets: [
@@ -7944,13 +7997,26 @@ function renderTabGuardia(){
   if (p80Chart){
     if (!DATA.frag.length){ MiniChart.clear(p80Chart); }
     else {
-      const p80Serie = dailyAvg(DATA.frag, DATE_COL.frag, 'P80 (pulg)', days);
-      const p80TargetDay = avgNonZero(fragDay,'Target P80 (Pulg.)');
+      // 2026-10-09: antes una sola serie/target mezclando Mineral y
+      // Desmonte (promedio sin sentido, ej. (3+8)/2=5.5 ≈ "6" reportado por
+      // el usuario). Ahora dos series + dos líneas de target, una por
+      // material — igual criterio que mineralOnly/desmonteOnly del resto
+      // del panel (Mineral target 3", Desmonte target 8").
+      const p80SerieM = dailyAvg(mineralOnly(DATA.frag), DATE_COL.frag, 'P80 (pulg)', days);
+      const p80SerieD = dailyAvg(desmonteOnly(DATA.frag), DATE_COL.frag, 'P80 (pulg)', days);
+      const p80TargetDayM = avgNonZero(mineralOnly(fragDay),'Target P80 (Pulg.)');
+      const p80TargetDayD = avgNonZero(desmonteOnly(fragDay),'Target P80 (Pulg.)');
       MiniChart.bar(p80Chart, {
         labels: days.map(dayLabelShort), colors: c, formatTooltip: v=>fmtNum(v,2)+'"',
-        datasets: [ { label:'P80', data: p80Serie, color: gc.p80Bar } ],
+        datasets: [
+          { label:'P80 Mineral', data: p80SerieM, color: gc.p80Bar },
+          { label:'P80 Desmonte', data: p80SerieD, color: gc.p80BarDesmonte },
+        ],
         barLabels: v=>fmtNum(v,1),
-        referenceLine: p80TargetDay || undefined,
+        referenceLine: [
+          { value: p80TargetDayM || undefined, color: gc.p80Bar, label: `Target M: ${fmtNum(p80TargetDayM,0)}"` },
+          { value: p80TargetDayD || undefined, color: gc.p80BarDesmonte, label: `Target D: ${fmtNum(p80TargetDayD,0)}"` },
+        ],
       });
     }
   }
